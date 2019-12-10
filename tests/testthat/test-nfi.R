@@ -1,0 +1,66 @@
+test_that("class object creation works", {
+  expect_is(nfi(), c('lfcNFI', 'R6'))
+  expect_true(rlang::is_function(nfi()$get_data))
+})
+
+# foo to avoid calling the db so ofter
+foo <- nfi()
+
+test_that("get method works", {
+  expect_s3_class(foo$get_data('plots', FALSE), 'tbl_df')
+  expect_s3_class(foo$get_data('plots', TRUE), 'sf')
+  # errors
+  expect_error(
+    foo$get_data(1, FALSE),
+    "rlang::is_character"
+  )
+  expect_error(
+    foo$get_data(c('plots', 'plot_nfi_4_results'), FALSE),
+    "length\\(table_name\\)"
+  )
+  expect_error(
+    foo$get_data('plots', 'FALSE'),
+    "rlang::is_logical"
+  )
+  expect_error(
+    foo$get_data('plots', NA),
+    "\\!rlang::is_na"
+  )
+  expect_error(
+    foo$get_data('non_existent_table', FALSE),
+    "Can not connect to the database:"
+  )
+})
+
+test_that("cache works", {
+  expect_length(foo$.__enclos_env__$private$data_cache, 2)
+  bar <- foo$get_data('plots', FALSE)
+  expect_s3_class(bar, 'tbl_df')
+  expect_identical(
+    bar,
+    dplyr::tbl(foo$.__enclos_env__$private$pool_conn, 'plots') %>%
+      dplyr::collect()
+  )
+  expect_length(foo$.__enclos_env__$private$data_cache, 2)
+  baz <- foo$get_data('plot_nfi_4_results', FALSE)
+  expect_length(foo$.__enclos_env__$private$data_cache, 3)
+})
+
+test_that("external get data wrapper works", {
+  expect_identical(
+    foo$get_data('plots', FALSE),
+    nfi_get_data(foo, 'plots', FALSE)
+  )
+  expect_error(
+    nfi_get_data('foo', 'plots', FALSE),
+    "inherits"
+  )
+  xyz <- nfi_get_data(foo, 'plot_nfi_3_results', FALSE)
+  expect_length(foo$.__enclos_env__$private$data_cache, 4)
+  expect_identical(
+    foo$get_data('plot_nfi_3_results', FALSE),
+    nfi_get_data(foo, 'plot_nfi_3_results', FALSE)
+  )
+})
+
+

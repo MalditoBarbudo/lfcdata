@@ -14,6 +14,7 @@ nfi <- function() {
 lfcNFI <- R6::R6Class(
   # specs
   classname = "lfcNFI",
+  cloneable = FALSE,
   # public methods and values
   public = list(
     # initialize method
@@ -23,6 +24,12 @@ lfcNFI <- R6::R6Class(
 
     # get method, accepting a table name
     get_data = function(table_name, spatial = FALSE) {
+
+      # arguments validation
+      stopifnot(
+        rlang::is_character(table_name) & length(table_name) == 1,
+        rlang::is_logical(spatial) & !rlang::is_na(spatial)
+      )
 
       # get the cached data if any
       cached_data <- private$data_cache[[glue::glue("{table_name}_{as.character(spatial)}")]]
@@ -85,12 +92,6 @@ lfcNFI <- R6::R6Class(
 
 .lfcproto_get_data <- function(private, table_name, spatial) {
 
-  # arguments validation
-  stopifnot(
-    rlang::is_character(table_name) & length(table_name) == 1,
-    rlang::is_logical(spatial)
-  )
-
   # try to catch a db connection error
   query_data <- try(
     dplyr::tbl(private$pool_conn, table_name) %>% dplyr::collect()
@@ -135,7 +136,7 @@ lfcNFI <- R6::R6Class(
 #' @export
 nfi_get_data <- function(object, table_name, spatial) {
   # argument validation
-  # NOTE: table_name and spatial are validated in the proto function
+  # NOTE: table_name and spatial are validated in the method
   stopifnot(inherits(object, 'lfcNFI'))
   # call to the class method
   object$get_data(table_name, spatial)
