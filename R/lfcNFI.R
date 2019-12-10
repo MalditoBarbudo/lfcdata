@@ -31,18 +31,18 @@ lfcNFI <- R6::R6Class(
         rlang::is_logical(spatial) & !rlang::is_na(spatial)
       )
 
-      # get the cached data if any
-      cached_data <- private$data_cache[[glue::glue("{table_name}_{as.character(spatial)}")]]
+      # return the cached data if exists. If no cache, retrieve the data from db
+      # and update the cache
+      # NOTE: %||% is in utils.R, simplifies the syntax and the readibility of the
+      # expression.
+      res <- private$data_cache[[glue::glue("{table_name}_{as.character(spatial)}")]] %||%
+        {
+          temp_res <- lfcdata:::.lfcproto_get_data(private, table_name, spatial)
+          private$data_cache[[glue::glue("{table_name}_{as.character(spatial)}")]] <- temp_res
+          temp_res
+        }
 
-      if (!rlang::is_null(cached_data)) {
-        # return the cached data if exists
-        return(cached_data)
-      } else {
-        # no cache, retrieve the data from db and update the cache
-        res <- lfcdata:::.lfcproto_get_data(private, table_name, spatial)
-        private$data_cache[[glue::glue("{table_name}_{as.character(spatial)}")]] <- res
-        return(res)
-      }
+      return(res)
     },
 
     # override default print
