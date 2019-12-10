@@ -1,12 +1,12 @@
 #' Create an object to access the nfi database
 #'
-#' @title lfc_nfi
+#' @title nfi
 #'
 #' @export
 #'
 #' @examples
-#' foo <- lfc_nfi data()
-lfc_nfi_data <- function() {
+#' foo <- nfi()
+nfi <- function() {
   lfcNFI$new()
 }
 
@@ -133,6 +133,10 @@ lfcNFI <- R6::R6Class(
 #' access the nfi available tables
 #'
 #' @export
-lfc_get_data <- function(object, table_name, spatial) {
+nfi_get_data <- function(object, table_name, spatial) {
+  # argument validation
+  # NOTE: table_name and spatial are validated in the proto function
+  stopifnot(inherits(object, 'lfcNFI'))
+  # call to the class method
   object$get_data(table_name, spatial)
 }
