@@ -2,10 +2,48 @@
 % Please edit documentation in R/lfcNFI.R
 \name{nfi_get_data}
 \alias{nfi_get_data}
-\title{access the nfi available tables}
+\title{Access to the tables in the NFI database}
 \usage{
-nfi_get_data(object, table_name, spatial)
+nfi_get_data(object, table_name, spatial = FALSE)
+}
+\arguments{
+\item{object}{\code{lfcNFI} object, as created by \code{\link{nfi}}}
+
+\item{table_name}{character vector of lenght 1 indicating the requested table name}
+
+\item{spatial}{logical indicating if the data must be converted to an spatial object}
+}
+\value{
+A tbl object: tbl_df if spatial is \code{FALSE}, sf if
+  spatial is \code{TRUE}
 }
 \description{
-access the nfi available tables
+\code{nfi_get_data} is a wrapper for the \code{$get_data} method of
+  \code{lfcNFI} objects. See \code{\link{nfi}}.
 }
+\details{
+Connection to database can be slow. Tables retrieved from the db are stored
+  in a temporary cache inside the lfcNFI object created by \code{\link{nfi}}, making
+  subsequent calls to the same table faster.
+}
+\examples{
+nfidb <- nfi()
+# tibble
+nfi_get_data(nfidb, 'plots')
+# sf tibble
+nfi_get_data(nfidb, 'plots', TRUE)
+
+# we can use pipes
+library(dplyr)
+nfidb \%>\%
+  nfi_get_data('plots', TRUE)
+
+# nfidb is an R6 object, so the previous examples are the same as:
+nfidb$get_data('plots')
+nfidb$get_data('plots', TRUE)
+
+}
+\seealso{
+Other NFI functions: \code{\link{nfi}}
+}
+\concept{NFI functions}

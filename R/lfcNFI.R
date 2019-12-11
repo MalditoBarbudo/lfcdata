@@ -1,11 +1,27 @@
-#' Create an object to access the nfi database
+#' @description \code{nfi()} creates an object to access the nfi database.
 #'
-#' @title nfi
+#' @title lfcNFI class
+#'
+#' @return An \code{lfcNFI} class object (inherits from \code{\link[R6]{R6Class}}),
+#'   with methods to access the data. See Methods section.
+#'
+#' @section Methods:
+#'   \code{lfcNFI} objects has two public methods:
+#'   \itemize{
+#'     \item{\code{$get_data}: Retrieve and collect NFI database tables. See
+#'           \code{\link{nfi_get_data}} for more details}
+#'     \item{\code{$avail_tables}: Return a character vector with the names of the
+#'           available tables in the database. See \code{\link{nfi_avail_tables}} for
+#'           more details}
+#'   }
+#'
+#' @family NFI functions
 #'
 #' @export
 #'
 #' @examples
-#' foo <- nfi()
+#' nfidb <- nfi()
+#' nfidb
 nfi <- function() {
   lfcNFI$new()
 }
@@ -45,11 +61,19 @@ lfcNFI <- R6::R6Class(
       return(res)
     },
 
+    # available tables method
+    avail_tables = function() {
+      dplyr::db_list_tables(private$pool_conn) %>%
+        tolower() %>%
+        unique()
+    },
+
     # override default print
     print = function(...) {
       cat(
-        "lfcNFI object to access the nfi database.\n",
-        "foo <- lfcNFI$new(); foo$get_data('plots')"
+        " Access to the Spanish National Forest Inventory data for Catalonia.\n",
+        "(laboratoriforestal.creaf.uab.cat)\n",
+        "See ?nfi_get_data to know how to access the tables"
       )
       invisible(self)
     }
@@ -131,10 +155,42 @@ lfcNFI <- R6::R6Class(
 
 }
 
-#' access the nfi available tables
+#' Access to the tables in the NFI database
+#'
+#' @description \code{nfi_get_data} is a wrapper for the \code{$get_data} method of
+#'   \code{lfcNFI} objects. See \code{\link{nfi}}.
+#'
+#' @param object \code{lfcNFI} object, as created by \code{\link{nfi}}
+#' @param table_name character vector of lenght 1 indicating the requested table name
+#' @param spatial logical indicating if the data must be converted to an spatial object
+#'
+#' @return A tbl object: tbl_df if spatial is \code{FALSE}, sf if
+#'   spatial is \code{TRUE}
+#'
+#' @family NFI functions
+#'
+#' @details Connection to database can be slow. Tables retrieved from the db are stored
+#'   in a temporary cache inside the lfcNFI object created by \code{\link{nfi}}, making
+#'   subsequent calls to the same table faster.
+#'
+#' @examples
+#' nfidb <- nfi()
+#' # tibble
+#' nfi_get_data(nfidb, 'plots')
+#' # sf tibble
+#' nfi_get_data(nfidb, 'plots', TRUE)
+#'
+#' # we can use pipes
+#' library(dplyr)
+#' nfidb %>%
+#'   nfi_get_data('plots', TRUE)
+#'
+#' # nfidb is an R6 object, so the previous examples are the same as:
+#' nfidb$get_data('plots')
+#' nfidb$get_data('plots', TRUE)
 #'
 #' @export
-nfi_get_data <- function(object, table_name, spatial) {
+nfi_get_data <- function(object, table_name, spatial = FALSE) {
   # argument validation
   # NOTE: table_name and spatial are validated in the method
   stopifnot(inherits(object, 'lfcNFI'))

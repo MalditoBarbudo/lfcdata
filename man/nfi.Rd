@@ -2,13 +2,34 @@
 % Please edit documentation in R/lfcNFI.R
 \name{nfi}
 \alias{nfi}
-\title{nfi}
+\title{lfcNFI class}
 \usage{
 nfi()
 }
+\value{
+An \code{lfcNFI} class object (inherits from \code{\link[R6]{R6Class}}),
+  with methods to access the data. See Methods section.
+}
 \description{
-Create an object to access the nfi database
+\code{nfi()} creates an object to access the nfi database.
 }
+\section{Methods}{
+
+  \code{lfcNFI} objects has two public methods:
+  \itemize{
+    \item{\code{$get_data}: Retrieve and collect NFI database tables. See
+          \code{\link{nfi_get_data}} for more details}
+    \item{\code{$avail_tables}: Return a character vector with the names of the
+          available tables in the database. See \code{\link{nfi_avail_tables}} for
+          more details}
+  }
+}
+
 \examples{
-foo <- nfi()
+nfidb <- nfi()
+nfidb
 }
+\seealso{
+Other NFI functions: \code{\link{nfi_get_data}}
+}
+\concept{NFI functions}
