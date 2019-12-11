@@ -48,7 +48,7 @@ lfcAllometries <- R6::R6Class(
     },
     # allometries_descriptiom method. It returns the allometry as a list with all the
     # fields from the table. Is easy to use programmatically
-    description = function(..., id) {
+    description = function(..., id = NULL) {
 
       # browser()
       dots_expressions <- rlang::quos(...)
@@ -59,6 +59,10 @@ lfcAllometries <- R6::R6Class(
           split(.$allometry_id) %>%
           purrr::map(~ rlang::as_list(.x))
       } else {
+        # argument validation (here, because is when first id is used)
+        stopifnot(
+          rlang::is_character(id)
+        )
         res <- super$get_data('allometries') %>%
           dplyr::filter(allometry_id %in% id) %>%
           split(.$allometry_id) %>%
@@ -73,8 +77,21 @@ lfcAllometries <- R6::R6Class(
 
     # allometries_calculate method
     calculate = function(..., allometry_id) {
+
       # variables
-      dots_vars <- rlang::enquos(..., .named = TRUE)
+      dots_vars <- rlang::enquos(..., .named = FALSE)
+
+      # argument validation
+      stopifnot(
+        rlang::is_character(allometry_id)
+      )
+      silent_lapply <- lapply(
+        dots_vars,
+        function(x) {
+          stopifnot(is.numeric(rlang::eval_tidy(x)))
+        }
+      )
+
       # allometry description
       allo_desc <- self$description(id = allometry_id)
       # parameters from allometry (needed in equation)
@@ -87,11 +104,17 @@ lfcAllometries <- R6::R6Class(
         stringr::str_split(pattern = ' = ', n = 2) %>%
         unlist() %>%
         magrittr::extract(2) %>%
-        private$eq_formatter() %>%
-        stringr::str_replace_all(
-          pattern = names(dots_vars),
-          replacement = paste0('rlang::eval_tidy(dots_vars$', names(dots_vars), ')')
-        ) %>%
+        private$eq_formatter() %>% {
+          for (var in names(dots_vars)) {
+            # validate dots_vars are named
+            stopifnot(stringr::str_length(var) > 0)
+            . <- stringr::str_replace_all(
+              ., pattern = var,
+              replacement = paste0('rlang::eval_tidy(dots_vars$', var, ')')
+            )
+          }
+          .
+        } %>%
         rlang::parse_expr() %>%
         rlang::eval_tidy()
     }
@@ -186,7 +209,7 @@ allometries_description <- function(object, ..., id = NULL) {
   # argument validation
   stopifnot(inherits(object, 'lfcAllometries'))
   # call to the class method
-  object$description(..., id)
+  object$description(..., id = id)
 }
 
 #' Calculating new variables based on the allometries formula
