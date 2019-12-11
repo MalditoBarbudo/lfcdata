@@ -30,6 +30,7 @@ nfidb <- nfi()
 nfidb
 }
 \seealso{
-Other NFI functions: \code{\link{nfi_get_data}}
+Other NFI functions: \code{\link{nfi_avail_tables}},
+  \code{\link{nfi_get_data}}
 }
 \concept{NFI functions}

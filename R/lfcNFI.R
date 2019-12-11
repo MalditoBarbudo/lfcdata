@@ -197,3 +197,29 @@ nfi_get_data <- function(object, table_name, spatial = FALSE) {
   # call to the class method
   object$get_data(table_name, spatial)
 }
+
+#' Get the available tables in NFI db
+#'
+#' @description \code{nfi_avail_tables} is a wrapper for the \code{$avail_tables} method of
+#'   \code{lfcNFI} objects. See \code{\link{nfi}}.
+#'
+#' @param object \code{lfcNFI} object, as created by \code{\link{nfi}}
+#'
+#' @return A character vector with the table names
+#'
+#' @family NFI functions
+#'
+#' @examples
+#' nfidb <- nfi()
+#' nfi_avail_tables(nfidb)
+#'
+#' # nfidb is an R6 object, so the previous example is the same as:
+#' nfidb$avail_tables()
+#'
+#' @export
+nfi_avail_tables <- function(object) {
+  # argument validation
+  stopifnot(inherits(object, 'lfcNFI'))
+  # call to the class method
+  object$avail_tables()
+}

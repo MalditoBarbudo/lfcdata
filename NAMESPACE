@@ -2,5 +2,6 @@
 
 export("%>%")
 export(nfi)
+export(nfi_avail_tables)
 export(nfi_get_data)
 importFrom(magrittr,"%>%")

@@ -32,6 +32,11 @@ test_that("get method works", {
   )
 })
 
+test_that("avail_tables method works", {
+  expect_type(foo$avail_tables(), 'character')
+  expect_true('plots' %in% foo$avail_tables())
+})
+
 test_that("cache works", {
   expect_length(foo$.__enclos_env__$private$data_cache, 2)
   bar <- foo$get_data('plots', FALSE)
@@ -61,6 +66,11 @@ test_that("external get data wrapper works", {
     foo$get_data('plot_nfi_3_results', FALSE),
     nfi_get_data(foo, 'plot_nfi_3_results', FALSE)
   )
+})
+
+test_that("external avail tables wrapper works", {
+  expect_identical(foo$avail_tables(), nfi_avail_tables(foo))
+  expect_error(nfi_avail_tables('foo'), "inherits")
 })
 
 
