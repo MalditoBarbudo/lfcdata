@@ -16,7 +16,7 @@ A tbl object
 }
 \description{
 \code{allometries_get_data} is a wrapper for the \code{$get_data} method of
-  \code{lfcAllometries} objects. See \code{\link{allometries}}.
+  \code{lfcAllometries} objects. See also \code{\link{allometries}}.
 }
 \details{
 Connection to database can be slow. Tables retrieved from the db are stored
@@ -38,6 +38,7 @@ allomdb$get_data('allometries')
 
 }
 \seealso{
-Other Allometries functions: \code{\link{allometries}}
+Other Allometries functions: \code{\link{allometries_description}},
+  \code{\link{allometries}}
 }
 \concept{Allometries functions}

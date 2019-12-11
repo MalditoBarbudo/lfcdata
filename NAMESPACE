@@ -2,6 +2,8 @@
 
 export("%>%")
 export(allometries)
+export(allometries_calculate)
+export(allometries_description)
 export(allometries_get_data)
 export(nfi)
 export(nfi_avail_tables)

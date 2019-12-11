@@ -18,8 +18,12 @@ An \code{lfcAllometries} class object (inherits from \code{\link[R6]{R6Class}}),
   \code{lfcAllometries} objects has two public methods:
   \itemize{
     \item{\code{$get_data}: Retrieve and collect the allometries table. See
-          \code{\link{allom_get_data}} for more details}
-    \item{\code{$???}: xxxx. See \code{\link{allom_???}} for
+          \code{\link{allometries_get_data}} for more details}
+    \item{\code{$description}: Retrieve the description for the desired
+          allometries. See \code{\link{allometries_description}} for
+          more details}
+    \item{\code{$calculate}: Calculate variables based on the selected
+          allometries. See \code{\link{allometries_calculate}} for
           more details}
   }
 }
@@ -29,6 +33,7 @@ allomdb <- allometries()
 allomdb
 }
 \seealso{
-Other Allometries functions: \code{\link{allometries_get_data}}
+Other Allometries functions: \code{\link{allometries_description}},
+  \code{\link{allometries_get_data}}
 }
 \concept{Allometries functions}
