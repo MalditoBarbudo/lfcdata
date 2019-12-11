@@ -24,7 +24,7 @@ A tbl object: tbl_df if spatial is \code{FALSE}, sf if
 \details{
 Connection to database can be slow. Tables retrieved from the db are stored
   in a temporary cache inside the lfcNFI object created by \code{\link{nfi}}, making
-  subsequent calls to the same table faster.
+  subsequent calls to the same table are faster.
 }
 \examples{
 nfidb <- nfi()
