@@ -72,8 +72,10 @@ lfcNFI <- R6::R6Class(
     print = function(...) {
       cat(
         " Access to the Spanish National Forest Inventory data for Catalonia.\n",
-        "(laboratoriforestal.creaf.uab.cat)\n",
-        "See ?nfi_get_data to know how to access the tables"
+        "(laboratoriforestal.creaf.uab.cat)\n\n",
+        "Use nfi_get_data to access the tables.\n",
+        "Use nfi_avail_tables to know which tables are available.\n",
+        "See vignette('tables_and_variables', package = 'lfcdata') to learn more about the tables and variables."
       )
       invisible(self)
     }
