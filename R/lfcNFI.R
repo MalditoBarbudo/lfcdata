@@ -26,36 +26,53 @@ nfi <- function() {
   lfcNFI$new()
 }
 
-#' importFrom R6 R6Class
+#' @importFrom R6 R6Class
 lfcNFI <- R6::R6Class(
   # specs
   classname = "lfcNFI",
+  inherit = lfcObject,
   cloneable = FALSE,
   # public methods and values
   public = list(
-    # initialize method
-    initialize = function() {
-      private$pool_conn <- private$pool_conn_create()
-    },
-
-    # get method, accepting a table name
+    # get method, modifying the super class method
     get_data = function(table_name, spatial = FALSE) {
 
-      # arguments validation
+      # arguments validation (table name is always validated in the super)
       stopifnot(
-        rlang::is_character(table_name) & length(table_name) == 1,
         rlang::is_logical(spatial) & !rlang::is_na(spatial)
       )
 
-      # return the cached data if exists. If no cache, retrieve the data from db
-      # and update the cache
-      # NOTE: %||% is in utils.R, simplifies the syntax and the readibility of the
-      # expression.
       res <- private$data_cache[[glue::glue("{table_name}_{as.character(spatial)}")]] %||%
         {
-          temp_res <- lfcdata:::.lfcproto_get_data(private, table_name, spatial)
-          private$data_cache[[glue::glue("{table_name}_{as.character(spatial)}")]] <- temp_res
-          temp_res
+          # is the query spatial?
+          if (!spatial) {
+            # if not, return the data as is
+            super$get_data(table_name)
+          } else {
+            # if it is, then convert based on the lat and long vars
+            if (all(c('coords_longitude', 'coords_latitude') %in% names(super$get_data(table_name)))) {
+              query_data_spatial <- super$get_data(table_name) %>%
+                sf::st_as_sf(
+                  coords = c('coords_longitude', 'coords_latitude'), remove = FALSE,
+                  crs = 4326
+                )
+            } else {
+              # if there is no lat long vars, then get them from plots
+              query_data_spatial <- super$get_data(table_name) %>%
+                dplyr::left_join(
+                  super$get_data('plots') %>%
+                    dplyr::select(plot_id, coords_longitude, coords_latitude) %>%
+                    dplyr::collect(),
+                  by = 'plot_id'
+                ) %>%
+                sf::st_as_sf(
+                  coords = c('coords_longitude', 'coords_latitude'), remove = FALSE,
+                  crs = 4326
+                )
+            }
+            private$data_cache[[glue::glue("{table_name}_{as.character(spatial)}")]] <- query_data_spatial
+            query_data_spatial
+          }
         }
 
       return(res)
@@ -83,36 +100,7 @@ lfcNFI <- R6::R6Class(
   # private methods and values
   private = list(
     # connection values
-    host = 'laboratoriforestal.creaf.uab.cat',
-    port = 5432,
-    user = 'guest',
-    pass = 'guest',
-    dbname = 'tururu',
-
-    # cache object
-    data_cache = list(),
-
-    # pool connection
-    pool_conn = NULL,
-
-    # finalize method
-    finalize = function() {
-      # when object is collected or R session exits, close the db connections
-      pool::poolClose(private$pool_conn)
-    },
-
-    # initialize method function
-    pool_conn_create = function() {
-      pool::dbPool(
-        drv = RPostgreSQL::PostgreSQL(),
-        user = private$user,
-        password = private$pass,
-        dbname = private$dbname,
-        host = private$host,
-        port = private$port,
-        idleTimeout = 3600000
-      )
-    }
+    dbname = 'tururu'
   )
 )
 

@@ -28,36 +28,10 @@ allometries <- function() {
 lfcAllometries <- R6::R6Class(
   # specs
   classname = 'lfcAllometries',
+  inherit = lfcObject,
   cloneable = FALSE,
   # public methods and values
   public = list(
-    # initialize method
-    initialize = function() {
-      private$pool_conn <- private$pool_conn_create()
-    },
-
-    # get method, accepting a table name
-    get_data = function(table_name) {
-
-      # arguments validation
-      stopifnot(
-        rlang::is_character(table_name) & length(table_name) == 1
-      )
-
-      # return the cached data if exists. If no cache, retrieve the data from db
-      # and update the cache
-      # NOTE: %||% is in utils.R, simplifies the syntax and the readibility of the
-      # expression.
-      res <- private$data_cache[[table_name]] %||%
-        {
-          temp_res <- lfcdata:::.lfcproto_get_data(private, table_name, spatial = FALSE)
-          private$data_cache[[table_name]] <- temp_res
-          temp_res
-        }
-
-      return(res)
-    },
-
     # override default print
     print = function(...) {
       cat(
@@ -72,36 +46,7 @@ lfcAllometries <- R6::R6Class(
   # private methods and values
   private = list(
     # connection values
-    host = 'laboratoriforestal.creaf.uab.cat',
-    port = 5432,
-    user = 'guest',
-    pass = 'guest',
-    dbname = 'allometr_db',
-
-    # cache object
-    data_cache = list(),
-
-    # pool connection
-    pool_conn = NULL,
-
-    # finalize method
-    finalize = function() {
-      # when object is collected or R session exits, close the db connections
-      pool::poolClose(private$pool_conn)
-    },
-
-    # initialize method function
-    pool_conn_create = function() {
-      pool::dbPool(
-        drv = RPostgreSQL::PostgreSQL(),
-        user = private$user,
-        password = private$pass,
-        dbname = private$dbname,
-        host = private$host,
-        port = private$port,
-        idleTimeout = 3600000
-      )
-    }
+    dbname = 'allometr_db'
   )
 )
 
