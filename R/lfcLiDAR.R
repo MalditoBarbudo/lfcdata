@@ -137,7 +137,7 @@ lfcLiDAR <- R6::R6Class(
 #'
 #' # we can use pipes
 #' lidardb %>%
-#'   lidar_get_data('plots', 'raster')
+#'   lidar_get_data('AB', 'raster')
 #'
 #' # lidardb is an R6 object, so the previous examples are the same as:
 #' lidardb$get_data('AB', 'raster')

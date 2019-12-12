@@ -24,12 +24,13 @@ a list with the selected allometries and their info
 \examples{
 
 # by id
-foo <- allometries_description(id = "GC_2589")
+allomdb <- allometries()
+foo <- allometries_description(allomdb, id = "GC_2589")
 foo$GC_2589$dependent_var
 foo$GC_2589$param_a
 
 # filtering
-ht_dn_allometries <- allometries_description(dependent_var \%in\% c("GC", "Dn"))
+ht_dn_allometries <- allometries_description(allomdb, dependent_var \%in\% c("GC", "Dn"))
 ht_dn_allometries$GC_2589$dependent_var
 ht_dn_allometries$GC_2589$param_a
 

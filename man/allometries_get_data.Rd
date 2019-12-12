@@ -24,7 +24,7 @@ Connection to database can be slow. Tables retrieved from the db are stored
   \code{\link{allometries}}, making subsequent calls to the same table are faster.
 }
 \examples{
-allomdb <- nfi()
+allomdb <- allometries()
 # tibble
 allometries_get_data(allomdb, 'allometries')
 

@@ -7,6 +7,8 @@
 allometries_calculate(object, ..., allometry_id)
 }
 \arguments{
+\item{object}{\code{lfcAllometries} object, as created by \code{\link{allometries}}}
+
 \item{...}{\bold{Must be named}. Numeric vectors for the independent variables
 present in the allometry equation. Each argument must be named as the
 independent variable the values correspond with. See examples.}
@@ -18,6 +20,7 @@ Return a vector with the desired allometry equation calculated
 }
 \examples{
 
+library(dplyr)
 allomdb <- allometries()
 allometries_calculate(allomdb, DR = c(0.55, 0.46, 0.37), allometry_id = "BH_287")
 

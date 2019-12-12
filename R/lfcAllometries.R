@@ -127,9 +127,9 @@ lfcAllometries <- R6::R6Class(
     # equation formatter for using it to calculate
     eq_formatter = function(eq) {
       eq_res <- eq %>%
-        stringr::str_replace_all('·', '*') %>%
-        stringr::str_replace_all('²', '^2') %>%
-        stringr::str_replace_all('³', '^3') %>%
+        stringr::str_replace_all('\u00B7', '*') %>%
+        stringr::str_replace_all('\u00B2', '\u005E2') %>%
+        stringr::str_replace_all('\u00B3', '\u005E3') %>%
         stringr::str_replace('\\ba\\b', 'param_a') %>%
         stringr::str_replace('\\bb\\b', 'param_b') %>%
         stringr::str_replace('\\bc\\b', 'param_c') %>%
@@ -157,7 +157,7 @@ lfcAllometries <- R6::R6Class(
 #'   \code{\link{allometries}}, making subsequent calls to the same table are faster.
 #'
 #' @examples
-#' allomdb <- nfi()
+#' allomdb <- allometries()
 #' # tibble
 #' allometries_get_data(allomdb, 'allometries')
 #'
@@ -192,12 +192,13 @@ allometries_get_data <- function(object, table_name = 'allometries') {
 #' @examples
 #'
 #' # by id
-#' foo <- allometries_description(id = "GC_2589")
+#' allomdb <- allometries()
+#' foo <- allometries_description(allomdb, id = "GC_2589")
 #' foo$GC_2589$dependent_var
 #' foo$GC_2589$param_a
 #'
 #' # filtering
-#' ht_dn_allometries <- allometries_description(dependent_var %in% c("GC", "Dn"))
+#' ht_dn_allometries <- allometries_description(allomdb, dependent_var %in% c("GC", "Dn"))
 #' ht_dn_allometries$GC_2589$dependent_var
 #' ht_dn_allometries$GC_2589$param_a
 #'
@@ -215,6 +216,7 @@ allometries_description <- function(object, ..., id = NULL) {
 #'
 #' Return a vector with the desired allometry equation calculated
 #'
+#' @param object \code{lfcAllometries} object, as created by \code{\link{allometries}}
 #' @param ... \bold{Must be named}. Numeric vectors for the independent variables
 #'   present in the allometry equation. Each argument must be named as the
 #'   independent variable the values correspond with. See examples.
@@ -222,6 +224,7 @@ allometries_description <- function(object, ..., id = NULL) {
 #'
 #' @examples
 #'
+#' library(dplyr)
 #' allomdb <- allometries()
 #' allometries_calculate(allomdb, DR = c(0.55, 0.46, 0.37), allometry_id = "BH_287")
 #'
