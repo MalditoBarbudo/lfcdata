@@ -19,7 +19,7 @@ A tbl object: tbl_df if spatial is \code{FALSE}, sf if
 }
 \description{
 \code{nfi_get_data} is a wrapper for the \code{$get_data} method of
-  \code{lfcNFI} objects. See \code{\link{nfi}}.
+  \code{lfcNFI} objects. See also \code{\link{nfi}}.
 }
 \details{
 Connection to database can be slow. Tables retrieved from the db are stored

@@ -14,7 +14,9 @@ Imports:
     dplyr,
     sf,
     rlang,
-    glue
+    glue,
+    rpostgis,
+    stars
 RoxygenNote: 6.1.1
 Suggests: 
     testthat (>= 2.1.0)

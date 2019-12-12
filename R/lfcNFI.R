@@ -107,7 +107,7 @@ lfcNFI <- R6::R6Class(
 #' Access to the tables in the NFI database
 #'
 #' @description \code{nfi_get_data} is a wrapper for the \code{$get_data} method of
-#'   \code{lfcNFI} objects. See \code{\link{nfi}}.
+#'   \code{lfcNFI} objects. See also \code{\link{nfi}}.
 #'
 #' @param object \code{lfcNFI} object, as created by \code{\link{nfi}}
 #' @param table_name character vector of lenght 1 indicating the requested table name
@@ -130,7 +130,6 @@ lfcNFI <- R6::R6Class(
 #' nfi_get_data(nfidb, 'plots', TRUE)
 #'
 #' # we can use pipes
-#' library(dplyr)
 #' nfidb %>%
 #'   nfi_get_data('plots', TRUE)
 #'
