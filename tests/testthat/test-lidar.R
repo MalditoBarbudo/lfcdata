@@ -20,7 +20,7 @@ test_that("cache works", {
   expect_is(foo$get_data('AB', 'raster'), 'RasterLayer')
   temp_postgresql_conn <- pool::poolCheckout(foo$.__enclos_env__$private$pool_conn)
   expect_identical(
-    bar, rpostgis::pgGetRast(temp_postgresql_conn, c('public', 'lidar_stack'), bands = 1)
+    bar, rpostgis::pgGetRast(temp_postgresql_conn, c('public', 'lidar_stack_utm'), bands = 1)
   )
   pool::poolReturn(temp_postgresql_conn)
   expect_length(foo$.__enclos_env__$private$data_cache, 2)

@@ -78,7 +78,8 @@ lfcLiDAR <- R6::R6Class(
           # resulting in dangling db connections, so we use try
           lidar_raster <- try(
             rpostgis::pgGetRast(
-              temp_postgresql_conn, c('public', 'lidar_stack'), bands = table_name_as_number
+              temp_postgresql_conn, c('public', 'lidar_stack_utm'),
+              bands = table_name_as_number
             )
           )
           # return the pool checkout, before anything else
