@@ -44,8 +44,9 @@ lfcLiDAR <- R6::R6Class(
     # override the super$get_data method.
     get_data = function(table_name, spatial = 'stars') {
 
-      # argument validation (table name is always validated in the super
+      # argument validation
       stopifnot(
+        rlang::is_character(table_name) & length(table_name) == 1,
         rlang::is_character(spatial),
         length(spatial) == 1,
         spatial %in% c('stars', 'raster')
@@ -68,7 +69,7 @@ lfcLiDAR <- R6::R6Class(
 
           # check for table name
           stopifnot(
-            table_name_as_number
+            !rlang::is_null(table_name_as_number)
           )
 
           # temp persistent conn object (rpostgis not working with pool objects)
@@ -115,7 +116,7 @@ lfcLiDAR <- R6::R6Class(
 #' @param spatial character vector of lenght 1 indicating the type of raster object to
 #'   return, "raster" or "stars", the default.
 #'
-#' @return A raster object: \code{Raster} if spatial is \code{raster},
+#' @return A raster object: \code{RasterLayer} if spatial is \code{raster},
 #'   \code{stars} if spatial is \code{stars}. See https://r-spatial.github.io/stars/index.html
 #'   for details about stars objects and \code{\link[raster]{raster}} for details
 #'   about raster objects.

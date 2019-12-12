@@ -1,0 +1,46 @@
+test_that("class object creation works", {
+  expect_is(lidar(), c('lfcLiDAR', 'R6'))
+  expect_true(rlang::is_function(lidar()$get_data))
+})
+
+# foo to avoid calling the db so often
+foo <- lidar()
+
+test_that("get method works", {
+  expect_is(foo$get_data('AB', 'raster'), 'RasterLayer')
+  expect_s3_class(foo$get_data('AB', 'stars'), 'stars')
+  expect_error(foo$get_data(1, 'raster'), 'rlang::is_character')
+  expect_error(foo$get_data('non_existent_table', 'raster'), 'table_name_as_number')
+  expect_error(foo$get_data('AB', 1), 'rlang::is_character')
+})
+
+test_that("cache works", {
+  expect_length(foo$.__enclos_env__$private$data_cache, 2)
+  bar <- foo$get_data('AB', 'raster')
+  expect_is(foo$get_data('AB', 'raster'), 'RasterLayer')
+  temp_postgresql_conn <- pool::poolCheckout(foo$.__enclos_env__$private$pool_conn)
+  expect_identical(
+    bar, rpostgis::pgGetRast(temp_postgresql_conn, c('public', 'lidar_stack'), bands = 1)
+  )
+  pool::poolReturn(temp_postgresql_conn)
+  expect_length(foo$.__enclos_env__$private$data_cache, 2)
+  baz <- foo$get_data('DBH', 'raster')
+  expect_length(foo$.__enclos_env__$private$data_cache, 3)
+})
+
+test_that("external get data wrapper works", {
+  expect_identical(
+    foo$get_data('AB', 'raster'),
+    lidar_get_data(foo, 'AB', 'raster')
+  )
+  expect_error(
+    lidar_get_data('foo', 'AB', 'raster'),
+    "inherits"
+  )
+  xyz <- lidar_get_data(foo, 'REC', 'stars')
+  expect_length(foo$.__enclos_env__$private$data_cache, 4)
+  expect_identical(
+    foo$get_data('REC', 'stars'),
+    lidar_get_data(foo, 'REC', 'stars')
+  )
+})

@@ -29,7 +29,6 @@ allomdb <- nfi()
 allometries_get_data(allomdb, 'allometries')
 
 # we can use pipes
-library(dplyr)
 allomdb \%>\%
   allometries_get_data('allometries')
 

@@ -34,7 +34,6 @@ nfi_get_data(nfidb, 'plots')
 nfi_get_data(nfidb, 'plots', TRUE)
 
 # we can use pipes
-library(dplyr)
 nfidb \%>\%
   nfi_get_data('plots', TRUE)
 

@@ -15,7 +15,7 @@ lidar_get_data(object, table_name, spatial = "stars")
 return, "raster" or "stars", the default.}
 }
 \value{
-A raster object: \code{Raster} if spatial is \code{raster},
+A raster object: \code{RasterLayer} if spatial is \code{raster},
   \code{stars} if spatial is \code{stars}. See https://r-spatial.github.io/stars/index.html
   for details about stars objects and \code{\link[raster]{raster}} for details
   about raster objects.
@@ -38,7 +38,6 @@ ab_raster <- lidar_get_data(lidardb, 'AB', 'raster')
 ab_stars <- lidar_get_data(lidardb, 'AB', 'stars')
 
 # we can use pipes
-library(dplyr)
 lidardb \%>\%
   lidar_get_data('plots', 'raster')
 
