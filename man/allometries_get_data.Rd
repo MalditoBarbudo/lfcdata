@@ -37,7 +37,8 @@ allomdb$get_data('allometries')
 
 }
 \seealso{
-Other Allometries functions: \code{\link{allometries_description}},
+Other Allometries functions: \code{\link{allometries_calculate}},
+  \code{\link{allometries_description}},
   \code{\link{allometries}}
 }
 \concept{Allometries functions}

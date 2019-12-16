@@ -222,6 +222,8 @@ allometries_description <- function(object, ..., id = NULL) {
 #'   independent variable the values correspond with. See examples.
 #' @param allometry_id character with the unique allometry identifier
 #'
+#' @family Allometries functions
+#'
 #' @examples
 #'
 #' library(dplyr)

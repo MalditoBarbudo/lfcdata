@@ -33,7 +33,8 @@ allomdb <- allometries()
 allomdb
 }
 \seealso{
-Other Allometries functions: \code{\link{allometries_description}},
+Other Allometries functions: \code{\link{allometries_calculate}},
+  \code{\link{allometries_description}},
   \code{\link{allometries_get_data}}
 }
 \concept{Allometries functions}
