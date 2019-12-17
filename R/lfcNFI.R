@@ -110,7 +110,7 @@ lfcNFI <- R6::R6Class(
           dplyr::group_walk(
             ~ cat(
               # var name
-              crayon::yellow$bold(glue::glue("{.x$translation_eng %>% unique()}")),
+              crayon::yellow$bold(glue::glue("{.x$translation_eng %>% unique()} ({.x$var_id %>% unique()})")),
               "\n",
               # tables present
               "Present in the following tables:\n",

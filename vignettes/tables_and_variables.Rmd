@@ -1,0 +1,53 @@
+---
+title: "Tables and variables"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Tables and variables}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(lfcdata)
+```
+
+## NFI database
+
+### Tables available
+
+Tables available to get data from can be consulted this way:
+
+```{r avail_table}
+nfidb <- nfi()
+nfi_avail_tables(nfidb)
+```
+
+### Variables info
+
+Information about variables can be consulted in console:
+
+```{r var_info}
+nfi_describe_var(nfidb, c('density', 'basal_area'))
+```
+
+#### Complete list of NFI variables
+
+```{r var_info_complete, echo = FALSE, comment = ''}
+nfi_get_data(nfidb, 'variables_thesaurus') %>%
+  dplyr::pull(var_id) %>%
+  unique() %>% 
+  sort() %>% {
+    for (var in .) {
+      nfi_describe_var(nfidb, var)
+      cat('----------------\n\n')
+    }
+  }
+```
+
