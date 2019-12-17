@@ -44,6 +44,6 @@ nfidb$get_data('plots', TRUE)
 }
 \seealso{
 Other NFI functions: \code{\link{nfi_avail_tables}},
-  \code{\link{nfi}}
+  \code{\link{nfi_describe_var}}, \code{\link{nfi}}
 }
 \concept{NFI functions}

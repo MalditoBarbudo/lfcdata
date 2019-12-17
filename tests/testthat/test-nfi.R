@@ -2,6 +2,7 @@ test_that("class object creation works", {
   expect_is(nfi(), c('lfcNFI', 'R6'))
   expect_true(rlang::is_function(nfi()$get_data))
   expect_true(rlang::is_function(nfi()$avail_tables))
+  expect_true(rlang::is_function(nfi()$describe_var))
 })
 
 # foo to avoid calling the db so ofter
@@ -38,8 +39,17 @@ test_that("avail_tables method works", {
   expect_true('plots' %in% foo$avail_tables())
 })
 
+test_that("describe_var method works", {
+  expect_is(foo$describe_var('density'), c('lfcNFI', 'R6'))
+  expect_output(foo$describe_var('density'))
+  expect_output(foo$describe_var(c('density', 'density_dead')))
+  expect_output(foo$describe_var('tururu'), regexp = NA)
+  expect_output(foo$describe_var(c('density', 'density_dead', 'tururu')))
+  expect_error(foo$describe_var(25), 'rlang::is_character')
+})
+
 test_that("cache works", {
-  expect_length(foo$.__enclos_env__$private$data_cache, 2)
+  expect_length(foo$.__enclos_env__$private$data_cache, 4)
   bar <- foo$get_data('plots', FALSE)
   expect_s3_class(bar, 'tbl_df')
   expect_identical(
@@ -47,9 +57,9 @@ test_that("cache works", {
     dplyr::tbl(foo$.__enclos_env__$private$pool_conn, 'plots') %>%
       dplyr::collect()
   )
-  expect_length(foo$.__enclos_env__$private$data_cache, 2)
+  expect_length(foo$.__enclos_env__$private$data_cache, 4)
   baz <- foo$get_data('plot_nfi_4_results', FALSE)
-  expect_length(foo$.__enclos_env__$private$data_cache, 3)
+  expect_length(foo$.__enclos_env__$private$data_cache, 5)
 })
 
 test_that("external get data wrapper works", {
@@ -62,7 +72,7 @@ test_that("external get data wrapper works", {
     "inherits"
   )
   xyz <- nfi_get_data(foo, 'plot_nfi_3_results', FALSE)
-  expect_length(foo$.__enclos_env__$private$data_cache, 4)
+  expect_length(foo$.__enclos_env__$private$data_cache, 6)
   expect_identical(
     foo$get_data('plot_nfi_3_results', FALSE),
     nfi_get_data(foo, 'plot_nfi_3_results', FALSE)
@@ -72,6 +82,11 @@ test_that("external get data wrapper works", {
 test_that("external avail tables wrapper works", {
   expect_identical(foo$avail_tables(), nfi_avail_tables(foo))
   expect_error(nfi_avail_tables('foo'), "inherits")
+})
+
+test_that("external describe_var wrapper works", {
+  expect_identical(foo$describe_var('density'), nfi_describe_var(foo, 'density'))
+  expect_error(nfi_describe_var('foo', 'density'), "inherits")
 })
 
 

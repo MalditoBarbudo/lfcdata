@@ -22,6 +22,8 @@ An \code{lfcNFI} class object (inherits from \code{\link[R6]{R6Class}}),
     \item{\code{$avail_tables}: Return a character vector with the names of the
           available tables in the database. See \code{\link{nfi_avail_tables}} for
           more details}
+    \item{\code{$describe_var}: Print the information available about the provided
+          variable. See \code{\link{nfi_describe_var}} for more details}
   }
 }
 
@@ -31,6 +33,7 @@ nfidb
 }
 \seealso{
 Other NFI functions: \code{\link{nfi_avail_tables}},
+  \code{\link{nfi_describe_var}},
   \code{\link{nfi_get_data}}
 }
 \concept{NFI functions}

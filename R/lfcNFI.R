@@ -13,6 +13,8 @@
 #'     \item{\code{$avail_tables}: Return a character vector with the names of the
 #'           available tables in the database. See \code{\link{nfi_avail_tables}} for
 #'           more details}
+#'     \item{\code{$describe_var}: Print the information available about the provided
+#'           variable. See \code{\link{nfi_describe_var}} for more details}
 #'   }
 #'
 #' @family NFI functions
@@ -27,6 +29,7 @@ nfi <- function() {
 }
 
 #' @importFrom R6 R6Class
+#' @importFrom crayon %+%
 lfcNFI <- R6::R6Class(
   # specs
   classname = "lfcNFI",
@@ -50,7 +53,9 @@ lfcNFI <- R6::R6Class(
             super$get_data(table_name)
           } else {
             # if it is, then convert based on the lat and long vars
-            if (all(c('coords_longitude', 'coords_latitude') %in% names(super$get_data(table_name)))) {
+            if (all(
+              c('coords_longitude', 'coords_latitude') %in% names(super$get_data(table_name))
+            )) {
               query_data_spatial <- super$get_data(table_name) %>%
                 sf::st_as_sf(
                   coords = c('coords_longitude', 'coords_latitude'), remove = FALSE,
@@ -85,14 +90,77 @@ lfcNFI <- R6::R6Class(
         unique()
     },
 
+    # describe variable method
+    describe_var = function(variables) {
+
+      # argument checking
+      stopifnot(
+        rlang::is_character(variables)
+      )
+
+      # get the var thes, the numerical var thes filter by the variable and prepare the
+      # result with cat, glue and crayon, as a function to apply to a vector of variables
+      invisible_cats <- function(variable) {
+        no_returned <- self$get_data('variables_thesaurus') %>%
+          dplyr::filter(var_id == variable) %>%
+          dplyr::left_join(
+            self$get_data('variables_numerical'), by = c("var_id", "var_table")
+          ) %>%
+          dplyr::group_by(var_description_eng) %>%
+          dplyr::group_walk(
+            ~ cat(
+              # var name
+              crayon::yellow$bold(glue::glue("{.x$translation_eng %>% unique()}")),
+              "\n",
+              # tables present
+              "Present in the following tables:\n",
+              crayon::magenta(
+                stringr::str_c("    - ", sort(.x$var_table), collapse = '\n')
+              ),
+              "\n",
+              # var description
+              "Description:\n",
+              crayon::green(stringr::str_c(
+                "    ",
+                substring(
+                  .y$var_description_eng,
+                  seq(1, nchar(.y$var_description_eng), by = 78),
+                  seq(78, nchar(.y$var_description_eng) + 78, by = 78)
+                ),
+                collapse = '\n'
+              )),
+              "\n",
+              # var units
+              "Units:  ",
+              crayon::blue$bold("[") %+%
+                crayon::blue$italic$bold(
+                  glue::glue("{(.x$var_units %na% ' - ') %>% unique()}")
+                ) %+%
+                crayon::blue$bold("]"),
+              "\n\n",
+              sep = ''
+            )
+          )
+        invisible(variable)
+      }
+
+      lapply(variables, invisible_cats)
+      invisible(self)
+
+    },
+
     # override default print
     print = function(...) {
       cat(
         " Access to the Spanish National Forest Inventory data for Catalonia.\n",
-        "(laboratoriforestal.creaf.uab.cat)\n\n",
-        "Use nfi_get_data to access the tables.\n",
-        "Use nfi_avail_tables to know which tables are available.\n",
-        "See vignette('tables_and_variables', package = 'lfcdata') to learn more about the tables and variables."
+        crayon::blue$underline("laboratoriforestal.creaf.uab.cat\n\n"),
+        "Use " %+% crayon::yellow$bold("nfi_get_data(...)") %+%
+          " to access the tables.\n",
+        "Use " %+% crayon::yellow$bold("nfi_avail_tables()") %+%
+          " to know which tables are available.\n",
+        "See " %+%
+          crayon::yellow$bold("vignette('tables_and_variables', package = 'lfcdata')") %+%
+          " to learn more about the tables and variables."
       )
       invisible(self)
     }
@@ -170,4 +238,32 @@ nfi_avail_tables <- function(object) {
   stopifnot(inherits(object, 'lfcNFI'))
   # call to the class method
   object$avail_tables()
+}
+
+#' Print info about the variables present in the NFI db
+#'
+#' @description \code{nfi_describe_var} is a wrapper for the \code{$describe_var} method of
+#'   \code{lfcNFI} objects. See \code{\link{nfi}}.
+#'
+#' @param object \code{lfcNFI} object, as created by \code{\link{nfi}}
+#'
+#' @return A character vector with the variable names to describe
+#'
+#' @family NFI functions
+#'
+#' @examples
+#' nfidb <- nfi()
+#' nfi_describe_var(nfidb, "density")
+#' nfi_describe_var(nfidb, c("over_bark_volume", "basal_area"))
+#'
+#' # nfidb is an R6 object, so the previous example is the same as:
+#' nfidb$describe_var("density")
+#' nfidb$describe_var(c("over_bark_volume", "basal_area"))
+#'
+#' @export
+nfi_describe_var <- function(object, variables) {
+  # argument validation
+  stopifnot(inherits(object, 'lfcNFI'))
+  # call to the class method
+  object$describe_var(variables)
 }
