@@ -154,10 +154,12 @@ lfcNFI <- R6::R6Class(
       cat(
         " Access to the Spanish National Forest Inventory data for Catalonia.\n",
         crayon::blue$underline("laboratoriforestal.creaf.uab.cat\n\n"),
-        "Use " %+% crayon::yellow$bold("nfi_get_data(...)") %+%
+        "Use " %+% crayon::yellow$bold("nfi_get_data") %+%
           " to access the tables.\n",
-        "Use " %+% crayon::yellow$bold("nfi_avail_tables()") %+%
+        "Use " %+% crayon::yellow$bold("nfi_avail_tables") %+%
           " to know which tables are available.\n",
+        "Use " %+% crayon::yellow$bold("nfi_describe_var") %+%
+          " to get the information available on the variables.\n",
         "See " %+%
           crayon::yellow$bold("vignette('tables_and_variables', package = 'lfcdata')") %+%
           " to learn more about the tables and variables."

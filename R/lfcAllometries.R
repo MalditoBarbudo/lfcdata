@@ -146,7 +146,8 @@ lfcAllometries <- R6::R6Class(
 #'   \code{lfcAllometries} objects. See also \code{\link{allometries}}.
 #'
 #' @param object \code{lfcAllometries} object, as created by \code{\link{allometries}}
-#' @param table_name character vector of lenght 1 indicating the requested table name
+#' @param table_name character vector of lenght 1 indicating the requested table name.
+#'   Only value available at the moment is \code{"allometries"}
 #'
 #' @return A tbl object
 #'
