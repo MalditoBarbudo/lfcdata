@@ -43,6 +43,14 @@ library(dplyr)
 #> 
 #>     intersect, setdiff, setequal, union
 nfidb <- nfi()
+nfidb
+#>  Access to the Spanish National Forest Inventory data for Catalonia.
+#>  laboratoriforestal.creaf.uab.cat
+#> 
+#>  Use nfi_get_data to access the tables.
+#>  Use nfi_avail_tables to know which tables are available.
+#>  Use nfi_describe_var to get the information available on the variables.
+#>  See vignette('tables_and_variables', package = 'lfcdata') to learn more about the tables and variables.
 nfidb %>%
   nfi_get_data('plot_nfi_4_results', spatial = TRUE) %>%
   select(geometry, density, basal_area) %>%
@@ -55,6 +63,14 @@ nfidb %>%
 
 ``` r
 allometriesdb <- allometries()
+allometriesdb
+#>  Access to the LFC allometries database.
+#>  laboratoriforestal.creaf.uab.cat
+#> 
+#>  Use allometries_get_data to access the tables.
+#>  Use allometries_calculate to calculate new values based on the allometries.
+#>  Use allometries_describe_var to get the information available on the variables.
+#>  See vignette('tables_and_variables', package = 'lfcdata') to learn more about the tables and variables.
 allometriesdb %>%
   allometries_get_data('allometries')
 #> # A tibble: 9,157 x 22
@@ -83,6 +99,12 @@ allometriesdb %>%
 
 ``` r
 lidardb <- lidar()
+lidardb
+#>  Access to the LiDAR rasters database.
+#>  (laboratoriforestal.creaf.uab.cat)
+#> 
+#>  Use lidar_get_data to access the rasters.
+#>  See vignette('tables_and_variables', package = 'lfcdata') to learn more about the tables and variables.
 lidardb %>%
   lidar_get_data('AB', spatial = 'stars') %>%
   plot()

@@ -44,6 +44,7 @@ remotes::install_github("MalditoBarbudo/lfcdata", ref = "staging")
 library(lfcdata)
 library(dplyr)
 nfidb <- nfi()
+nfidb
 nfidb %>%
   nfi_get_data('plot_nfi_4_results', spatial = TRUE) %>%
   select(geometry, density, basal_area) %>%
@@ -54,6 +55,7 @@ nfidb %>%
 
 ```{r allometries}
 allometriesdb <- allometries()
+allometriesdb
 allometriesdb %>%
   allometries_get_data('allometries')
 ```
@@ -62,6 +64,7 @@ allometriesdb %>%
 
 ```{r lidar}
 lidardb <- lidar()
+lidardb
 lidardb %>%
   lidar_get_data('AB', spatial = 'stars') %>%
   plot()

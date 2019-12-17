@@ -53,15 +53,6 @@ lfcAllometries <- R6::R6Class(
           crayon::yellow$bold("vignette('tables_and_variables', package = 'lfcdata')") %+%
           " to learn more about the tables and variables."
       )
-
-
-
-      cat(
-        " Access to the LFC allometries database.\n",
-        "(laboratoriforestal.creaf.uab.cat)\n\n",
-        "Use allometries_get_data to access the tables.\n",
-        "See vignette('tables_and_variables', package = 'lfcdata') to learn more about the tables and variables."
-      )
       invisible(self)
     },
     # allometries_descriptiom method. It returns the allometry as a list with all the
