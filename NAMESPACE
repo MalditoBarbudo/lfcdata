@@ -3,6 +3,7 @@
 export("%>%")
 export(allometries)
 export(allometries_calculate)
+export(allometries_describe_var)
 export(allometries_description)
 export(allometries_get_data)
 export(lidar)

@@ -16,6 +16,8 @@
 #'     \item{\code{$calculate}: Calculate variables based on the selected
 #'           allometries. See \code{\link{allometries_calculate}} for
 #'           more details}
+#'     \item{\code{$describe_var}: Print the information available about the provided
+#'           variable. See \code{\link{allometries_describe_var}} for more details}
 #'   }
 #'
 #' @family Allometries functions
@@ -38,6 +40,22 @@ lfcAllometries <- R6::R6Class(
   public = list(
     # override default print
     print = function(...) {
+      cat(
+        " Access to the LFC allometries database.\n",
+        crayon::blue$underline("laboratoriforestal.creaf.uab.cat\n\n"),
+        "Use " %+% crayon::yellow$bold("allometries_get_data") %+%
+          " to access the tables.\n",
+        "Use " %+% crayon::yellow$bold("allometries_calculate") %+%
+          " to calculate new values based on the allometries.\n",
+        "Use " %+% crayon::yellow$bold("allometries_describe_var") %+%
+          " to get the information available on the variables.\n",
+        "See " %+%
+          crayon::yellow$bold("vignette('tables_and_variables', package = 'lfcdata')") %+%
+          " to learn more about the tables and variables."
+      )
+
+
+
       cat(
         " Access to the LFC allometries database.\n",
         "(laboratoriforestal.creaf.uab.cat)\n\n",
@@ -117,6 +135,47 @@ lfcAllometries <- R6::R6Class(
         } %>%
         rlang::parse_expr() %>%
         rlang::eval_tidy()
+    },
+
+    # describe method
+    describe_var = function(variables) {
+
+      # argument checking
+      stopifnot(
+        rlang::is_character(variables)
+      )
+
+      no_returned <- self$get_data('thesaurus_app') %>%
+        dplyr::filter(text_id %in% variables) %>%
+        dplyr::group_by(translation_eng) %>%
+        dplyr::group_walk(
+          ~ cat(
+            # var name
+            crayon::yellow$bold(stringr::str_split_fixed(.y$translation_eng, ' \\(', 2)[1]),
+            "\n",
+            # var units
+            "Units:  ",
+            crayon::blue$bold("[") %+%
+              crayon::blue$italic$bold(
+                glue::glue("{(.x$var_units %na% ' - ') %>% unique()}")
+              ) %+%
+              crayon::blue$bold("]"),
+            "\n",
+            "English abbreviation:  ",
+            crayon::blue$italic$bold(
+              glue::glue("{(.x$var_abbr_eng %na% ' - ') %>% unique()}")
+            ),
+            "\n",
+            "Data abbreviation:  ",
+            crayon::blue$italic$bold(
+              glue::glue("{(.x$var_abbr_spa %na% ' - ') %>% unique()}")
+            ),
+            "\n\n",
+            sep = ''
+          )
+        )
+      invisible(self)
+
     }
   ),
   # private methods and values
@@ -249,4 +308,32 @@ allometries_calculate <- function(object, ..., allometry_id) {
   stopifnot(inherits(object, 'lfcAllometries'))
   # call to the class method
   object$calculate(..., allometry_id = allometry_id)
+}
+
+#' Print info about the variables present in the allometries db
+#'
+#' @description \code{allometries_describe_var} is a wrapper for the \code{$describe_var} method of
+#'   \code{lfcAllometries} objects. See \code{\link{allometries}}.
+#'
+#' @param object \code{lfcAllometries} object, as created by \code{\link{allometries}}
+#'
+#' @return A character vector with the variable names to describe
+#'
+#' @family allometries functions
+#'
+#' @examples
+#' allometriesdb <- allometries()
+#' allometries_describe_var(allometriesdb, "BR")
+#' allometries_describe_var(allometriesdb, c("DBH", "P_BST"))
+#'
+#' # allometriesdb is an R6 object, so the previous example is the same as:
+#' allometriesdb$describe_var("BR")
+#' allometriesdb$describe_var(c("DBH", "P_BST"))
+#'
+#' @export
+allometries_describe_var <- function(object, variables) {
+  # argument validation
+  stopifnot(inherits(object, 'lfcAllometries'))
+  # call to the class method
+  object$describe_var(variables)
 }

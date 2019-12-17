@@ -9,7 +9,8 @@ allometries_get_data(object, table_name = "allometries")
 \arguments{
 \item{object}{\code{lfcAllometries} object, as created by \code{\link{allometries}}}
 
-\item{table_name}{character vector of lenght 1 indicating the requested table name}
+\item{table_name}{character vector of lenght 1 indicating the requested table name.
+Only value available at the moment is \code{"allometries"}}
 }
 \value{
 A tbl object

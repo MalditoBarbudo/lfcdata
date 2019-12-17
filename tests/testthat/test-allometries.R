@@ -50,8 +50,17 @@ test_that("calculate method works", {
   expect_error(foo$calculate(c(1,2,3), allometry_id = 'BH_287'), 'stringr::str_length')
 })
 
+test_that("describe_var method works", {
+  expect_is(foo$describe_var('BR'), c('lfcNFI', 'R6'))
+  expect_output(foo$describe_var('BR'))
+  expect_output(foo$describe_var(c('BR', 'DBH')))
+  expect_output(foo$describe_var('tururu'), regexp = NA)
+  expect_output(foo$describe_var(c('BR', 'DBH', 'tururu')))
+  expect_error(foo$describe_var(25), 'rlang::is_character')
+})
+
 test_that("cache works", {
-  expect_length(foo$.__enclos_env__$private$data_cache, 1)
+  expect_length(foo$.__enclos_env__$private$data_cache, 2)
   bar <- foo$get_data('allometries')
   expect_s3_class(bar, 'tbl_df')
   expect_identical(
@@ -59,9 +68,9 @@ test_that("cache works", {
     dplyr::tbl(foo$.__enclos_env__$private$pool_conn, 'allometries') %>%
       dplyr::collect()
   )
-  expect_length(foo$.__enclos_env__$private$data_cache, 1)
-  baz <- foo$get_data('thesaurus_variables')
   expect_length(foo$.__enclos_env__$private$data_cache, 2)
+  baz <- foo$get_data('thesaurus_variables')
+  expect_length(foo$.__enclos_env__$private$data_cache, 3)
 })
 
 test_that("external get data wrapper works", {
@@ -74,7 +83,7 @@ test_that("external get data wrapper works", {
     "inherits"
   )
   xyz <- allometries_get_data(foo, 'thesaurus_sources')
-  expect_length(foo$.__enclos_env__$private$data_cache, 3)
+  expect_length(foo$.__enclos_env__$private$data_cache, 4)
   expect_identical(
     foo$get_data('thesaurus_sources'),
     allometries_get_data(foo, 'thesaurus_sources')
@@ -119,4 +128,9 @@ test_that("external calculate wrapper works", {
     allometries_calculate(foo, DR = c(1,2,3), allometry_id = 1),
     'rlang::is_character'
   )
+})
+
+test_that("external describe_var wrapper works", {
+  expect_identical(foo$describe_var('density'), allometries_describe_var(foo, 'density'))
+  expect_error(allometries_describe_var('foo', 'density'), "inherits")
 })

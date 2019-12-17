@@ -25,6 +25,8 @@ An \code{lfcAllometries} class object (inherits from \code{\link[R6]{R6Class}}),
     \item{\code{$calculate}: Calculate variables based on the selected
           allometries. See \code{\link{allometries_calculate}} for
           more details}
+    \item{\code{$describe_var}: Print the information available about the provided
+          variable. See \code{\link{allometries_describe_var}} for more details}
   }
 }
 
