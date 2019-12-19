@@ -29,6 +29,9 @@ nfidb <- nfi()
 nfi_avail_tables(nfidb)
 ```
 
+### Table names convention
+
+
 ### Variables info
 
 Information about variables can be consulted in console:
