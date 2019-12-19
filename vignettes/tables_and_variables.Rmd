@@ -29,7 +29,43 @@ nfidb <- nfi()
 nfi_avail_tables(nfidb)
 ```
 
-### Table names convention
+### Table naming conventions
+
+Plots info:
+
+  - `plots`: main table containing the *static-in-time* information about plots.  
+  - `plots_nfi_X_dynamic_info`: tables containing the *dynamic-in-time* information about
+    plots for each nfi version
+
+Plot level results:
+
+  - `plot_nfi_X_[diamclass]_results`: tables with the data for the `X` nfi version.  
+      + `diamclass` indicates plot data broken down by diameter classes.  
+  - `plot_comp_nfiX_nfiY_[diamclass]_results`: tables with the data for nfi `X` and `Y`
+    versions comparisions.  
+      + `diamclass` indicates plot data broken down by diameter classes.
+
+Functional group broken down results:
+
+  - `[fg]_nfi_X_[diamclass]_results`: tables with the data for the `X` nfi version, broken
+    down by functional group value.  
+      + `diamclass` indicates data broken down by diameter classes.  
+      + `fg` can be `species`, `genus`, `simpspecies` (simplified list of species, with
+        some of them grouped), `dec` (**d**eciduous - **e**sclerophyll - **c**onifer) and
+        `bc` (**b**roadleaves - **c**onifer)  
+  - `[fg]_comp_nfiX_nfiY_[diamclass]_results`: tables with the data for nfi `X` and `Y`
+    versions comparisions, broken down by functional group value.  
+      + `diamclass` indicates data broken down by diameter classes.  
+      + `fg` can be `species`, `genus`, `simpspecies` (simplified list of species, with
+        some of them grouped), `dec` (**d**eciduous - **e**sclerophyll - **c**onifer) and
+        `bc` (**b**roadleaves - **c**onifer)  
+
+Other tables:
+
+  - `regeneration_nfi_X`: regeneration (small trees) tables for `X` nfi version. These
+    tables are **always broken down by species**.  
+  - `shrub_nfi_X_info`: Shrubs information tables for `X` nfi version. These
+    tables are **always broken down by species**.
 
 
 ### Variables info
