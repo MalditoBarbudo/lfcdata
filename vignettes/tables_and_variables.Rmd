@@ -90,3 +90,29 @@ nfi_get_data(nfidb, 'variables_thesaurus') %>%
   }
 ```
 
+## Allometries
+
+### Tables available
+
+Allometries database only offers one table, `allometries`. This table contains all the
+allometries and their information:
+
+```{r allometries}
+allomdb <- allometries()
+allometries_get_data(allomdb)
+```
+
+### Variables info
+
+Information about variables can be consulted in console:
+
+```{r}
+allometries_describe_var(allomdb, 'param_a')
+```
+
+It also can be used to describe in detail the independent and dependent variables:
+
+```{r}
+allometries_describe_var(allomdb, c('DR', 'DBH'))
+```
+
