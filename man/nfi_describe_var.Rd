@@ -8,6 +8,8 @@ nfi_describe_var(object, variables)
 }
 \arguments{
 \item{object}{\code{lfcNFI} object, as created by \code{\link{nfi}}}
+
+\item{variables}{character vector with the names of the variables to describe}
 }
 \value{
 A character vector with the variable names to describe

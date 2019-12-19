@@ -307,6 +307,7 @@ allometries_calculate <- function(object, ..., allometry_id) {
 #'   \code{lfcAllometries} objects. See \code{\link{allometries}}.
 #'
 #' @param object \code{lfcAllometries} object, as created by \code{\link{allometries}}
+#' @param variables character vector with the names of the variables to describe
 #'
 #' @return A character vector with the variable names to describe
 #'

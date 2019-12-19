@@ -8,6 +8,8 @@ allometries_describe_var(object, variables)
 }
 \arguments{
 \item{object}{\code{lfcAllometries} object, as created by \code{\link{allometries}}}
+
+\item{variables}{character vector with the names of the variables to describe}
 }
 \value{
 A character vector with the variable names to describe

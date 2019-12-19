@@ -248,6 +248,7 @@ nfi_avail_tables <- function(object) {
 #'   \code{lfcNFI} objects. See \code{\link{nfi}}.
 #'
 #' @param object \code{lfcNFI} object, as created by \code{\link{nfi}}
+#' @param variables character vector with the names of the variables to describe
 #'
 #' @return A character vector with the variable names to describe
 #'
