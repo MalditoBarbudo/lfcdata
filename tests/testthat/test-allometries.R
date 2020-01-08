@@ -51,7 +51,7 @@ test_that("calculate method works", {
 })
 
 test_that("describe_var method works", {
-  expect_is(foo$describe_var('BR'), c('lfcNFI', 'R6'))
+  expect_is(foo$describe_var('BR'), c('lfcAllometries'))
   expect_output(foo$describe_var('BR'))
   expect_output(foo$describe_var(c('BR', 'DBH')))
   expect_output(foo$describe_var('tururu'), regexp = NA)

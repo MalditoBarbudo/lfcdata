@@ -1,5 +1,5 @@
 test_that("class object creation works", {
-  expect_is(nfi(), c('lfcNFI', 'R6'))
+  expect_is(nfi(), c('lfcNFI'))
   expect_true(rlang::is_function(nfi()$get_data))
   expect_true(rlang::is_function(nfi()$avail_tables))
   expect_true(rlang::is_function(nfi()$describe_var))
@@ -40,7 +40,7 @@ test_that("avail_tables method works", {
 })
 
 test_that("describe_var method works", {
-  expect_is(foo$describe_var('density'), c('lfcNFI', 'R6'))
+  expect_is(foo$describe_var('density'), c('lfcNFI'))
   expect_output(foo$describe_var('density'))
   expect_output(foo$describe_var(c('density', 'density_dead')))
   expect_output(foo$describe_var('tururu'), regexp = NA)

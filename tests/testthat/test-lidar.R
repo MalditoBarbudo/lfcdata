@@ -1,5 +1,5 @@
 test_that("class object creation works", {
-  expect_is(lidar(), c('lfcLiDAR', 'R6'))
+  expect_is(lidar(), c('lfcLiDAR'))
   expect_true(rlang::is_function(lidar()$get_data))
 })
 
@@ -12,6 +12,15 @@ test_that("get method works", {
   expect_error(foo$get_data(1, 'raster'), 'rlang::is_character')
   expect_error(foo$get_data('non_existent_table', 'raster'), 'table_name_as_number')
   expect_error(foo$get_data('AB', 1), 'rlang::is_character')
+})
+
+test_that("describe_var method works", {
+  expect_is(foo$describe_var('AB'), c('lfcLiDAR'))
+  expect_output(foo$describe_var('AB'))
+  expect_output(foo$describe_var(c('AB', 'DBH')))
+  expect_error(foo$describe_var(c('AB', 'DBH', 'tururu')), '%in%')
+  expect_error(foo$describe_var('tururu'), '%in%')
+  expect_error(foo$describe_var(25), 'rlang::is_character')
 })
 
 test_that("cache works", {

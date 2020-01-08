@@ -27,6 +27,7 @@ lidardb <- lidar()
 lidardb
 }
 \seealso{
-Other LiDAR functions: \code{\link{lidar_get_data}}
+Other LiDAR functions: \code{\link{lidar_describe_var}},
+  \code{\link{lidar_get_data}}
 }
 \concept{LiDAR functions}

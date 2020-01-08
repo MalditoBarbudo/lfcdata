@@ -98,6 +98,44 @@ lfcLiDAR <- R6::R6Class(
           private$data_cache[[glue::glue("{table_name}_{as.character(spatial)}")]] <- res
           res
         }
+    },
+
+    # describe method
+    describe_var = function(variables) {
+
+      # argument checking
+      stopifnot(
+        rlang::is_character(variables),
+        variables %in% c('AB', 'BAT', 'BF', 'CAT', 'DBH', 'HM', 'REC', 'VAE')
+      )
+
+      no_returned <- dplyr::tbl(private$pool_conn, 'variables_thesaurus') %>%
+        dplyr::filter(var_id %in% variables) %>%
+        dplyr::collect() %>%
+        dplyr::group_by(var_id) %>%
+        dplyr::group_walk(
+          ~ cat(
+            # var name
+            crayon::yellow$bold(.x$translation_eng),
+            "\n",
+            # var units
+            "Units:  ",
+            crayon::blue$bold("[") %+%
+              crayon::blue$italic$bold(
+                glue::glue("{(.x$var_units %na% ' - ') %>% unique()}")
+              ) %+%
+              crayon::blue$bold("]"),
+            "\n",
+            "Details:  ",
+            crayon::blue$italic$bold(
+              glue::glue("{(.x$var_description_eng %na% ' - ') %>% unique()}")
+            ),
+            "\n\n",
+            sep = ''
+          )
+        )
+      invisible(self)
+
     }
   ),
   # private methods and values
@@ -151,4 +189,33 @@ lidar_get_data <- function(object, table_name, spatial = 'stars') {
   stopifnot(inherits(object, 'lfcLiDAR'))
   # call to the class method
   object$get_data(table_name, spatial)
+}
+
+#' Print info about the variables present in the LiDAR db
+#'
+#' @description \code{lidar_describe_var} is a wrapper for the \code{$describe_var} method of
+#'   \code{lfcLiDAR} objects. See \code{\link{lidar}}.
+#'
+#' @param object \code{lfcLiDAR} object, as created by \code{\link{lidar}}
+#' @param variables character vector with the names of the variables to describe
+#'
+#' @return A character vector with the variable names to describe
+#'
+#' @family LiDAR functions
+#'
+#' @examples
+#' lidardb <- lidar()
+#' lidar_describe_var(lidardb, "BF")
+#' lidar_describe_var(lidardb, c("DBH", "VAE"))
+#'
+#' # lidardb is an R6 object, so the previous example is the same as:
+#' lidardb$describe_var("BF")
+#' lidardb$describe_var(c("DBH", "VAE"))
+#'
+#' @export
+lidar_describe_var <- function(object, variables) {
+  # argument validation
+  stopifnot(inherits(object, 'lfcLiDAR'))
+  # call to the class method
+  object$describe_var(variables)
 }
