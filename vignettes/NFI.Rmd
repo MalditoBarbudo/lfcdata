@@ -59,3 +59,14 @@ all_info_nfi4 <- nfi_get_data(nfidb, 'plots') %>%
 all_info_nfi4
 ```
 
+Data can be retrieved in a spatial object (with plot coordinates as points), using the
+`sf` package (http://r-spatial.github.io/sf/):
+
+```{r, collapse = FALSE}
+library(sf)
+
+nfi_get_data(nfidb, 'plot_nfi_4_results', spatial = TRUE)
+nfi_get_data(nfidb, 'plot_nfi_4_results', spatial = TRUE) %>%
+  plot()
+```
+
