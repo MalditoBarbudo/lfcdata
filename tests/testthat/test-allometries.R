@@ -43,7 +43,7 @@ test_that("calculate method works", {
   )
   expect_equal(
     foo$calculate(DBH = c(1,2,3), Ht = c(10,11,12), allometry_id = 'VOB_7674'),
-    foo$description(id = 'VOB_7674')[[1]]$param_a + foo$description(id = 'VOB_7674')[[1]]$param_b *(c(1,2,3))^2 * c(10,11,12)
+    foo$description(id = 'VOB_7674')[[1]]$param_a + foo$description(id = 'VOB_7674')[[1]]$param_b * (c(1,2,3)*10)^2 * c(10,11,12)
   )
   expect_error(foo$calculate(DR = c(1,2,3), allometry_id = 1), 'rlang::is_character')
   expect_error(foo$calculate(DR = Sys.Date(), allometry_id = 'BH_287'), 'is.numeric')

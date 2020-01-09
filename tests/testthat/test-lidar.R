@@ -53,3 +53,8 @@ test_that("external get data wrapper works", {
     lidar_get_data(foo, 'REC', 'stars')
   )
 })
+
+test_that("external describe_var wrapper works", {
+  expect_identical(foo$describe_var('AB'), lidar_describe_var(foo, 'AB'))
+  expect_error(lidar_describe_var('foo', 'density'), "inherits")
+})
