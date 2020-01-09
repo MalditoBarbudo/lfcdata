@@ -1,0 +1,127 @@
+---
+title: "Allometries"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Allometries}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(lfcdata)
+```
+
+## Allometries database
+
+The Spanish National Forest Inventory and the Catalonia Forest and Ecology Inventory contain
+enough data to provide allometries for the most common forestry variables. This database
+offers the allometries calculated at [CREAF](creaf.cat) and [CTFC](ctfc.cat) research
+centers.  
+In the database they are also included allometries provided by the Spanish National
+Agricultural Research Insitute and the ones provided by [Montero et al.]() and
+[de Caceres et al.]() papers.
+
+To access the allometries use the `allometries()` function:
+
+```{r}
+allomdb <- allometries()
+allomdb
+```
+
+All allometries are presented in one table, with their main characteristics:
+
+```{r allometries_table}
+allom_table <- allometries_get_data(allomdb)
+allom_table
+```
+
+### Main characteristics
+
+  - **allometry level**: At which plant level the allometry was calculated for, i.e. plant
+    level or organ level.
+  
+  - **spatial level**: At which spatial level the allometry was calculated for, i.e. national,
+    regional, county or municipality level
+  
+  - **functional group level**: At which functional group the allometry was calculated for,
+    i.e. species level or genus level
+  
+  - **variables**: Dependent and independent variables used in the allometry
+  
+  - **parameters**: Parameters used in the allometry
+  
+  - **equation**: Equation of the allometry
+  
+  - **source**: Source of the allometry
+  
+  - **cubication shape**: At which cubication shape the allometry was calculated for
+  
+```{r cubication_shape}
+allometries_get_data(allomdb, 'thesaurus_cubication') %>%
+  dplyr::select(cubication_shape_id, description = translation_eng)
+```
+  
+  
+  - **number of observations**: Number of plants/organs/... used to calculate the allometry
+  
+  - **r squared**: R square of the fit of the allometry
+  
+  - **standard error**: Standard error of the fit of the allometry
+
+
+### Describing the variables (`allometries_describe_var`)
+
+```{r}
+allometries_describe_var(allomdb, c('DBH', 'DR'))
+```
+
+### Inspecting an allometry (`allometries_description`)
+
+1. By allometry id
+
+```{r}
+bh_287 <- allometries_description(allomdb, id = 'BH_287')
+bh_287$BH_287$equation
+bh_287$BH_287$source
+```
+
+
+2. By allometries characteristics
+
+```{r}
+allom_list <- allometries_description(allomdb, dependent_var %in% c("GC", "BH"))
+length(allom_list)
+allom_list[[1]]$equation
+allom_list[[900]]$equation
+```
+
+
+### Calculation
+
+A method to automatically use the allometries in the database is offered:
+
+```{r}
+allometries_calculate(allomdb, DR = c(5.5, 4.6, 3.7), allometry_id = "BH_287")
+```
+
+It can be used inside in combination with dplyr:
+
+```{r}
+library(dplyr)
+dummy_data <- data.frame(
+  branch_diameter = c(5.5, 4.6, 3.7)
+)
+
+dummy_data %>%
+  mutate(
+    leaves_biomass = allometries_calculate(allomdb, DR = branch_diameter, allometry_id = 'BH_287')
+  )
+```
+

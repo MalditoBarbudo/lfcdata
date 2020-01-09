@@ -1,0 +1,61 @@
+---
+title: "NFI"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{NFI}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(lfcdata)
+```
+
+## Spanish National Forest Inventory for Catalonia database
+
+Spanish National Forest Inventory data, localised at Catalonia is provided in this
+database. Data is presented at plot level (no individual trees data is available at
+this moment) for all the NFI versions available:
+
+  - **NFI2**: Samipling done between 1985-1991.
+  - **NFI3**: Samipling done between 2000-2001.
+  - **NFI4**: Samipling done between 2013-2016.
+
+To access the data use the `nfi()` function:
+
+```{r}
+nfidb <- nfi()
+nfidb
+```
+
+### Available tables and variables info
+
+```{r, collapse=FALSE}
+nfi_avail_tables(nfidb)[1:5]
+nfi_describe_var(nfidb, 'density')
+```
+
+See `vignette('tables_and_variables', package = 'lfcdata')` for more detailed information.
+
+### Access the data
+
+Select the table to access and use the `nfi_get_data` function. Tables can be related by
+`plot_id` variable:
+
+```{r, collapse=TRUE}
+library(dplyr)
+
+all_info_nfi4 <- nfi_get_data(nfidb, 'plots') %>%
+  right_join(nfi_get_data(nfidb, 'plot_nfi_4_results')) %>%
+  left_join(nfi_get_data(nfidb, 'plots_nfi_4_dynamic_info'))
+
+all_info_nfi4
+```
+

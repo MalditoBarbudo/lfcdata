@@ -34,9 +34,16 @@ lfcLiDAR <- R6::R6Class(
     print = function(...) {
       cat(
         " Access to the LiDAR rasters database.\n",
-        "(laboratoriforestal.creaf.uab.cat)\n\n",
-        "Use lidar_get_data to access the rasters.\n",
-        "See vignette('tables_and_variables', package = 'lfcdata') to learn more about the tables and variables."
+        crayon::blue$underline("laboratoriforestal.creaf.uab.cat\n\n"),
+        "Use " %+% crayon::yellow$bold("lidar_get_data") %+%
+          " to access the tables.\n",
+        "Use " %+% crayon::yellow$bold("lidar_avail_tables") %+%
+          " to know which tables are available.\n",
+        "Use " %+% crayon::yellow$bold("lidar_describe_var") %+%
+          " to get the information available on the variables.\n",
+        "See " %+%
+          crayon::yellow$bold("vignette('tables_and_variables', package = 'lfcdata')") %+%
+          " to learn more about the tables and variables."
       )
       invisible(self)
     },

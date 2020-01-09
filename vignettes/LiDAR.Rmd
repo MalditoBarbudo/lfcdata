@@ -1,0 +1,55 @@
+---
+title: "LiDAR"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{LiDAR}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(lfcdata)
+library(stars)
+```
+
+
+## LiDAR database
+
+LiDAR database provides the eco-physiological variables data obtained by
+LiDAR flights from the [ICGC](https://www.icgc.cat/en/) in combination with the
+Spanish National Forest Inventory data.
+
+Access the data with the `lidar()` function:
+
+```{r lidar_data}
+lidardb <- lidar()
+lidardb
+```
+
+and retrieve the desired variable with `lidar_get_data`:
+
+```{r get_data}
+lidar_avail_tables(lidardb)
+ab_raster <- lidar_get_data(lidardb, 'AB', 'stars')
+ab_raster
+```
+
+### Data formats
+
+Raster data can be retrieved in two formats, `stars` and `RasterLayer`:
+
+```{r rasters}
+lidar_get_data(lidardb, 'AB', 'stars') %>%
+  class()
+
+lidar_get_data(lidardb, 'AB', 'raster') %>%
+  class()
+```
+
