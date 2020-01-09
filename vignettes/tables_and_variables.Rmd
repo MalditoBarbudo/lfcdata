@@ -116,3 +116,31 @@ It also can be used to describe in detail the independent and dependent variable
 allometries_describe_var(allomdb, c('DR', 'DBH'))
 ```
 
+
+## LiDAR
+
+### Tables available
+
+LiDAR database offers raster tables (in the form of `stars` or `raster` objects).
+Available rasters can be consulted:
+
+```{r lidar_avail}
+lidardb <- lidar()
+lidar_avail_tables(lidardb)
+```
+
+### Variables info
+
+Table names correspond to the variable stored in the raster, you can access the detailed
+information about the variable:
+
+```{r lidar_describe}
+lidar_describe_var(lidardb, 'AB')
+```
+
+#### Complete list of LiDAR variables
+
+```{r lidar_complete, echo = FALSE}
+lidar_describe_var(lidardb, c('AB', 'BAT', 'BF', 'CAT', 'DBH', 'HM', 'REC', 'VAE'))
+```
+

@@ -14,6 +14,11 @@ test_that("get method works", {
   expect_error(foo$get_data('AB', 1), 'rlang::is_character')
 })
 
+test_that("avail_tables method works", {
+  expect_type(foo$avail_tables(), 'character')
+  expect_true('BAT' %in% foo$avail_tables())
+})
+
 test_that("describe_var method works", {
   expect_is(foo$describe_var('AB'), c('lfcLiDAR'))
   expect_output(foo$describe_var('AB'))

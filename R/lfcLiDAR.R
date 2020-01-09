@@ -100,6 +100,11 @@ lfcLiDAR <- R6::R6Class(
         }
     },
 
+    # available tables method
+    avail_tables = function() {
+      c('AB', 'BAT', 'BF', 'CAT', 'DBH', 'HM', 'REC', 'VAE')
+    },
+
     # describe method
     describe_var = function(variables) {
 
@@ -189,6 +194,32 @@ lidar_get_data <- function(object, table_name, spatial = 'stars') {
   stopifnot(inherits(object, 'lfcLiDAR'))
   # call to the class method
   object$get_data(table_name, spatial)
+}
+
+#' Get the available tables in LiDAR db
+#'
+#' @description \code{lidar_avail_tables} is a wrapper for the \code{$avail_tables} method of
+#'   \code{lfcLiDAR} objects. See \code{\link{lidar}}.
+#'
+#' @param object \code{lfcLiDAR} object, as created by \code{\link{lidar}}
+#'
+#' @return A character vector with the table names
+#'
+#' @family LiDAR functions
+#'
+#' @examples
+#' lidardb <- lidar()
+#' lidar_avail_tables(lidardb)
+#'
+#' # lidardb is an R6 object, so the previous example is the same as:
+#' lidardb$avail_tables()
+#'
+#' @export
+lidar_avail_tables <- function(object) {
+  # argument validation
+  stopifnot(inherits(object, 'lfcLiDAR'))
+  # call to the class method
+  object$avail_tables()
 }
 
 #' Print info about the variables present in the LiDAR db
