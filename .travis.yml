@@ -3,3 +3,7 @@
 language: r
 cache: packages
 warnings_are_errors: true
+addons:
+  apt:
+    packages:
+      - libudunits2-dev
