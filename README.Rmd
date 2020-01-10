@@ -15,6 +15,7 @@ knitr::opts_chunk$set(
 # lfcdata
 
 <!-- badges: start -->
+[![Travis build status](https://travis-ci.org/MalditoBarbudo/lfcdata.svg?branch=master)](https://travis-ci.org/MalditoBarbudo/lfcdata)
 <!-- badges: end -->
 
 The goal of `lfcdata` R package is to provide access to the
