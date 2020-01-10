@@ -10,7 +10,8 @@ status](https://travis-ci.org/MalditoBarbudo/lfcdata.svg?branch=master)](https:/
 <!-- badges: end -->
 
 The goal of `lfcdata` R package is to provide access to the [Laboratori
-Forestal Català](laboratoriforestal.creaf.uab.cat) public databases.
+Forestal Català](http://laboratoriforestal.creaf.uab.cat/) public
+databases.
 
 ## Installation
 

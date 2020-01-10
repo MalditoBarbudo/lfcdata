@@ -103,7 +103,10 @@ lfcNFI <- R6::R6Class(
       # result with cat, glue and crayon, as a function to apply to a vector of variables
       invisible_cats <- function(variable) {
         no_returned <- self$get_data('variables_thesaurus') %>%
-          dplyr::filter(var_id == variable) %>%
+          dplyr::filter(var_id == variable) %>% {
+            stopifnot(nrow(.) > 0)
+            .
+          } %>%
           dplyr::left_join(
             self$get_data('variables_numerical'), by = c("var_id", "var_table")
           ) %>%

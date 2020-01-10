@@ -25,8 +25,10 @@ enough data to provide allometries for the most common forestry variables. This 
 offers the allometries calculated at [CREAF](http://www.creaf.cat/) and
 [CTFC](http://www.ctfc.cat/) research centers.  
 In the database they are also included allometries provided by the Spanish National
-Agricultural Research Insitute and the ones provided by [Montero et al.]() and
-[de Caceres et al.]() papers.
+Agricultural Research Insitute and the ones provided by
+[Montero et al.](https://www.researchgate.net/publication/235639682_Produccion_de_Biomasa_y_Fijacion_de_CO2_Por_Los_Bosques_Espanoles)
+and [de Caceres et al.](https://link.springer.com/article/10.1007/s13595-019-0873-4)
+papers.
 
 To access the allometries use the `allometries()` function:
 

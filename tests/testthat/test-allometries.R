@@ -54,8 +54,8 @@ test_that("describe_var method works", {
   expect_is(foo$describe_var('BR'), c('lfcAllometries'))
   expect_output(foo$describe_var('BR'))
   expect_output(foo$describe_var(c('BR', 'DBH')))
-  expect_output(foo$describe_var('tururu'), regexp = NA)
   expect_output(foo$describe_var(c('BR', 'DBH', 'tururu')))
+  expect_error(foo$describe_var('tururu'), 'nrow')
   expect_error(foo$describe_var(25), 'rlang::is_character')
 })
 
@@ -131,6 +131,6 @@ test_that("external calculate wrapper works", {
 })
 
 test_that("external describe_var wrapper works", {
-  expect_identical(foo$describe_var('density'), allometries_describe_var(foo, 'density'))
+  expect_identical(foo$describe_var('DBH'), allometries_describe_var(foo, 'DBH'))
   expect_error(allometries_describe_var('foo', 'density'), "inherits")
 })

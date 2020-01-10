@@ -43,8 +43,8 @@ test_that("describe_var method works", {
   expect_is(foo$describe_var('density'), c('lfcNFI'))
   expect_output(foo$describe_var('density'))
   expect_output(foo$describe_var(c('density', 'density_dead')))
-  expect_output(foo$describe_var('tururu'), regexp = NA)
-  expect_output(foo$describe_var(c('density', 'density_dead', 'tururu')))
+  expect_error(foo$describe_var(c('density', 'density_dead', 'tururu')), 'nrow')
+  expect_error(foo$describe_var('tururu'), 'nrow')
   expect_error(foo$describe_var(25), 'rlang::is_character')
 })
 

@@ -137,7 +137,10 @@ lfcAllometries <- R6::R6Class(
       )
 
       no_returned <- self$get_data('thesaurus_app') %>%
-        dplyr::filter(text_id %in% variables) %>%
+        dplyr::filter(text_id %in% variables) %>% {
+          stopifnot(nrow(.) > 0)
+          .
+        } %>%
         dplyr::group_by(translation_eng) %>%
         dplyr::group_walk(
           ~ cat(

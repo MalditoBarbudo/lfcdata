@@ -19,7 +19,7 @@ knitr::opts_chunk$set(
 <!-- badges: end -->
 
 The goal of `lfcdata` R package is to provide access to the
-[Laboratori Forestal Català](laboratoriforestal.creaf.uab.cat) public databases.
+[Laboratori Forestal Català](http://laboratoriforestal.creaf.uab.cat/) public databases.
 
 ## Installation
 
