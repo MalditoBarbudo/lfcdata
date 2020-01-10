@@ -22,8 +22,8 @@ library(lfcdata)
 
 The Spanish National Forest Inventory and the Catalonia Forest and Ecology Inventory contain
 enough data to provide allometries for the most common forestry variables. This database
-offers the allometries calculated at [CREAF](creaf.cat) and [CTFC](ctfc.cat) research
-centers.  
+offers the allometries calculated at [CREAF](http://www.creaf.cat/) and
+[CTFC](http://www.ctfc.cat/) research centers.  
 In the database they are also included allometries provided by the Spanish National
 Agricultural Research Insitute and the ones provided by [Montero et al.]() and
 [de Caceres et al.]() papers.

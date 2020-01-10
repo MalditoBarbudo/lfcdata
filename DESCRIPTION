@@ -1,10 +1,10 @@
 Package: lfcdata
-Title: Access to the LFC databases (forest inventory, allometries, lidar...)
+Title: Access to the LFC Databases
 Version: 0.0.1
 Authors@R: person("Victor", "Granda", email = "victorgrandagarcia@gmail.com", role = c("aut", "cre"), comment = c(ORCID = "0000-0002-0469-1991"))
 Description: This package allows retrieving data from all the available databases from
   the Catalonian Forest Laboratory (LFC) initiative
-  (http://laboratoriforestal.creaf.uab.cat). Access the Spanish National Forest Inventory
+  (<http://laboratoriforestal.creaf.uab.cat>). Access the Spanish National Forest Inventory
   data for Catalonia, calculate tree and shrubs allometries or obtain rasters for
   eco-physiological variables based on LiDAR data. 
 Depends: R (>= 3.6.0)
