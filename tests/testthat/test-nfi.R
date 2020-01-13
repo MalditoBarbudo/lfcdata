@@ -14,19 +14,19 @@ test_that("get method works", {
   # errors
   expect_error(
     foo$get_data(1, FALSE),
-    "rlang::is_character"
+    "not character"
   )
   expect_error(
     foo$get_data(c('plots', 'plot_nfi_4_results'), FALSE),
-    "length\\(table_name\\)"
+    "of length"
   )
   expect_error(
     foo$get_data('plots', 'FALSE'),
-    "rlang::is_logical"
+    "not logical"
   )
   expect_error(
     foo$get_data('plots', NA),
-    "\\!rlang::is_na"
+    "is missing"
   )
   expect_error(
     foo$get_data('non_existent_table', FALSE),
@@ -43,9 +43,9 @@ test_that("describe_var method works", {
   expect_is(foo$describe_var('density'), c('lfcNFI'))
   expect_output(foo$describe_var('density'))
   expect_output(foo$describe_var(c('density', 'density_dead')))
-  expect_error(foo$describe_var(c('density', 'density_dead', 'tururu')), 'nrow')
-  expect_error(foo$describe_var('tururu'), 'nrow')
-  expect_error(foo$describe_var(25), 'rlang::is_character')
+  expect_error(foo$describe_var(c('density', 'density_dead', 'tururu')), 'variable not found')
+  expect_error(foo$describe_var('tururu'), 'variable not found')
+  expect_error(foo$describe_var(25), 'not character')
 })
 
 test_that("cache works", {
@@ -69,7 +69,7 @@ test_that("external get data wrapper works", {
   )
   expect_error(
     nfi_get_data('foo', 'plots', FALSE),
-    "inherits"
+    "class lfcNFI"
   )
   xyz <- nfi_get_data(foo, 'plot_nfi_3_results', FALSE)
   expect_length(foo$.__enclos_env__$private$data_cache, 6)
@@ -81,12 +81,12 @@ test_that("external get data wrapper works", {
 
 test_that("external avail tables wrapper works", {
   expect_identical(foo$avail_tables(), nfi_avail_tables(foo))
-  expect_error(nfi_avail_tables('foo'), "inherits")
+  expect_error(nfi_avail_tables('foo'), "class lfcNFI")
 })
 
 test_that("external describe_var wrapper works", {
   expect_identical(foo$describe_var('density'), nfi_describe_var(foo, 'density'))
-  expect_error(nfi_describe_var('foo', 'density'), "inherits")
+  expect_error(nfi_describe_var('foo', 'density'), "class lfcNFI")
 })
 
 

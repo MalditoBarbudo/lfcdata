@@ -11,11 +11,11 @@ test_that("get method works", {
   # errors
   expect_error(
     foo$get_data(1),
-    "rlang::is_character"
+    "not character"
   )
   expect_error(
     foo$get_data(c('allometries', 'thesaurus_variables')),
-    "length\\(table_name\\)"
+    "of length"
   )
   expect_error(
     foo$get_data('non_existent_table'),
@@ -30,8 +30,8 @@ test_that("description method works", {
   expect_length(foo$description(id = 'BH_287')[[1]], 22)
   expect_true(length(foo$description(!is.na(independent_var_2))) > 1300)
   expect_true('VOB_7674' %in% names(foo$description(!is.na(independent_var_2))))
-  expect_error(foo$description(id = 1), 'rlang::is_character')
-  expect_error(foo$description(Sys.Date()), 'not evaluate to a logical vector')
+  expect_error(foo$description(id = 1), 'not character')
+  expect_error(foo$description(Sys.Date()), 'logical')
 })
 
 test_that("calculate method works", {
@@ -45,8 +45,8 @@ test_that("calculate method works", {
     foo$calculate(DBH = c(1,2,3), Ht = c(10,11,12), allometry_id = 'VOB_7674'),
     foo$description(id = 'VOB_7674')[[1]]$param_a + foo$description(id = 'VOB_7674')[[1]]$param_b * (c(1,2,3)*10)^2 * c(10,11,12)
   )
-  expect_error(foo$calculate(DR = c(1,2,3), allometry_id = 1), 'rlang::is_character')
-  expect_error(foo$calculate(DR = Sys.Date(), allometry_id = 'BH_287'), 'is.numeric')
+  expect_error(foo$calculate(DR = c(1,2,3), allometry_id = 1), 'not character')
+  expect_error(foo$calculate(DR = Sys.Date(), allometry_id = 'BH_287'), 'not numeric')
   expect_error(foo$calculate(c(1,2,3), allometry_id = 'BH_287'), 'stringr::str_length')
 })
 
@@ -55,8 +55,8 @@ test_that("describe_var method works", {
   expect_output(foo$describe_var('BR'))
   expect_output(foo$describe_var(c('BR', 'DBH')))
   expect_output(foo$describe_var(c('BR', 'DBH', 'tururu')))
-  expect_error(foo$describe_var('tururu'), 'nrow')
-  expect_error(foo$describe_var(25), 'rlang::is_character')
+  expect_error(foo$describe_var('tururu'), 'variables not found')
+  expect_error(foo$describe_var(25), 'not character')
 })
 
 test_that("cache works", {
@@ -80,7 +80,7 @@ test_that("external get data wrapper works", {
   )
   expect_error(
     allometries_get_data('foo', 'allometries'),
-    "inherits"
+    "class lfcAllometries"
   )
   xyz <- allometries_get_data(foo, 'thesaurus_sources')
   expect_length(foo$.__enclos_env__$private$data_cache, 4)
@@ -99,8 +99,8 @@ test_that("external description wrapper works", {
     foo$description(!is.na(independent_var_2)),
     allometries_description(foo, !is.na(independent_var_2))
   )
-  expect_error(allometries_description('foo', id = 'BH_287'), "inherits")
-  expect_error(allometries_description(foo, id = 1), "rlang::is_character")
+  expect_error(allometries_description('foo', id = 'BH_287'), "class lfcAllometries")
+  expect_error(allometries_description(foo, id = 1), "not character")
 })
 
 test_that("external calculate wrapper works", {
@@ -116,21 +116,21 @@ test_that("external calculate wrapper works", {
   )
   expect_error(
     allometries_calculate('foo', DR = c(1,2,3), allometry_id = 'BH_287'),
-    "inherits"
+    "class lfcAllometries"
   )
   expect_error(
     allometries_calculate(
       'foo', DBH = c(1,2,3), Ht = c(10,11,12), allometry_id = 'VOB_7674'
     ),
-    "inherits"
+    "class lfcAllometries"
   )
   expect_error(
     allometries_calculate(foo, DR = c(1,2,3), allometry_id = 1),
-    'rlang::is_character'
+    'not character'
   )
 })
 
 test_that("external describe_var wrapper works", {
   expect_identical(foo$describe_var('DBH'), allometries_describe_var(foo, 'DBH'))
-  expect_error(allometries_describe_var('foo', 'density'), "inherits")
+  expect_error(allometries_describe_var('foo', 'density'), "class lfcAllometries")
 })

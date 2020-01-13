@@ -52,12 +52,20 @@ lfcLiDAR <- R6::R6Class(
     get_data = function(table_name, spatial = 'stars') {
 
       # argument validation
-      stopifnot(
-        rlang::is_character(table_name) & length(table_name) == 1,
-        rlang::is_character(spatial),
-        length(spatial) == 1,
-        spatial %in% c('stars', 'raster')
+      check_args_for(
+        character = list(table_name = table_name, spatial = spatial),
       )
+      check_length_for(table_name, 1)
+      check_length_for(spatial, 1)
+      check_if_in_for(spatial, c('stars', 'raster'))
+      check_if_in_for(table_name, c('AB', 'BAT', 'BF', 'CAT', 'DBH', 'HM', 'REC', 'VAE'))
+
+      # stopifnot(
+      #   rlang::is_character(table_name) & length(table_name) == 1,
+      #   rlang::is_character(spatial),
+      #   length(spatial) == 1,
+      #   spatial %in% c('stars', 'raster')
+      # )
 
       # check cache, retrieve it or make the query
       res <- private$data_cache[[glue::glue("{table_name}_{as.character(spatial)}")]] %||%
@@ -72,11 +80,6 @@ lfcLiDAR <- R6::R6Class(
             'HM' = 3,
             'REC' = 5,
             'VAE' = 8
-          )
-
-          # check for table name
-          stopifnot(
-            !rlang::is_null(table_name_as_number)
           )
 
           # temp persistent conn object (rpostgis not working with pool objects)
@@ -116,10 +119,14 @@ lfcLiDAR <- R6::R6Class(
     describe_var = function(variables) {
 
       # argument checking
-      stopifnot(
-        rlang::is_character(variables),
-        variables %in% c('AB', 'BAT', 'BF', 'CAT', 'DBH', 'HM', 'REC', 'VAE')
+      # stopifnot(
+      #   rlang::is_character(variables),
+      #   variables %in% c('AB', 'BAT', 'BF', 'CAT', 'DBH', 'HM', 'REC', 'VAE')
+      # )
+      check_args_for(
+        character = list(variables = variables),
       )
+      check_if_in_for(variables, c('AB', 'BAT', 'BF', 'CAT', 'DBH', 'HM', 'REC', 'VAE'))
 
       no_returned <- dplyr::tbl(private$pool_conn, 'variables_thesaurus') %>%
         dplyr::filter(var_id %in% variables) %>%
@@ -198,7 +205,7 @@ lfcLiDAR <- R6::R6Class(
 lidar_get_data <- function(object, table_name, spatial = 'stars') {
   # argument validation
   # NOTE: table_name and spatial are validated in the method
-  stopifnot(inherits(object, 'lfcLiDAR'))
+  check_class_for(object, 'lfcLiDAR')
   # call to the class method
   object$get_data(table_name, spatial)
 }
@@ -224,7 +231,7 @@ lidar_get_data <- function(object, table_name, spatial = 'stars') {
 #' @export
 lidar_avail_tables <- function(object) {
   # argument validation
-  stopifnot(inherits(object, 'lfcLiDAR'))
+  check_class_for(object, 'lfcLiDAR')
   # call to the class method
   object$avail_tables()
 }
@@ -253,7 +260,7 @@ lidar_avail_tables <- function(object) {
 #' @export
 lidar_describe_var <- function(object, variables) {
   # argument validation
-  stopifnot(inherits(object, 'lfcLiDAR'))
+  check_class_for(object, 'lfcLiDAR')
   # call to the class method
   object$describe_var(variables)
 }

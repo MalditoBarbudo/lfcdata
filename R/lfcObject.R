@@ -12,9 +12,8 @@ lfcObject <- R6::R6Class(
     # desired
     get_data = function(table_name) {
       # arguments validation
-      stopifnot(
-        rlang::is_character(table_name) & length(table_name) == 1
-      )
+      check_args_for(character = list(table_name = table_name))
+      check_length_for(table_name, 1)
 
       # return the cached data if exists. If no cache, retrieve the data from db
       # and update the cache

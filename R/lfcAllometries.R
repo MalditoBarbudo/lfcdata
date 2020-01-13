@@ -69,9 +69,10 @@ lfcAllometries <- R6::R6Class(
           purrr::map(~ rlang::as_list(.x))
       } else {
         # argument validation (here, because is when first id is used)
-        stopifnot(
-          rlang::is_character(id)
-        )
+        # stopifnot(
+        #   rlang::is_character(id)
+        # )
+        check_args_for(character = list(id = id))
         res <- super$get_data('allometries') %>%
           dplyr::filter(allometry_id %in% id) %>%
           split(.$allometry_id) %>%
@@ -91,13 +92,15 @@ lfcAllometries <- R6::R6Class(
       dots_vars <- rlang::enquos(..., .named = FALSE)
 
       # argument validation
-      stopifnot(
-        rlang::is_character(allometry_id)
-      )
+      # stopifnot(
+      #   rlang::is_character(allometry_id)
+      # )
+      check_args_for(character = list(allometry_id = allometry_id))
       silent_lapply <- lapply(
         dots_vars,
         function(x) {
-          stopifnot(is.numeric(rlang::eval_tidy(x)))
+          # stopifnot(is.numeric(rlang::eval_tidy(x)))
+          check_args_for(numeric = list(x = rlang::eval_tidy(x)))
         }
       )
 
@@ -132,13 +135,14 @@ lfcAllometries <- R6::R6Class(
     describe_var = function(variables) {
 
       # argument checking
-      stopifnot(
-        rlang::is_character(variables)
-      )
+      # stopifnot(
+      #   rlang::is_character(variables)
+      # )
+      check_args_for(character = list(variables = variables))
 
       no_returned <- self$get_data('thesaurus_app') %>%
         dplyr::filter(text_id %in% variables) %>% {
-          stopifnot(nrow(.) > 0)
+          check_filter_for(., glue::glue("one or more variables not found"))
           .
         } %>%
         dplyr::group_by(translation_eng) %>%
@@ -226,7 +230,7 @@ lfcAllometries <- R6::R6Class(
 allometries_get_data <- function(object, table_name = 'allometries') {
   # argument validation
   # NOTE: table_name is validated in the method
-  stopifnot(inherits(object, 'lfcAllometries'))
+  check_class_for(object, 'lfcAllometries')
   # call to the class method
   object$get_data(table_name)
 }
@@ -261,7 +265,7 @@ allometries_get_data <- function(object, table_name = 'allometries') {
 #' @export
 allometries_description <- function(object, ..., id = NULL) {
   # argument validation
-  stopifnot(inherits(object, 'lfcAllometries'))
+  check_class_for(object, 'lfcAllometries')
   # call to the class method
   object$description(..., id = id)
 }
@@ -299,7 +303,7 @@ allometries_description <- function(object, ..., id = NULL) {
 #' @export
 allometries_calculate <- function(object, ..., allometry_id) {
   # argument validation
-  stopifnot(inherits(object, 'lfcAllometries'))
+  check_class_for(object, 'lfcAllometries')
   # call to the class method
   object$calculate(..., allometry_id = allometry_id)
 }
@@ -328,7 +332,7 @@ allometries_calculate <- function(object, ..., allometry_id) {
 #' @export
 allometries_describe_var <- function(object, variables) {
   # argument validation
-  stopifnot(inherits(object, 'lfcAllometries'))
+  check_class_for(object, 'lfcAllometries')
   # call to the class method
   object$describe_var(variables)
 }

@@ -3,8 +3,10 @@ title: "NFI"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{NFI}
-  %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
+  %\VignetteEngine{knitr::rmarkdown}
+editor_options: 
+  chunk_output_type: console
 ---
 
 ```{r, include = FALSE}
@@ -24,7 +26,7 @@ Spanish National Forest Inventory data, localised at Catalonia is provided in th
 database. Data is presented at plot level (no individual trees data is available at
 this moment) for all the NFI versions available:
 
-  - **NFI2**: Samipling done between 1985-1991.
+  - **NFI2**: Samipling done between 1990-1991.
   - **NFI3**: Samipling done between 2000-2001.
   - **NFI4**: Samipling done between 2013-2016.
 

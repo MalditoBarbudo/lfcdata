@@ -41,9 +41,14 @@ lfcNFI <- R6::R6Class(
     get_data = function(table_name, spatial = FALSE) {
 
       # arguments validation (table name is always validated in the super)
-      stopifnot(
-        rlang::is_logical(spatial) & !rlang::is_na(spatial)
+      check_args_for(
+        logical = list(spatial = spatial),
+        na = list(spatial = spatial)
       )
+
+      # stopifnot(
+      #   rlang::is_logical(spatial) & !rlang::is_na(spatial)
+      # )
 
       res <- private$data_cache[[glue::glue("{table_name}_{as.character(spatial)}")]] %||%
         {
@@ -95,16 +100,18 @@ lfcNFI <- R6::R6Class(
     describe_var = function(variables) {
 
       # argument checking
-      stopifnot(
-        rlang::is_character(variables)
-      )
+      check_args_for(character = list(variables = variables))
+
+      # stopifnot(
+      #   rlang::is_character(variables)
+      # )
 
       # get the var thes, the numerical var thes filter by the variable and prepare the
       # result with cat, glue and crayon, as a function to apply to a vector of variables
       invisible_cats <- function(variable) {
         no_returned <- self$get_data('variables_thesaurus') %>%
           dplyr::filter(var_id == variable) %>% {
-            stopifnot(nrow(.) > 0)
+            check_filter_for(., glue::glue("{variable} variable not found"))
             .
           } %>%
           dplyr::left_join(
@@ -215,7 +222,7 @@ lfcNFI <- R6::R6Class(
 nfi_get_data <- function(object, table_name, spatial = FALSE) {
   # argument validation
   # NOTE: table_name and spatial are validated in the method
-  stopifnot(inherits(object, 'lfcNFI'))
+  check_class_for(object, 'lfcNFI')
   # call to the class method
   object$get_data(table_name, spatial)
 }
@@ -241,7 +248,7 @@ nfi_get_data <- function(object, table_name, spatial = FALSE) {
 #' @export
 nfi_avail_tables <- function(object) {
   # argument validation
-  stopifnot(inherits(object, 'lfcNFI'))
+  check_class_for(object, 'lfcNFI')
   # call to the class method
   object$avail_tables()
 }
@@ -270,7 +277,7 @@ nfi_avail_tables <- function(object) {
 #' @export
 nfi_describe_var <- function(object, variables) {
   # argument validation
-  stopifnot(inherits(object, 'lfcNFI'))
+  check_class_for(object, 'lfcNFI')
   # call to the class method
   object$describe_var(variables)
 }
