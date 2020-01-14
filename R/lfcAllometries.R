@@ -59,7 +59,6 @@ lfcAllometries <- R6::R6Class(
     # fields from the table. Is easy to use programmatically
     description = function(..., id = NULL) {
 
-      # browser()
       dots_expressions <- rlang::quos(...)
 
       if (is.null(id)) {
@@ -119,11 +118,14 @@ lfcAllometries <- R6::R6Class(
         private$eq_formatter() %>% {
           for (var in names(dots_vars)) {
             # validate dots_vars are named
-            stopifnot(stringr::str_length(var) > 0)
-            . <- stringr::str_replace_all(
-              ., pattern = var,
-              replacement = paste0('rlang::eval_tidy(dots_vars$', var, ')')
-            )
+            if (stringr::str_length(var) < 1) {
+              stop("Numeric vectors for the independent variables must be named with the variable name")
+            } else {
+              . <- stringr::str_replace_all(
+                ., pattern = var,
+                replacement = paste0('rlang::eval_tidy(dots_vars$', var, ')')
+              )
+            }
           }
           .
         } %>%
@@ -184,10 +186,14 @@ lfcAllometries <- R6::R6Class(
     # equation formatter for using it to calculate
     eq_formatter = function(eq) {
       eq_res <- eq %>%
-        stringr::str_conv(encoding = 'UTF-8') %>%
+        # this first step (remove '\u00C2') is in case no UTF-8 system, i.e. win 'latin1'
+        stringr::str_remove_all('\u00C2') %>%
+        # replace · with *
         stringr::str_replace_all('\u00B7', '*') %>%
+        # replace \u00B2 and \u00B3 with \u005E2 and \u005E3
         stringr::str_replace_all('\u00B2', '\u005E2') %>%
         stringr::str_replace_all('\u00B3', '\u005E3') %>%
+        # replace parameter letters with param_letter
         stringr::str_replace('\\ba\\b', 'param_a') %>%
         stringr::str_replace('\\bb\\b', 'param_b') %>%
         stringr::str_replace('\\bc\\b', 'param_c') %>%
