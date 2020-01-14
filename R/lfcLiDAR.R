@@ -60,13 +60,6 @@ lfcLiDAR <- R6::R6Class(
       check_if_in_for(spatial, c('stars', 'raster'))
       check_if_in_for(table_name, c('AB', 'BAT', 'BF', 'CAT', 'DBH', 'HM', 'REC', 'VAE'))
 
-      # stopifnot(
-      #   rlang::is_character(table_name) & length(table_name) == 1,
-      #   rlang::is_character(spatial),
-      #   length(spatial) == 1,
-      #   spatial %in% c('stars', 'raster')
-      # )
-
       # check cache, retrieve it or make the query
       res <- private$data_cache[[glue::glue("{table_name}_{as.character(spatial)}")]] %||%
         {
@@ -118,11 +111,6 @@ lfcLiDAR <- R6::R6Class(
     # describe method
     describe_var = function(variables) {
 
-      # argument checking
-      # stopifnot(
-      #   rlang::is_character(variables),
-      #   variables %in% c('AB', 'BAT', 'BF', 'CAT', 'DBH', 'HM', 'REC', 'VAE')
-      # )
       check_args_for(
         character = list(variables = variables),
       )

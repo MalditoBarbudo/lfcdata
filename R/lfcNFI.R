@@ -46,10 +46,6 @@ lfcNFI <- R6::R6Class(
         na = list(spatial = spatial)
       )
 
-      # stopifnot(
-      #   rlang::is_logical(spatial) & !rlang::is_na(spatial)
-      # )
-
       res <- private$data_cache[[glue::glue("{table_name}_{as.character(spatial)}")]] %||%
         {
           # is the query spatial?
@@ -101,10 +97,6 @@ lfcNFI <- R6::R6Class(
 
       # argument checking
       check_args_for(character = list(variables = variables))
-
-      # stopifnot(
-      #   rlang::is_character(variables)
-      # )
 
       # get the var thes, the numerical var thes filter by the variable and prepare the
       # result with cat, glue and crayon, as a function to apply to a vector of variables

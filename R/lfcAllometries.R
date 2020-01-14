@@ -68,9 +68,6 @@ lfcAllometries <- R6::R6Class(
           purrr::map(~ rlang::as_list(.x))
       } else {
         # argument validation (here, because is when first id is used)
-        # stopifnot(
-        #   rlang::is_character(id)
-        # )
         check_args_for(character = list(id = id))
         res <- super$get_data('allometries') %>%
           dplyr::filter(allometry_id %in% id) %>%
@@ -91,14 +88,10 @@ lfcAllometries <- R6::R6Class(
       dots_vars <- rlang::enquos(..., .named = FALSE)
 
       # argument validation
-      # stopifnot(
-      #   rlang::is_character(allometry_id)
-      # )
       check_args_for(character = list(allometry_id = allometry_id))
       silent_lapply <- lapply(
         dots_vars,
         function(x) {
-          # stopifnot(is.numeric(rlang::eval_tidy(x)))
           check_args_for(numeric = list(x = rlang::eval_tidy(x)))
         }
       )
@@ -137,9 +130,6 @@ lfcAllometries <- R6::R6Class(
     describe_var = function(variables) {
 
       # argument checking
-      # stopifnot(
-      #   rlang::is_character(variables)
-      # )
       check_args_for(character = list(variables = variables))
 
       no_returned <- self$get_data('thesaurus_app') %>%
