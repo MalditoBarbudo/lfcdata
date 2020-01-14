@@ -184,6 +184,7 @@ lfcAllometries <- R6::R6Class(
     # equation formatter for using it to calculate
     eq_formatter = function(eq) {
       eq_res <- eq %>%
+        stringr::str_conv(encoding = 'UTF-8') %>%
         stringr::str_replace_all('\u00B7', '*') %>%
         stringr::str_replace_all('\u00B2', '\u005E2') %>%
         stringr::str_replace_all('\u00B3', '\u005E3') %>%

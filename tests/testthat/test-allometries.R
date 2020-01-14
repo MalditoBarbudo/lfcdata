@@ -34,6 +34,25 @@ test_that("description method works", {
   expect_error(foo$description(Sys.Date()), 'logical')
 })
 
+test_that("equation formatter method works", {
+  eq_test_set <- c(
+    "Ht = a·DBH^b", "BFAT = a · PHV^b", "VLE = a + b·(DBH·10) + c·(DBH·10)² + d·(DBH·10)³",
+    "VC = a·DBH^b", "VLE = a + b·VOB + c·VOB²", "BST = a·DBH^b",
+    "VM = a·DBH^b", "BR = a·(DBH·10)^b", "BAT = a·DBH^b·Ht^c",
+    "P_BST = a·BAT^b"
+  )
+  expect_identical(
+    foo$.__enclos_env__$private$eq_formatter(eq_test_set),
+    c(
+      "Ht = param_a*DBH^param_b", "BFAT = param_a * PHV^param_b",
+      "VLE = param_a + param_b*(DBH*10) + param_c*(DBH*10)^2 + param_d*(DBH*10)^3",
+      "VC = param_a*DBH^param_b", "VLE = param_a + param_b*VOB + param_c*VOB^2",
+      "BST = param_a*DBH^param_b", "VM = param_a*DBH^param_b", "BR = param_a*(DBH*10)^param_b",
+      "BAT = param_a*DBH^param_b*Ht^param_c", "P_BST = param_a*BAT^param_b"
+    )
+  )
+})
+
 test_that("calculate method works", {
   expect_type(foo$calculate(DR = c(1,2,3), allometry_id = 'BH_287'), 'double')
   expect_type(foo$calculate(DBH = c(1,2,3), Ht = c(10,11,12), allometry_id = 'VOB_7674'), 'double')
