@@ -20,21 +20,23 @@ Return a vector with the desired allometry equation calculated
 }
 \examples{
 
-library(dplyr)
-allomdb <- allometries()
-allometries_calculate(allomdb, DR = c(0.55, 0.46, 0.37), allometry_id = "BH_287")
+if (interactive()) {
+  library(dplyr)
+  allomdb <- allometries()
+  allometries_calculate(allomdb, DR = c(0.55, 0.46, 0.37), allometry_id = "BH_287")
 
-# inside a dplyr mutate, with a different allometry for each species
-iris_foo <- iris \%>\%
-  mutate(allom = rep(c("BH_287","BH_288","BH_290"), each = 50)) \%>\%
-  select(branch_diameter = Sepal.Length, Species, allom)
-iris_foo
+  # inside a dplyr mutate, with a different allometry for each species
+  iris_foo <- iris \%>\%
+    mutate(allom = rep(c("BH_287","BH_288","BH_290"), each = 50)) \%>\%
+    select(branch_diameter = Sepal.Length, Species, allom)
+  iris_foo
 
-iris_foo \%>\%
-  group_by(Species) \%>\%
-  mutate(BH = allometries_calculate(
-      allomdb, DR = branch_diameter, allometry_id = first(allom)
-  ))
+  iris_foo \%>\%
+    group_by(Species) \%>\%
+    mutate(BH = allometries_calculate(
+        allomdb, DR = branch_diameter, allometry_id = first(allom)
+    ))
+}
 
 }
 \seealso{

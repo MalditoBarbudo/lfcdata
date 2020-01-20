@@ -9,6 +9,7 @@ test_that("class object creation works", {
 foo <- nfi()
 
 test_that("get method works", {
+  skip_on_cran()
   expect_s3_class(foo$get_data('plots', FALSE), 'tbl_df')
   expect_s3_class(foo$get_data('plots', TRUE), 'sf')
   # errors
@@ -40,6 +41,7 @@ test_that("avail_tables method works", {
 })
 
 test_that("describe_var method works", {
+  skip_on_cran()
   expect_is(foo$describe_var('density'), c('lfcNFI'))
   expect_output(foo$describe_var('density'))
   expect_output(foo$describe_var(c('density', 'density_dead')))
@@ -49,6 +51,7 @@ test_that("describe_var method works", {
 })
 
 test_that("cache works", {
+  skip_on_cran()
   expect_length(foo$.__enclos_env__$private$data_cache, 4)
   bar <- foo$get_data('plots', FALSE)
   expect_s3_class(bar, 'tbl_df')
@@ -63,6 +66,7 @@ test_that("cache works", {
 })
 
 test_that("external get data wrapper works", {
+  skip_on_cran()
   expect_identical(
     foo$get_data('plots', FALSE),
     nfi_get_data(foo, 'plots', FALSE)
@@ -80,11 +84,13 @@ test_that("external get data wrapper works", {
 })
 
 test_that("external avail tables wrapper works", {
+  skip_on_cran()
   expect_identical(foo$avail_tables(), nfi_avail_tables(foo))
   expect_error(nfi_avail_tables('foo'), "class lfcNFI")
 })
 
 test_that("external describe_var wrapper works", {
+  skip_on_cran()
   expect_identical(foo$describe_var('density'), nfi_describe_var(foo, 'density'))
   expect_error(nfi_describe_var('foo', 'density'), "class lfcNFI")
 })

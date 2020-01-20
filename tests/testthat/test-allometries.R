@@ -7,6 +7,7 @@ test_that("class object creation works", {
 foo <- allometries()
 
 test_that("get method works", {
+  skip_on_cran()
   expect_s3_class(foo$get_data('allometries'), 'tbl_df')
   # errors
   expect_error(
@@ -24,6 +25,7 @@ test_that("get method works", {
 })
 
 test_that("description method works", {
+  skip_on_cran()
   expect_type(foo$description(id = 'BH_287'), 'list')
   expect_type(foo$description(!is.na(independent_var_2)), 'list')
   expect_identical(names(foo$description(id = 'BH_287')), 'BH_287')
@@ -35,6 +37,7 @@ test_that("description method works", {
 })
 
 test_that("equation formatter method works", {
+  skip_on_cran()
   eq_test_set <- c(
     "Ht = a·DBH^b", "BFAT = a · PHV^b", "VLE = a + b·(DBH·10) + c·(DBH·10)² + d·(DBH·10)³",
     "VC = a·DBH^b", "VLE = a + b·VOB + c·VOB²", "BST = a·DBH^b",
@@ -65,6 +68,7 @@ test_that("equation formatter method works", {
 })
 
 test_that("calculate method works", {
+  skip_on_cran()
   expect_type(foo$calculate(DR = c(1,2,3), allometry_id = 'BH_287'), 'double')
   expect_type(foo$calculate(DBH = c(1,2,3), Ht = c(10,11,12), allometry_id = 'VOB_7674'), 'double')
   expect_equal(
@@ -105,6 +109,7 @@ test_that("calculate method works", {
 })
 
 test_that("describe_var method works", {
+  skip_on_cran()
   expect_is(foo$describe_var('BR'), c('lfcAllometries'))
   expect_output(foo$describe_var('BR'))
   expect_output(foo$describe_var(c('BR', 'DBH')))
@@ -114,6 +119,7 @@ test_that("describe_var method works", {
 })
 
 test_that("cache works", {
+  skip_on_cran()
   expect_length(foo$.__enclos_env__$private$data_cache, 2)
   bar <- foo$get_data('allometries')
   expect_s3_class(bar, 'tbl_df')
@@ -128,6 +134,7 @@ test_that("cache works", {
 })
 
 test_that("external get data wrapper works", {
+  skip_on_cran()
   expect_identical(
     foo$get_data('allometries'),
     allometries_get_data(foo, 'allometries')
@@ -145,6 +152,7 @@ test_that("external get data wrapper works", {
 })
 
 test_that("external description wrapper works", {
+  skip_on_cran()
   expect_identical(
     foo$description(id = 'BH_287'),
     allometries_description(foo, id = 'BH_287')
@@ -158,6 +166,7 @@ test_that("external description wrapper works", {
 })
 
 test_that("external calculate wrapper works", {
+  skip_on_cran()
   expect_identical(
     foo$calculate(DR = c(1,2,3), allometry_id = 'BH_287'),
     allometries_calculate(foo, DR = c(1,2,3), allometry_id = 'BH_287')
@@ -185,6 +194,7 @@ test_that("external calculate wrapper works", {
 })
 
 test_that("external describe_var wrapper works", {
+  skip_on_cran()
   expect_identical(foo$describe_var('DBH'), allometries_describe_var(foo, 'DBH'))
   expect_error(allometries_describe_var('foo', 'density'), "class lfcAllometries")
 })

@@ -17,11 +17,13 @@ A character vector with the table names
   \code{lfcNFI} objects. See \code{\link{nfi}}.
 }
 \examples{
-nfidb <- nfi()
-nfi_avail_tables(nfidb)
+if (interactive()) {
+  nfidb <- nfi()
+  nfi_avail_tables(nfidb)
 
-# nfidb is an R6 object, so the previous example is the same as:
-nfidb$avail_tables()
+  # nfidb is an R6 object, so the previous example is the same as:
+  nfidb$avail_tables()
+}
 
 }
 \seealso{

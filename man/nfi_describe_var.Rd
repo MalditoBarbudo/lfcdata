@@ -19,13 +19,15 @@ A character vector with the variable names to describe
   \code{lfcNFI} objects. See \code{\link{nfi}}.
 }
 \examples{
-nfidb <- nfi()
-nfi_describe_var(nfidb, "density")
-nfi_describe_var(nfidb, c("over_bark_volume", "basal_area"))
+if (interactive()) {
+  nfidb <- nfi()
+  nfi_describe_var(nfidb, "density")
+  nfi_describe_var(nfidb, c("over_bark_volume", "basal_area"))
 
-# nfidb is an R6 object, so the previous example is the same as:
-nfidb$describe_var("density")
-nfidb$describe_var(c("over_bark_volume", "basal_area"))
+  # nfidb is an R6 object, so the previous example is the same as:
+  nfidb$describe_var("density")
+  nfidb$describe_var(c("over_bark_volume", "basal_area"))
+}
 
 }
 \seealso{

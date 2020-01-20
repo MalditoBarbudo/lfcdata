@@ -31,19 +31,21 @@ Connection to database can be slow. Rasters retrieved from the db are stored
   can use a lot of memory!
 }
 \examples{
-lidardb <- lidar()
-# raster
-ab_raster <- lidar_get_data(lidardb, 'AB', 'raster')
-# stars
-ab_stars <- lidar_get_data(lidardb, 'AB', 'stars')
+if (interactive()) {
+  lidardb <- lidar()
+  # raster
+  ab_raster <- lidar_get_data(lidardb, 'AB', 'raster')
+  # stars
+  ab_stars <- lidar_get_data(lidardb, 'AB', 'stars')
 
-# we can use pipes
-lidardb \%>\%
-  lidar_get_data('AB', 'raster')
+  # we can use pipes
+  lidardb \%>\%
+    lidar_get_data('AB', 'raster')
 
-# lidardb is an R6 object, so the previous examples are the same as:
-lidardb$get_data('AB', 'raster')
-lidardb$get_data('AB', 'stars')
+  # lidardb is an R6 object, so the previous examples are the same as:
+  lidardb$get_data('AB', 'raster')
+  lidardb$get_data('AB', 'stars')
+}
 
 }
 \seealso{

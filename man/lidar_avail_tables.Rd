@@ -17,11 +17,13 @@ A character vector with the table names
   \code{lfcLiDAR} objects. See \code{\link{lidar}}.
 }
 \examples{
-lidardb <- lidar()
-lidar_avail_tables(lidardb)
+if (interactive()) {
+  lidardb <- lidar()
+  lidar_avail_tables(lidardb)
 
-# lidardb is an R6 object, so the previous example is the same as:
-lidardb$avail_tables()
+  # lidardb is an R6 object, so the previous example is the same as:
+  lidardb$avail_tables()
+}
 
 }
 \seealso{

@@ -25,16 +25,18 @@ Connection to database can be slow. Tables retrieved from the db are stored
   \code{\link{allometries}}, making subsequent calls to the same table are faster.
 }
 \examples{
-allomdb <- allometries()
-# tibble
-allometries_get_data(allomdb, 'allometries')
+if (interactive()) {
+  allomdb <- allometries()
+  # tibble
+  allometries_get_data(allomdb, 'allometries')
 
-# we can use pipes
-allomdb \%>\%
-  allometries_get_data('allometries')
+  # we can use pipes
+  allomdb \%>\%
+    allometries_get_data('allometries')
 
-# allomdb is an R6 object, so the previous examples are the same as:
-allomdb$get_data('allometries')
+  # allomdb is an R6 object, so the previous examples are the same as:
+  allomdb$get_data('allometries')
+}
 
 }
 \seealso{

@@ -27,19 +27,21 @@ Connection to database can be slow. Tables retrieved from the db are stored
   subsequent calls to the same table are faster.
 }
 \examples{
-nfidb <- nfi()
-# tibble
-nfi_get_data(nfidb, 'plots')
-# sf tibble
-nfi_get_data(nfidb, 'plots', TRUE)
+if (interactive()) {
+  nfidb <- nfi()
+  # tibble
+  nfi_get_data(nfidb, 'plots')
+  # sf tibble
+  nfi_get_data(nfidb, 'plots', TRUE)
 
-# we can use pipes
-nfidb \%>\%
-  nfi_get_data('plots', TRUE)
+  # we can use pipes
+  nfidb \%>\%
+    nfi_get_data('plots', TRUE)
 
-# nfidb is an R6 object, so the previous examples are the same as:
-nfidb$get_data('plots')
-nfidb$get_data('plots', TRUE)
+  # nfidb is an R6 object, so the previous examples are the same as:
+  nfidb$get_data('plots')
+  nfidb$get_data('plots', TRUE)
+}
 
 }
 \seealso{

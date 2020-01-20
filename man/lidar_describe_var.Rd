@@ -19,6 +19,7 @@ A character vector with the variable names to describe
   \code{lfcLiDAR} objects. See \code{\link{lidar}}.
 }
 \examples{
+if (interactive()) {
 lidardb <- lidar()
 lidar_describe_var(lidardb, "BF")
 lidar_describe_var(lidardb, c("DBH", "VAE"))
@@ -26,6 +27,7 @@ lidar_describe_var(lidardb, c("DBH", "VAE"))
 # lidardb is an R6 object, so the previous example is the same as:
 lidardb$describe_var("BF")
 lidardb$describe_var(c("DBH", "VAE"))
+}
 
 }
 \seealso{

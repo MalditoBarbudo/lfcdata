@@ -19,6 +19,7 @@ A character vector with the variable names to describe
   \code{lfcAllometries} objects. See \code{\link{allometries}}.
 }
 \examples{
+if (interactive()) {
 allometriesdb <- allometries()
 allometries_describe_var(allometriesdb, "BR")
 allometries_describe_var(allometriesdb, c("DBH", "P_BST"))
@@ -26,6 +27,7 @@ allometries_describe_var(allometriesdb, c("DBH", "P_BST"))
 # allometriesdb is an R6 object, so the previous example is the same as:
 allometriesdb$describe_var("BR")
 allometriesdb$describe_var(c("DBH", "P_BST"))
+}
 
 }
 \concept{allometries functions}
