@@ -98,6 +98,36 @@ lfcAllometries <- R6::R6Class(
 
       # allometry description
       allo_desc <- self$description(id = allometry_id)
+
+      # variables in dots checks
+      var_provided <- names(dots_vars)
+      var_needed <- c(
+        allo_desc[[allometry_id]][['independent_var_1']],
+        allo_desc[[allometry_id]][['independent_var_2']],
+        allo_desc[[allometry_id]][['independent_var_3']]
+      ) %>% magrittr::extract(!is.na(.))
+
+      var_needed_np <- var_needed[!var_needed %in% var_provided]
+      if (length(var_needed_np) > 0) {
+        stop(
+          glue::glue(
+            "variable(s) {glue::glue_collapse(var_needed_np, sep = ', ')}",
+            " needed but not provided"
+          )
+        )
+      }
+
+      var_provided_nn <- var_provided[!var_provided %in% var_needed]
+      if (length(var_provided_nn) > 0) {
+        warning(
+          glue::glue(
+            "variable(s) {glue::glue_collapse(var_provided_nn, sep = ', ')} provided but",
+            " not used"
+          )
+        )
+      }
+
+
       # parameters from allometry (needed in equation)
       param_a <- allo_desc[[allometry_id]][['param_a']]
       param_b <- allo_desc[[allometry_id]][['param_b']]
@@ -109,16 +139,11 @@ lfcAllometries <- R6::R6Class(
         unlist() %>%
         magrittr::extract(2) %>%
         private$eq_formatter() %>% {
-          for (var in names(dots_vars)) {
-            # validate dots_vars are named
-            if (stringr::str_length(var) < 1) {
-              stop("Numeric vectors for the independent variables must be named with the variable name")
-            } else {
-              . <- stringr::str_replace_all(
-                ., pattern = var,
-                replacement = paste0('rlang::eval_tidy(dots_vars$', var, ')')
-              )
-            }
+          for (var in var_provided[var_provided %in% var_needed]) {
+            . <- stringr::str_replace_all(
+              ., pattern = var,
+              replacement = paste0('rlang::eval_tidy(dots_vars$', var, ')')
+            )
           }
           .
         } %>%

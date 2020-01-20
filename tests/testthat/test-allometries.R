@@ -77,7 +77,31 @@ test_that("calculate method works", {
   )
   expect_error(foo$calculate(DR = c(1,2,3), allometry_id = 1), 'not character')
   expect_error(foo$calculate(DR = Sys.Date(), allometry_id = 'BH_287'), 'not numeric')
-  expect_error(foo$calculate(c(1,2,3), allometry_id = 'BH_287'), 'Numeric vectors for the independent variables')
+  expect_error(
+    foo$calculate(c(1,2,3), allometry_id = 'BH_287'),
+    'DR'
+  )
+  # errors/warnings expected when bad variable names supplied
+  expect_error(
+    foo$calculate(DB = c(1,2,3), allometry_id = 'BH_287'),
+    'DR'
+  )
+  expect_error(
+    foo$calculate(DC = c(1,2,3), DB = c(1,2,3), allometry_id = 'BH_287'),
+    'DR'
+  )
+  expect_warning(
+    foo$calculate(DR = c(1,2,3), DB = c(1,2,3), allometry_id = 'BH_287'),
+    'DB'
+  )
+  expect_warning(
+    foo$calculate(DC = c(1,2,3), DR = c(1,2,3), DB = c(1,2,3), allometry_id = 'BH_287'),
+    'DC, DB'
+  )
+  suppressWarnings(expect_equal(
+    foo$calculate(DR = c(1,2,3), DB = c(1,2,3), allometry_id = 'BH_287'),
+    foo$calculate(DR = c(1,2,3), allometry_id = 'BH_287')
+  ))
 })
 
 test_that("describe_var method works", {
