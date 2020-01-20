@@ -104,12 +104,32 @@ allom_list[[1]]$equation
 allom_list[[900]]$equation
 ```
 
+3. All the allometries
 
-### Calculation
-
-A method to automatically use the allometries in the database is offered:
+We can obtain the same information as with `allometries_get_data`, but in a nested list
+format by no providing *id* or *...* arguments:
 
 ```{r}
+allom_list <- allometries_description(allomdb)
+length(allom_list)
+allom_list[[1]]$equation
+```
+
+
+### Calculate values based on an allometry
+
+Allometries in the database can be used right away with the `allometries_calculate`
+function (see `?allometries_calculate`). Vectors with the independent variables values
+must be supplied, as well as the allometry identificator.
+
+```{r, collapse=FALSE}
+allometry_info <- allometries_description(
+  allomdb,
+  spatial_level_name == 'Alt Camp',
+  functional_group_level_name == 'Ilex aquifolium',
+  dependent_var == 'BH'
+)
+allometry_info$BH_287$independent_var_1
 allometries_calculate(allomdb, DR = c(5.5, 4.6, 3.7), allometry_id = "BH_287")
 ```
 
@@ -123,7 +143,9 @@ dummy_data <- data.frame(
 
 dummy_data %>%
   mutate(
-    leaves_biomass = allometries_calculate(allomdb, DR = branch_diameter, allometry_id = 'BH_287')
+    leaves_biomass = allometries_calculate(
+      allomdb, DR = branch_diameter, allometry_id = 'BH_287'
+    )
   )
 ```
 
