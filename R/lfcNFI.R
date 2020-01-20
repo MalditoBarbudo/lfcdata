@@ -196,19 +196,21 @@ lfcNFI <- R6::R6Class(
 #'   subsequent calls to the same table are faster.
 #'
 #' @examples
-#' nfidb <- nfi()
-#' # tibble
-#' nfi_get_data(nfidb, 'plots')
-#' # sf tibble
-#' nfi_get_data(nfidb, 'plots', TRUE)
+#' if (interactive()) {
+#'   nfidb <- nfi()
+#'   # tibble
+#'   nfi_get_data(nfidb, 'plots')
+#'   # sf tibble
+#'   nfi_get_data(nfidb, 'plots', TRUE)
 #'
-#' # we can use pipes
-#' nfidb %>%
-#'   nfi_get_data('plots', TRUE)
+#'   # we can use pipes
+#'   nfidb %>%
+#'     nfi_get_data('plots', TRUE)
 #'
-#' # nfidb is an R6 object, so the previous examples are the same as:
-#' nfidb$get_data('plots')
-#' nfidb$get_data('plots', TRUE)
+#'   # nfidb is an R6 object, so the previous examples are the same as:
+#'   nfidb$get_data('plots')
+#'   nfidb$get_data('plots', TRUE)
+#' }
 #'
 #' @export
 nfi_get_data <- function(object, table_name, spatial = FALSE) {
@@ -231,11 +233,13 @@ nfi_get_data <- function(object, table_name, spatial = FALSE) {
 #' @family NFI functions
 #'
 #' @examples
-#' nfidb <- nfi()
-#' nfi_avail_tables(nfidb)
+#' if (interactive()) {
+#'   nfidb <- nfi()
+#'   nfi_avail_tables(nfidb)
 #'
-#' # nfidb is an R6 object, so the previous example is the same as:
-#' nfidb$avail_tables()
+#'   # nfidb is an R6 object, so the previous example is the same as:
+#'   nfidb$avail_tables()
+#' }
 #'
 #' @export
 nfi_avail_tables <- function(object) {
@@ -258,13 +262,15 @@ nfi_avail_tables <- function(object) {
 #' @family NFI functions
 #'
 #' @examples
-#' nfidb <- nfi()
-#' nfi_describe_var(nfidb, "density")
-#' nfi_describe_var(nfidb, c("over_bark_volume", "basal_area"))
+#' if (interactive()) {
+#'   nfidb <- nfi()
+#'   nfi_describe_var(nfidb, "density")
+#'   nfi_describe_var(nfidb, c("over_bark_volume", "basal_area"))
 #'
-#' # nfidb is an R6 object, so the previous example is the same as:
-#' nfidb$describe_var("density")
-#' nfidb$describe_var(c("over_bark_volume", "basal_area"))
+#'   # nfidb is an R6 object, so the previous example is the same as:
+#'   nfidb$describe_var("density")
+#'   nfidb$describe_var(c("over_bark_volume", "basal_area"))
+#' }
 #'
 #' @export
 nfi_describe_var <- function(object, variables) {

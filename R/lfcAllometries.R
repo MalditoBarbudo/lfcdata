@@ -237,16 +237,18 @@ lfcAllometries <- R6::R6Class(
 #'   \code{\link{allometries}}, making subsequent calls to the same table are faster.
 #'
 #' @examples
-#' allomdb <- allometries()
-#' # tibble
-#' allometries_get_data(allomdb, 'allometries')
+#' if (interactive()) {
+#'   allomdb <- allometries()
+#'   # tibble
+#'   allometries_get_data(allomdb, 'allometries')
 #'
-#' # we can use pipes
-#' allomdb %>%
-#'   allometries_get_data('allometries')
+#'   # we can use pipes
+#'   allomdb %>%
+#'     allometries_get_data('allometries')
 #'
-#' # allomdb is an R6 object, so the previous examples are the same as:
-#' allomdb$get_data('allometries')
+#'   # allomdb is an R6 object, so the previous examples are the same as:
+#'   allomdb$get_data('allometries')
+#' }
 #'
 #' @export
 allometries_get_data <- function(object, table_name = 'allometries') {
@@ -271,19 +273,21 @@ allometries_get_data <- function(object, table_name = 'allometries') {
 #'
 #' @examples
 #'
-#' # by id
-#' allomdb <- allometries()
-#' foo <- allometries_description(allomdb, id = "GC_3210")
-#' foo
-#' foo$GC_3210$dependent_var
-#' foo$GC_3210$param_a
+#' if (interactive()) {
+#'   # by id
+#'   allomdb <- allometries()
+#'   foo <- allometries_description(allomdb, id = "GC_3210")
+#'   foo
+#'   foo$GC_3210$dependent_var
+#'   foo$GC_3210$param_a
 #'
-#' # filtering
-#' ht_dn_allometries <- allometries_description(allomdb, dependent_var %in% c("GC", "Dn"))
-#' length(ht_dn_allometries)
-#' names(ht_dn_allometries)
-#' ht_dn_allometries$GC_3210$dependent_var
-#' ht_dn_allometries$GC_3210$param_a
+#'   # filtering
+#'   ht_dn_allometries <- allometries_description(allomdb, dependent_var %in% c("GC", "Dn"))
+#'   length(ht_dn_allometries)
+#'   names(ht_dn_allometries)
+#'   ht_dn_allometries$GC_3210$dependent_var
+#'   ht_dn_allometries$GC_3210$param_a
+#' }
 #'
 #' @return A list with the selected allometries and their info, see examples. In the
 #'   special case of no \code{id} or expressions (\code{...}) provided, information for
@@ -311,21 +315,23 @@ allometries_description <- function(object, ..., id = NULL) {
 #'
 #' @examples
 #'
-#' library(dplyr)
-#' allomdb <- allometries()
-#' allometries_calculate(allomdb, DR = c(0.55, 0.46, 0.37), allometry_id = "BH_287")
+#' if (interactive()) {
+#'   library(dplyr)
+#'   allomdb <- allometries()
+#'   allometries_calculate(allomdb, DR = c(0.55, 0.46, 0.37), allometry_id = "BH_287")
 #'
-#' # inside a dplyr mutate, with a different allometry for each species
-#' iris_foo <- iris %>%
-#'   mutate(allom = rep(c("BH_287","BH_288","BH_290"), each = 50)) %>%
-#'   select(branch_diameter = Sepal.Length, Species, allom)
-#' iris_foo
+#'   # inside a dplyr mutate, with a different allometry for each species
+#'   iris_foo <- iris %>%
+#'     mutate(allom = rep(c("BH_287","BH_288","BH_290"), each = 50)) %>%
+#'     select(branch_diameter = Sepal.Length, Species, allom)
+#'   iris_foo
 #'
-#' iris_foo %>%
-#'   group_by(Species) %>%
-#'   mutate(BH = allometries_calculate(
-#'       allomdb, DR = branch_diameter, allometry_id = first(allom)
-#'   ))
+#'   iris_foo %>%
+#'     group_by(Species) %>%
+#'     mutate(BH = allometries_calculate(
+#'         allomdb, DR = branch_diameter, allometry_id = first(allom)
+#'     ))
+#' }
 #'
 #' @export
 allometries_calculate <- function(object, ..., allometry_id) {
@@ -348,6 +354,7 @@ allometries_calculate <- function(object, ..., allometry_id) {
 #' @family allometries functions
 #'
 #' @examples
+#' if (interactive()) {
 #' allometriesdb <- allometries()
 #' allometries_describe_var(allometriesdb, "BR")
 #' allometries_describe_var(allometriesdb, c("DBH", "P_BST"))
@@ -355,6 +362,7 @@ allometries_calculate <- function(object, ..., allometry_id) {
 #' # allometriesdb is an R6 object, so the previous example is the same as:
 #' allometriesdb$describe_var("BR")
 #' allometriesdb$describe_var(c("DBH", "P_BST"))
+#' }
 #'
 #' @export
 allometries_describe_var <- function(object, variables) {

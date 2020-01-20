@@ -175,19 +175,21 @@ lfcLiDAR <- R6::R6Class(
 #'   can use a lot of memory!
 #'
 #' @examples
-#' lidardb <- lidar()
-#' # raster
-#' ab_raster <- lidar_get_data(lidardb, 'AB', 'raster')
-#' # stars
-#' ab_stars <- lidar_get_data(lidardb, 'AB', 'stars')
+#' if (interactive()) {
+#'   lidardb <- lidar()
+#'   # raster
+#'   ab_raster <- lidar_get_data(lidardb, 'AB', 'raster')
+#'   # stars
+#'   ab_stars <- lidar_get_data(lidardb, 'AB', 'stars')
 #'
-#' # we can use pipes
-#' lidardb %>%
-#'   lidar_get_data('AB', 'raster')
+#'   # we can use pipes
+#'   lidardb %>%
+#'     lidar_get_data('AB', 'raster')
 #'
-#' # lidardb is an R6 object, so the previous examples are the same as:
-#' lidardb$get_data('AB', 'raster')
-#' lidardb$get_data('AB', 'stars')
+#'   # lidardb is an R6 object, so the previous examples are the same as:
+#'   lidardb$get_data('AB', 'raster')
+#'   lidardb$get_data('AB', 'stars')
+#' }
 #'
 #' @export
 lidar_get_data <- function(object, table_name, spatial = 'stars') {
@@ -210,11 +212,13 @@ lidar_get_data <- function(object, table_name, spatial = 'stars') {
 #' @family LiDAR functions
 #'
 #' @examples
-#' lidardb <- lidar()
-#' lidar_avail_tables(lidardb)
+#' if (interactive()) {
+#'   lidardb <- lidar()
+#'   lidar_avail_tables(lidardb)
 #'
-#' # lidardb is an R6 object, so the previous example is the same as:
-#' lidardb$avail_tables()
+#'   # lidardb is an R6 object, so the previous example is the same as:
+#'   lidardb$avail_tables()
+#' }
 #'
 #' @export
 lidar_avail_tables <- function(object) {
@@ -237,6 +241,7 @@ lidar_avail_tables <- function(object) {
 #' @family LiDAR functions
 #'
 #' @examples
+#' if (interactive()) {
 #' lidardb <- lidar()
 #' lidar_describe_var(lidardb, "BF")
 #' lidar_describe_var(lidardb, c("DBH", "VAE"))
@@ -244,6 +249,7 @@ lidar_avail_tables <- function(object) {
 #' # lidardb is an R6 object, so the previous example is the same as:
 #' lidardb$describe_var("BF")
 #' lidardb$describe_var(c("DBH", "VAE"))
+#' }
 #'
 #' @export
 lidar_describe_var <- function(object, variables) {
