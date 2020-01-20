@@ -8,9 +8,6 @@ addons:
     packages:
       - libudunits2-dev
       - libgdal-dev
-install:
-  - R -e 'devtools::install_deps(dep = T)'
-
 script:
   - R CMD build .
   - travis_wait R CMD check *tar.gz
