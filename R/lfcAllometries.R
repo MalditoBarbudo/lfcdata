@@ -274,15 +274,20 @@ allometries_get_data <- function(object, table_name = 'allometries') {
 #' # by id
 #' allomdb <- allometries()
 #' foo <- allometries_description(allomdb, id = "GC_3210")
+#' foo
 #' foo$GC_3210$dependent_var
 #' foo$GC_3210$param_a
 #'
 #' # filtering
 #' ht_dn_allometries <- allometries_description(allomdb, dependent_var %in% c("GC", "Dn"))
+#' length(ht_dn_allometries)
+#' names(ht_dn_allometries)
 #' ht_dn_allometries$GC_3210$dependent_var
 #' ht_dn_allometries$GC_3210$param_a
 #'
-#' @return a list with the selected allometries and their info
+#' @return A list with the selected allometries and their info, see examples. In the
+#'   special case of no \code{id} or expressions (\code{...}) provided, information for
+#'   all the allometries is returned.
 #'
 #' @export
 allometries_description <- function(object, ..., id = NULL) {
