@@ -77,6 +77,7 @@ lfcLiDAR <- R6::R6Class(
 
           # temp persistent conn object (rpostgis not working with pool objects)
           temp_postgresql_conn <- pool::poolCheckout(private$pool_conn)
+          message('Querying raster from LFC database, this can take a while...')
           # let's try to get the raster. With any error, the pool checkout is not returned
           # resulting in dangling db connections, so we use try
           lidar_raster <- try(
@@ -97,6 +98,7 @@ lfcLiDAR <- R6::R6Class(
             'raster' = lidar_raster,
             'stars' = lidar_raster %>% stars::st_as_stars()
           )
+          message('Done')
           # update cache
           private$data_cache[[glue::glue("{table_name}_{as.character(spatial)}")]] <- res
           res

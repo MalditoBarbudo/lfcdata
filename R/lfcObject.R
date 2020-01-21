@@ -21,9 +21,11 @@ lfcObject <- R6::R6Class(
       # expression.
       private$data_cache[[glue::glue("{table_name}_FALSE")]] %||% {
         # try to catch a db connection error
+        message('Querying table from LFC database, this can take a while...')
         query_data <- try(
           dplyr::tbl(private$pool_conn, table_name) %>% dplyr::collect()
         )
+        message('Done')
         # check if any error
         if (inherits(query_data, "try-error")) {
           stop("Can not connect to the database:\n", query_data[1])
