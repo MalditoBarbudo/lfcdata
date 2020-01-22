@@ -112,26 +112,15 @@ lfcNFI <- R6::R6Class(
           dplyr::group_by(var_description_eng) %>%
           dplyr::group_walk(
             ~ cat(
+              "\n",
               # var name
               crayon::yellow$bold(glue::glue("{.x$translation_eng %>% unique()} ({.x$var_id %>% unique()})")),
               "\n",
-              # tables present
-              "Present in the following tables:\n",
-              crayon::magenta(
-                stringr::str_c("    - ", sort(.x$var_table), collapse = '\n')
-              ),
-              "\n",
               # var description
-              "Description:\n",
-              crayon::green(stringr::str_c(
-                "    ",
-                substring(
-                  .y$var_description_eng,
-                  seq(1, nchar(.y$var_description_eng), by = 78),
-                  seq(78, nchar(.y$var_description_eng) + 78, by = 78)
-                ),
-                collapse = '\n'
-              )),
+              "Description:",
+              strwrap(crayon::green(
+                stringr::str_c(.y$var_description_eng, collapse = '\n')
+              ), width = 72),
               "\n",
               # var units
               "Units:  ",
@@ -140,8 +129,13 @@ lfcNFI <- R6::R6Class(
                   glue::glue("{(.x$var_units %na% ' - ') %>% unique()}")
                 ) %+%
                 crayon::blue$bold("]"),
-              "\n\n",
-              sep = ''
+              # "\n",
+              # tables present
+              "Present in the following tables:",
+              crayon::magenta(
+                stringr::str_c(" - ", sort(.x$var_table), collapse = '\n')
+              ),
+              sep = '', fill = 80
             )
           )
         invisible(variable)
