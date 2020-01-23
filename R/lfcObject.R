@@ -48,7 +48,7 @@ lfcObject <- R6::R6Class(
     # initialize method function
     pool_conn_create = function() {
       pool::dbPool(
-        drv = RPostgreSQL::PostgreSQL(),
+        drv = RPostgres::Postgres(),
         dbname = private$dbname,
         host = 'laboratoriforestal.creaf.uab.cat',
         idleTimeout = 3600000,

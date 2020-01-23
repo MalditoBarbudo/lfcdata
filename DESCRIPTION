@@ -14,7 +14,7 @@ LazyData: true
 Imports: 
     R6 (>= 2.4.0),
     pool,
-    RPostgreSQL,
+    RPostgres,
     dplyr,
     sf,
     rlang,
