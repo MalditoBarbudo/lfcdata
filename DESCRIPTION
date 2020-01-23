@@ -19,7 +19,7 @@ Imports:
     sf,
     rlang,
     glue,
-    rpostgis,
+    rpostgis (>= 1.4.3),
     stars,
     magrittr,
     crayon,
