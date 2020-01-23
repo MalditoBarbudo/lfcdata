@@ -51,7 +51,7 @@ lfcObject <- R6::R6Class(
         drv = RPostgres::Postgres(),
         dbname = private$dbname,
         host = 'laboratoriforestal.creaf.uab.cat',
-        idleTimeout = 3600000,
+        idleTimeout = 3600,
         user = 'guest',
         password = 'guest'
       )

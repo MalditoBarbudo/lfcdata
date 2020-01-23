@@ -8,6 +8,3 @@ addons:
     packages:
       - libudunits2-dev
       - libgdal-dev
-script:
-  - R CMD build .
-  - travis_wait R CMD check *tar.gz
