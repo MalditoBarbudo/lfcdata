@@ -100,40 +100,46 @@ lfcNFI <- R6::R6Class(
 
       # get the var thes, the numerical var thes filter by the variable and prepare the
       # result with cat, glue and crayon, as a function to apply to a vector of variables
+      # suppresMessages is used to avoid the querying database message
       invisible_cats <- function(variable) {
-        no_returned <- self$get_data('variables_thesaurus') %>%
+        no_returned <- suppressMessages(self$get_data('variables_thesaurus')) %>%
           dplyr::filter(var_id == variable) %>% {
             check_filter_for(., glue::glue("{variable} variable not found"))
             .
           } %>%
           dplyr::left_join(
-            self$get_data('variables_numerical'), by = c("var_id", "var_table")
+            suppressMessages(self$get_data('variables_numerical')), by = c("var_id", "var_table")
           ) %>%
           dplyr::group_by(var_description_eng) %>%
           dplyr::group_walk(
             ~ cat(
               "\n",
               # var name
-              crayon::yellow$bold(glue::glue("{.x$translation_eng %>% unique()} ({.x$var_id %>% unique()})")),
+              crayon::yellow$bold(glue::glue(
+                "{.x$translation_eng %>% unique()} ({.x$var_id %>% unique()})"
+              )),
               "\n",
               # var description
-              "Description:",
               strwrap(crayon::green(
-                stringr::str_c(.y$var_description_eng, collapse = '\n')
+                .y$var_description_eng
+                # glue::glue_collapse(glue::glue("  Description {.y$var_description_eng}"))
+                # stringr::str_c('  Description: ', .y$var_description_eng)
               ), width = 72),
               "\n",
               # var units
-              "Units:  ",
-              crayon::blue$bold("[") %+%
-                crayon::blue$italic$bold(
-                  glue::glue("{(.x$var_units %na% ' - ') %>% unique()}")
-                ) %+%
-                crayon::blue$bold("]"),
-              # "\n",
+              crayon::blue$bold(
+                "Units: [" %+%
+                  crayon::blue$italic$bold(
+                    glue::glue("{(.x$var_units %na% ' - ') %>% unique()}")
+                  ) %+%
+                  "]"
+              ),
+              "\n",
               # tables present
-              "Present in the following tables:",
+              "Present in the following tables:\n",
               crayon::magenta(
-                stringr::str_c(" - ", sort(.x$var_table), collapse = '\n')
+                glue::glue_collapse(glue::glue(" - {sort(.x$var_table)}"), sep = '\n')
+                # stringr::str_c(" - ", sort(.x$var_table), collapse = '\n')
               ),
               sep = '', fill = 80
             )
