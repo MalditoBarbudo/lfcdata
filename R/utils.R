@@ -1,3 +1,4 @@
+## syntactic sugars ####
 # syntactic sugar for "one or another if one is null" case. taken from tidyverse utils
 `%||%` <- function(a, b) {
   if (rlang::is_null(a)) b else a
@@ -8,6 +9,7 @@
   if (rlang::is_na(a)) b else a
 }
 
+## argument and other checks ####
 # argument checking
 check_args_for <- function(
   character = NULL, numerical = NULL, logical = NULL, na = NULL
@@ -100,4 +102,37 @@ check_filter_for <- function(object, error_message) {
   if (nrow(object) < 1) {
     stop(error_message)
   }
+}
+
+## dictionaries and lookup tables ####
+nfi_table_dictionary <- function() {
+  c(
+    plot = 'Plots eco-physiological variables',
+    species = 'Plots eco-physiological variables broken down by species',
+    simpspecies = 'Plots eco-physiological variables broken down by simplified species',
+    genus = 'Plots eco-physiological variables broken down by genus',
+    dec = 'Plots eco-physiological variables broken down by deciduous/esclerophyill/conifers',
+    bc = 'Plots eco-physiological variables broken down by broadleaf and conifers',
+
+    diamclass = ', also broken down by diameter classes',
+
+    comp = ' from the comparision between',
+
+    nfi2 = ' NFI version 2 (1990-1991)',
+    nfi3 = ' NFI version 3 (2000-2001)',
+    nfi4 = ' NFI version 4 (2013-2016)',
+
+    '2' = ' from NFI version 2 (1990-1991)',
+    '3' = ' from NFI version 3 (2000-2001)',
+    '4' = ' from NFI version 4 (2013-2016)',
+
+    plots = 'Plots general info',
+    dynamic = 'dynamic (meaning it changes for each NFI version)',
+
+    shrub = 'Plots eco-physiological variables broken down by shrub species',
+    regeneration = 'Plots eco-physiological variables for small trees broken down by species',
+
+    variables = 'Thesaurus for variables',
+    numerical = ' (limits and units for numerical variables)'
+  )
 }

@@ -7,8 +7,9 @@
 nfi()
 }
 \value{
-An \code{lfcNFI} class object (inherits from \code{\link[R6]{R6Class}}),
-  with methods to access the data. See Methods section.
+An \code{lfcNFI} class object (inherits from
+  \code{\link[R6]{R6Class}}), with methods to access the data. See Methods
+  section.
 }
 \description{
 \code{nfi()} creates an object to access the nfi database.
@@ -19,11 +20,12 @@ An \code{lfcNFI} class object (inherits from \code{\link[R6]{R6Class}}),
   \itemize{
     \item{\code{$get_data}: Retrieve and collect NFI database tables. See
           \code{\link{nfi_get_data}} for more details}
-    \item{\code{$avail_tables}: Return a character vector with the names of the
-          available tables in the database. See \code{\link{nfi_avail_tables}} for
-          more details}
-    \item{\code{$describe_var}: Print the information available about the provided
-          variable. See \code{\link{nfi_describe_var}} for more details}
+    \item{\code{$avail_tables}: Return a character vector with the names of
+          the available tables in the database. See
+          \code{\link{nfi_avail_tables}} for more details}
+    \item{\code{$describe_var}: Print the information available about the
+          provided variable. See \code{\link{nfi_describe_var}} for more
+          details}
   }
 }
 

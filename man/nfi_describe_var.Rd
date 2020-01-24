@@ -15,8 +15,8 @@ nfi_describe_var(object, variables)
 A character vector with the variable names to describe
 }
 \description{
-\code{nfi_describe_var} is a wrapper for the \code{$describe_var} method of
-  \code{lfcNFI} objects. See \code{\link{nfi}}.
+\code{nfi_describe_var} is a wrapper for the \code{$describe_var}
+  method of \code{lfcNFI} objects. See \code{\link{nfi}}.
 }
 \examples{
 if (interactive()) {

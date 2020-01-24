@@ -2,19 +2,21 @@
 #'
 #' @title lfcNFI class
 #'
-#' @return An \code{lfcNFI} class object (inherits from \code{\link[R6]{R6Class}}),
-#'   with methods to access the data. See Methods section.
+#' @return An \code{lfcNFI} class object (inherits from
+#'   \code{\link[R6]{R6Class}}), with methods to access the data. See Methods
+#'   section.
 #'
 #' @section Methods:
 #'   \code{lfcNFI} objects has two public methods:
 #'   \itemize{
 #'     \item{\code{$get_data}: Retrieve and collect NFI database tables. See
 #'           \code{\link{nfi_get_data}} for more details}
-#'     \item{\code{$avail_tables}: Return a character vector with the names of the
-#'           available tables in the database. See \code{\link{nfi_avail_tables}} for
-#'           more details}
-#'     \item{\code{$describe_var}: Print the information available about the provided
-#'           variable. See \code{\link{nfi_describe_var}} for more details}
+#'     \item{\code{$avail_tables}: Return a character vector with the names of
+#'           the available tables in the database. See
+#'           \code{\link{nfi_avail_tables}} for more details}
+#'     \item{\code{$describe_var}: Print the information available about the
+#'           provided variable. See \code{\link{nfi_describe_var}} for more
+#'           details}
 #'   }
 #'
 #' @family NFI functions
@@ -62,8 +64,8 @@ lfcNFI <- R6::R6Class(
             )) {
               query_data_spatial <- super$get_data(table_name) %>%
                 sf::st_as_sf(
-                  coords = c('coords_longitude', 'coords_latitude'), remove = FALSE,
-                  crs = 4326
+                  coords = c('coords_longitude', 'coords_latitude'),
+                  remove = FALSE, crs = 4326
                 )
             } else {
               # if there is no lat long vars, then get them from plots
@@ -95,6 +97,51 @@ lfcNFI <- R6::R6Class(
         tolower() %>%
         unique() %>%
         sort()
+    },
+
+    # describe table method
+    describe_table = function(tables) {
+      # argument checking
+      check_args_for(character = list(tables = tables))
+
+      # table name dictionary and variables thesaurus
+      tables_dict <- nfi_table_dictionary()
+      variables_thes <- suppressMessages(self$get_data('variables_thesaurus'))
+
+      # function for each table
+      invisible_cats <- function(table) {
+        variable_names <- variables_thes %>%
+          dplyr::filter(var_table == table) %>%
+          dplyr::pull(var_id) %>%
+          unique()
+
+        table_decomposed <- stringr::str_split(table, '_') %>%
+          purrr::flatten_chr()
+
+        browser()
+
+        cat(
+          crayon::yellow$bold(table),
+          '\n',
+          strwrap(crayon::green(
+            glue::glue_collapse(glue::glue(
+              "{tables_dict[table_decomposed] %>% purrr::discard(is.na)}"
+            ))
+          ), width = 72),
+          '\n',
+          'Variables in table:\n',
+          crayon::magenta(glue::glue_collapse(
+            glue::glue(" - {sort(variable_names)}"), sep = '\n'
+          )),
+
+          # cat options
+          fill = 80
+        )
+        invisible(table)
+      }
+
+      lapply(tables, invisible_cats)
+      return(invisible(self))
     },
 
     # describe variable method
@@ -167,7 +214,9 @@ lfcNFI <- R6::R6Class(
         "Use " %+% crayon::yellow$bold("nfi_describe_var") %+%
           " to get the information available on the variables.\n",
         "See " %+%
-          crayon::yellow$bold("vignette('tables_and_variables', package = 'lfcdata')") %+%
+          crayon::yellow$bold(
+            "vignette('tables_and_variables', package = 'lfcdata')"
+          ) %+%
           " to learn more about the tables and variables."
       )
       invisible(self)
@@ -182,21 +231,23 @@ lfcNFI <- R6::R6Class(
 
 #' Access to the tables in the NFI database
 #'
-#' @description \code{nfi_get_data} is a wrapper for the \code{$get_data} method of
-#'   \code{lfcNFI} objects. See also \code{\link{nfi}}.
+#' @description \code{nfi_get_data} is a wrapper for the \code{$get_data} method
+#'   of \code{lfcNFI} objects. See also \code{\link{nfi}}.
 #'
 #' @param object \code{lfcNFI} object, as created by \code{\link{nfi}}
-#' @param table_name character vector of lenght 1 indicating the requested table name
-#' @param spatial logical indicating if the data must be converted to an spatial object
+#' @param table_name character vector of lenght 1 indicating the requested table
+#'   name
+#' @param spatial logical indicating if the data must be converted to an spatial
+#'   object
 #'
-#' @return A tbl object: tbl_df if spatial is \code{FALSE}, sf if
-#'   spatial is \code{TRUE}
+#' @return A tbl object: tbl_df if spatial is \code{FALSE}, sf if spatial is
+#'   \code{TRUE}
 #'
 #' @family NFI functions
 #'
-#' @details Connection to database can be slow. Tables retrieved from the db are stored
-#'   in a temporary cache inside the lfcNFI object created by \code{\link{nfi}}, making
-#'   subsequent calls to the same table are faster.
+#' @details Connection to database can be slow. Tables retrieved from the db are
+#'   stored in a temporary cache inside the lfcNFI object created by
+#'   \code{\link{nfi}}, making subsequent calls to the same table are faster.
 #'
 #' @examples
 #' if (interactive()) {
@@ -226,8 +277,8 @@ nfi_get_data <- function(object, table_name, spatial = FALSE) {
 
 #' Get the available tables in NFI db
 #'
-#' @description \code{nfi_avail_tables} is a wrapper for the \code{$avail_tables} method of
-#'   \code{lfcNFI} objects. See \code{\link{nfi}}.
+#' @description \code{nfi_avail_tables} is a wrapper for the \code{$avail_tables}
+#'   method of \code{lfcNFI} objects. See \code{\link{nfi}}.
 #'
 #' @param object \code{lfcNFI} object, as created by \code{\link{nfi}}
 #'
@@ -254,8 +305,8 @@ nfi_avail_tables <- function(object) {
 
 #' Print info about the variables present in the NFI db
 #'
-#' @description \code{nfi_describe_var} is a wrapper for the \code{$describe_var} method of
-#'   \code{lfcNFI} objects. See \code{\link{nfi}}.
+#' @description \code{nfi_describe_var} is a wrapper for the \code{$describe_var}
+#'   method of \code{lfcNFI} objects. See \code{\link{nfi}}.
 #'
 #' @param object \code{lfcNFI} object, as created by \code{\link{nfi}}
 #' @param variables character vector with the names of the variables to describe

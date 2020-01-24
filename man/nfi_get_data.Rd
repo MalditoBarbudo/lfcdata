@@ -9,22 +9,24 @@ nfi_get_data(object, table_name, spatial = FALSE)
 \arguments{
 \item{object}{\code{lfcNFI} object, as created by \code{\link{nfi}}}
 
-\item{table_name}{character vector of lenght 1 indicating the requested table name}
+\item{table_name}{character vector of lenght 1 indicating the requested table
+name}
 
-\item{spatial}{logical indicating if the data must be converted to an spatial object}
+\item{spatial}{logical indicating if the data must be converted to an spatial
+object}
 }
 \value{
-A tbl object: tbl_df if spatial is \code{FALSE}, sf if
-  spatial is \code{TRUE}
+A tbl object: tbl_df if spatial is \code{FALSE}, sf if spatial is
+  \code{TRUE}
 }
 \description{
-\code{nfi_get_data} is a wrapper for the \code{$get_data} method of
-  \code{lfcNFI} objects. See also \code{\link{nfi}}.
+\code{nfi_get_data} is a wrapper for the \code{$get_data} method
+  of \code{lfcNFI} objects. See also \code{\link{nfi}}.
 }
 \details{
-Connection to database can be slow. Tables retrieved from the db are stored
-  in a temporary cache inside the lfcNFI object created by \code{\link{nfi}}, making
-  subsequent calls to the same table are faster.
+Connection to database can be slow. Tables retrieved from the db are
+  stored in a temporary cache inside the lfcNFI object created by
+  \code{\link{nfi}}, making subsequent calls to the same table are faster.
 }
 \examples{
 if (interactive()) {

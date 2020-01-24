@@ -13,8 +13,8 @@ nfi_avail_tables(object)
 A character vector with the table names
 }
 \description{
-\code{nfi_avail_tables} is a wrapper for the \code{$avail_tables} method of
-  \code{lfcNFI} objects. See \code{\link{nfi}}.
+\code{nfi_avail_tables} is a wrapper for the \code{$avail_tables}
+  method of \code{lfcNFI} objects. See \code{\link{nfi}}.
 }
 \examples{
 if (interactive()) {
