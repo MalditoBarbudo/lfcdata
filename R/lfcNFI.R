@@ -46,7 +46,9 @@ lfcNFI <- R6::R6Class(
         na = list(spatial = spatial)
       )
 
-      res <- private$data_cache[[glue::glue("{table_name}_{as.character(spatial)}")]] %||%
+      res <- private$data_cache[[
+        glue::glue("{table_name}_{as.character(spatial)}")
+      ]] %||%
         {
           # is the query spatial?
           if (!spatial) {
@@ -55,7 +57,8 @@ lfcNFI <- R6::R6Class(
           } else {
             # if it is, then convert based on the lat and long vars
             if (all(
-              c('coords_longitude', 'coords_latitude') %in% names(super$get_data(table_name))
+              c('coords_longitude', 'coords_latitude') %in%
+              names(super$get_data(table_name))
             )) {
               query_data_spatial <- super$get_data(table_name) %>%
                 sf::st_as_sf(
@@ -72,11 +75,13 @@ lfcNFI <- R6::R6Class(
                   by = 'plot_id'
                 ) %>%
                 sf::st_as_sf(
-                  coords = c('coords_longitude', 'coords_latitude'), remove = FALSE,
-                  crs = 4326
+                  coords = c('coords_longitude', 'coords_latitude'),
+                  remove = FALSE, crs = 4326
                 )
             }
-            private$data_cache[[glue::glue("{table_name}_{as.character(spatial)}")]] <- query_data_spatial
+            private$data_cache[[
+              glue::glue("{table_name}_{as.character(spatial)}")
+            ]] <- query_data_spatial
             query_data_spatial
           }
         }
@@ -98,9 +103,10 @@ lfcNFI <- R6::R6Class(
       # argument checking
       check_args_for(character = list(variables = variables))
 
-      # get the var thes, the numerical var thes filter by the variable and prepare the
-      # result with cat, glue and crayon, as a function to apply to a vector of variables
-      # suppresMessages is used to avoid the querying database message
+      # get the var thes, the numerical var thes filter by the variable and
+      # prepare the result with cat, glue and crayon, as a function to apply to
+      # a vector of variables suppresMessages is used to avoid the querying
+      # database message
       invisible_cats <- function(variable) {
         no_returned <- suppressMessages(self$get_data('variables_thesaurus')) %>%
           dplyr::filter(var_id == variable) %>% {
@@ -108,7 +114,8 @@ lfcNFI <- R6::R6Class(
             .
           } %>%
           dplyr::left_join(
-            suppressMessages(self$get_data('variables_numerical')), by = c("var_id", "var_table")
+            suppressMessages(self$get_data('variables_numerical')),
+            by = c("var_id", "var_table")
           ) %>%
           dplyr::group_by(var_description_eng) %>%
           dplyr::group_walk(
@@ -120,11 +127,7 @@ lfcNFI <- R6::R6Class(
               )),
               "\n",
               # var description
-              strwrap(crayon::green(
-                .y$var_description_eng
-                # glue::glue_collapse(glue::glue("  Description {.y$var_description_eng}"))
-                # stringr::str_c('  Description: ', .y$var_description_eng)
-              ), width = 72),
+              strwrap(crayon::green(.y$var_description_eng), width = 72),
               "\n",
               # var units
               crayon::blue$bold(
@@ -137,10 +140,10 @@ lfcNFI <- R6::R6Class(
               "\n",
               # tables present
               "Present in the following tables:\n",
-              crayon::magenta(
-                glue::glue_collapse(glue::glue(" - {sort(.x$var_table)}"), sep = '\n')
-                # stringr::str_c(" - ", sort(.x$var_table), collapse = '\n')
-              ),
+              crayon::magenta(glue::glue_collapse(
+                  glue::glue(" - {sort(.x$var_table)}"), sep = '\n'
+              )),
+              # cat options
               sep = '', fill = 80
             )
           )
