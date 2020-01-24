@@ -16,21 +16,26 @@ databases.
 ## Installation
 
 You can install the released version of lfcdata from
-[GitHub](https://github.com/) with:
+[GitHub](https://github.com/MalditoBarbudo/lfcdata) with:
 
 ``` r
 # install.packages("remotes")
-remotes::install_github("MalditoBarbudo/lfcdata", ref = "master")
+remotes::install_github("MalditoBarbudo/lfcdata", ref = "master", build_vignettes = TRUE)
 ```
 
-And the development version from [GitHub](https://github.com/) with:
+And the development version from
+[GitHub](https://github.com/MalditoBarbudo/lfcdata/tree/staging) with:
 
 ``` r
 # install.packages("remotes")
-remotes::install_github("MalditoBarbudo/lfcdata", ref = "staging")
+remotes::install_github("MalditoBarbudo/lfcdata", ref = "staging", build_vignettes = TRUE)
 ```
 
 ## Databases
+
+A quick glance on the current availbale databases. See `vignette(package
+= 'lfcdata')` to get a more detailed explanation of each db as well as
+their tables and variables.
 
 ### Spanish National Forest Inventory (NFI) data for Catalonia
 
@@ -58,6 +63,10 @@ nfidb %>%
   nfi_get_data('plot_nfi_4_results', spatial = TRUE) %>%
   select(geometry, density, basal_area) %>%
   plot()
+#> Querying table from LFC database, this can take a while...
+#> Done
+#> Querying table from LFC database, this can take a while...
+#> Done
 ```
 
 <img src="man/figures/README-nfi-1.png" width="100%" />
@@ -76,9 +85,11 @@ allometriesdb
 #>  See vignette('tables_and_variables', package = 'lfcdata') to learn more about the tables and variables.
 allometriesdb %>%
   allometries_get_data('allometries')
+#> Querying table from LFC database, this can take a while...
+#> Done
 #> # A tibble: 9,157 x 22
 #>    allometry_id allometry_level allometry_level… spatial_level
-#>  * <chr>        <chr>           <chr>            <chr>        
+#>    <chr>        <chr>           <chr>            <chr>        
 #>  1 BRH_1427     organ           branch           county       
 #>  2 BH_287       organ           branch           county       
 #>  3 Ht_3211      tree            tree             county       
@@ -113,6 +124,8 @@ lidardb
 lidardb %>%
   lidar_get_data('AB', spatial = 'stars') %>%
   plot()
+#> Querying raster from LFC database, this can take a while...
+#> Done
 ```
 
 <img src="man/figures/README-lidar-1.png" width="100%" />
