@@ -12,7 +12,7 @@ test_that("get method works", {
   expect_is(foo$get_data('AB', 'raster'), 'RasterLayer')
   expect_s3_class(foo$get_data('AB', 'stars'), 'stars')
   expect_error(foo$get_data(1, 'raster'), 'not character')
-  expect_error(foo$get_data('non_existent_table', 'raster'), 'must be one of')
+  expect_error(foo$get_data('non_existent_table', 'raster'), 'Must be one of')
   expect_error(foo$get_data('AB', 1), 'not character')
 })
 
@@ -27,8 +27,8 @@ test_that("describe_var method works", {
   expect_is(foo$describe_var('AB'), c('lfcLiDAR'))
   expect_output(foo$describe_var('AB'))
   expect_output(foo$describe_var(c('AB', 'DBH')))
-  expect_error(foo$describe_var(c('AB', 'DBH', 'tururu')), 'must be one of')
-  expect_error(foo$describe_var('tururu'), 'must be one of')
+  expect_error(foo$describe_var(c('AB', 'DBH', 'tururu')), 'Must be one of')
+  expect_error(foo$describe_var('tururu'), 'Must be one of')
   expect_error(foo$describe_var(25), 'not character')
 })
 

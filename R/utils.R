@@ -92,7 +92,12 @@ check_length_for <- function(object, expected_length) {
 # check if in a character vector
 check_if_in_for <- function(object, in_template) {
   if (any(!object %in% in_template)) {
-    error_message <- glue::glue("object must be one of {glue::glue_collapse(in_template, sep = ', ')}, not '{object}'")
+    not_complying <- which(!object %in% in_template)
+    allowed_entries <- glue::glue_collapse(in_template, sep = ', ', width = 120)
+    error_message <- glue::glue(
+      "{object[not_complying]} not found. Must be one of {allowed_entries}"
+      # "object must be one of {allowed_entries}, not '{object}'"
+    )
     stop(error_message)
   }
 }

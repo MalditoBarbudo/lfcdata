@@ -103,6 +103,7 @@ lfcNFI <- R6::R6Class(
     describe_table = function(tables) {
       # argument checking
       check_args_for(character = list(tables = tables))
+      check_if_in_for(tables, self$avail_tables())
 
       # table name dictionary and variables thesaurus
       tables_dict <- nfi_table_dictionary()
@@ -117,8 +118,6 @@ lfcNFI <- R6::R6Class(
 
         table_decomposed <- stringr::str_split(table, '_') %>%
           purrr::flatten_chr()
-
-        browser()
 
         cat(
           crayon::yellow$bold(table),

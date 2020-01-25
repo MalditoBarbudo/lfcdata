@@ -41,6 +41,17 @@ test_that("avail_tables method works", {
   expect_true('plots' %in% foo$avail_tables())
 })
 
+test_that("describe_table method works", {
+  skip_on_cran()
+  skip_on_travis()
+  expect_is(foo$describe_table('plot_nfi_4_results'), c('lfcNFI'))
+  expect_output(foo$describe_table('plot_nfi_4_results'))
+  expect_output(foo$describe_table(c('plot_nfi_4_results', 'variables_thesaurus')))
+  expect_error(foo$describe_table(c('plot_nfi_4_results', 'density_dead')), 'not found')
+  expect_error(foo$describe_table('tururu'), 'not found')
+  expect_error(foo$describe_table(25), 'not character')
+})
+
 test_that("describe_var method works", {
   skip_on_cran()
   skip_on_travis()
