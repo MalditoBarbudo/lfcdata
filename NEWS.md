@@ -1,5 +1,7 @@
 # lfcdata (development version)
 
+* Added `lfcNFI$describe_table` method
+
 # lfcdata 0.0.3
 
 * Using RPostgres instead of RPostgreSQL library.
