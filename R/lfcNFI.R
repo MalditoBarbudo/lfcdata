@@ -119,24 +119,27 @@ lfcNFI <- R6::R6Class(
         table_decomposed <- stringr::str_split(table, '_') %>%
           purrr::flatten_chr()
 
-        cat(
-          crayon::yellow$bold(table),
-          '\n',
-          strwrap(crayon::green(
-            glue::glue_collapse(glue::glue(
-              "{tables_dict[table_decomposed] %>% purrr::discard(is.na)}"
-            ))
-          ), width = 72),
-          '\n',
-          'Variables in table:\n',
-          crayon::magenta(glue::glue_collapse(
-            glue::glue(" - {sort(variable_names)}"), sep = '\n'
-          )),
+        # browser()
 
-          # cat options
-          fill = 80
+        # table name
+        cat(crayon::yellow$bold(table), '\n')
+        # table description
+        cat(
+          glue::glue("{tables_dict[table_decomposed] %>% purrr::discard(is.na)}") %>%
+            glue::glue_collapse() %>%
+            crayon::green() %>%
+            strwrap(width = 75),
+          # '\n',
+          fill = 80, sep = ''
         )
-        invisible(table)
+        # table variables
+        cat('Variables in table:\n')
+        cat(
+          glue::glue(" - {sort(variable_names)}") %>%
+            glue::glue_collapse(sep = '\n') %>%
+            crayon::magenta()
+        )
+        invisible(NULL)
       }
 
       lapply(tables, invisible_cats)
