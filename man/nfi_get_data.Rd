@@ -48,6 +48,7 @@ if (interactive()) {
 }
 \seealso{
 Other NFI functions: \code{\link{nfi_avail_tables}},
+  \code{\link{nfi_describe_table}},
   \code{\link{nfi_describe_var}}, \code{\link{nfi}}
 }
 \concept{NFI functions}

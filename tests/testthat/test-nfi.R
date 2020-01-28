@@ -112,4 +112,9 @@ test_that("external describe_var wrapper works", {
   expect_error(nfi_describe_var('foo', 'density'), "class lfcNFI")
 })
 
-
+test_that("external describe_table wrapper works", {
+  skip_on_cran()
+  skip_on_travis()
+  expect_identical(foo$describe_table('plots'), nfi_describe_table(foo, 'plots'))
+  expect_error(nfi_describe_table('foo', 'density'), "class lfcNFI")
+})

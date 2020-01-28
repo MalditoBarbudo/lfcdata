@@ -251,7 +251,7 @@ nfi_avail_tables <- function(object) {
 #' @param object \code{lfcNFI} object, as created by \code{\link{nfi}}
 #' @param variables character vector with the names of the variables to describe
 #'
-#' @return A character vector with the variable names to describe
+#' @return Description is printed in the console, nothing is returned
 #'
 #' @family NFI functions
 #'
@@ -272,4 +272,35 @@ nfi_describe_var <- function(object, variables) {
   check_class_for(object, 'lfcNFI')
   # call to the class method
   object$describe_var(variables)
+}
+
+#' Print info about the tables present in the NFI db
+#'
+#' @description \code{nfi_describe_table} is a wrapper for the \code{$describe_table}
+#'   method of \code{lfcNFI} objects. See \code{\link{nfi}}.
+#'
+#' @param object \code{lfcNFI} object, as created by \code{\link{nfi}}
+#' @param tables character vector with the names of the tables to describe
+#'
+#' @return Description is printed in the console, nothing is returned
+#'
+#' @family NFI functions
+#'
+#' @examples
+#' if (interactive()) {
+#'   nfidb <- nfi()
+#'   nfi_describe_table(nfidb, "density")
+#'   nfi_describe_table(nfidb, c("over_bark_volume", "basal_area"))
+#'
+#'   # nfidb is an R6 object, so the previous example is the same as:
+#'   nfidb$describe_table("density")
+#'   nfidb$describe_table(c("over_bark_volume", "basal_area"))
+#' }
+#'
+#' @export
+nfi_describe_table <- function(object, tables) {
+  # argument validation
+  check_class_for(object, 'lfcNFI')
+  # call to the class method
+  object$describe_table(tables)
 }
