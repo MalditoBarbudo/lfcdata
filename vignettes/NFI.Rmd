@@ -39,9 +39,24 @@ nfidb
 
 ### Available tables and variables info
 
-```{r, collapse=FALSE}
+Available tables in the NFI database can be consulted with `nfi_avail_tables`,
+
+```{r}
+# limited to the first
 nfi_avail_tables(nfidb)[1:5]
-nfi_describe_var(nfidb, 'density')
+```
+
+and a description for the tables with the `nfi_describe_table` function:
+
+```{r, collapse=FALSE}
+tables_available <- nfi_avail_tables(nfidb)
+nfi_describe_table(nfidb, tables_available[1])
+```
+
+Information about the variables can also be consulted with `nfi_describe_var`:
+
+```{r}
+nfi_describe_var(nfidb, 'basal_area_balance')
 ```
 
 See `vignette('tables_and_variables', package = 'lfcdata')` for more detailed information.
