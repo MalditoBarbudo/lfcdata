@@ -157,39 +157,13 @@ lfcAllometries <- R6::R6Class(
       # argument checking
       check_args_for(character = list(variables = variables))
 
-      no_returned <- self$get_data('thesaurus_app') %>%
-        dplyr::filter(text_id %in% variables) %>% {
-          check_filter_for(., glue::glue("one or more variables not found"))
-          .
-        } %>%
-        dplyr::group_by(translation_eng) %>%
-        dplyr::group_walk(
-          ~ cat(
-            # var name
-            crayon::yellow$bold(stringr::str_split_fixed(.y$translation_eng, ' \\(', 2)[1]),
-            "\n",
-            # var units
-            "Units:  ",
-            crayon::blue$bold("[") %+%
-              crayon::blue$italic$bold(
-                glue::glue("{(.x$var_units %na% ' - ') %>% unique()}")
-              ) %+%
-              crayon::blue$bold("]"),
-            "\n",
-            "English abbreviation:  ",
-            crayon::blue$italic$bold(
-              glue::glue("{(.x$var_abbr_eng %na% ' - ') %>% unique()}")
-            ),
-            "\n",
-            "Data abbreviation:  ",
-            crayon::blue$italic$bold(
-              glue::glue("{(.x$var_abbr_spa %na% ' - ') %>% unique()}")
-            ),
-            "\n\n",
-            sep = ''
-          )
-        )
-      invisible(self)
+      # cats
+      allometries_describe_var_cat(
+        variables, suppressMessages(self$get_data('thesaurus_app'))
+      )
+
+      # as the print method, this should return invisible(self) to allow $ piping
+      return(invisible(self))
 
     }
   ),
