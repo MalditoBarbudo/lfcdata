@@ -113,37 +113,17 @@ lfcLiDAR <- R6::R6Class(
     # describe method
     describe_var = function(variables) {
 
-      check_args_for(
-        character = list(variables = variables),
-      )
+      # argument checks
+      check_args_for(character = list(variables = variables))
       check_if_in_for(variables, c('AB', 'BAT', 'BF', 'CAT', 'DBH', 'HM', 'REC', 'VAE'))
 
-      no_returned <- dplyr::tbl(private$pool_conn, 'variables_thesaurus') %>%
-        dplyr::filter(var_id %in% variables) %>%
-        dplyr::collect() %>%
-        dplyr::group_by(var_id) %>%
-        dplyr::group_walk(
-          ~ cat(
-            # var name
-            crayon::yellow$bold(.x$translation_eng),
-            "\n",
-            # var units
-            "Units:  ",
-            crayon::blue$bold("[") %+%
-              crayon::blue$italic$bold(
-                glue::glue("{(.x$var_units %na% ' - ') %>% unique()}")
-              ) %+%
-              crayon::blue$bold("]"),
-            "\n",
-            "Details:  ",
-            crayon::blue$italic$bold(
-              glue::glue("{(.x$var_description_eng %na% ' - ') %>% unique()}")
-            ),
-            "\n\n",
-            sep = ''
-          )
-        )
-      invisible(self)
+      # cats
+      lidar_describe_var_cat(
+        variables, dplyr::tbl(private$pool_conn, 'variables_thesaurus')
+      )
+
+      # as the print method, to allow $ piping
+      return(invisible(self))
 
     }
   ),

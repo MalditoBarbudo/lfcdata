@@ -257,4 +257,34 @@ allometries_describe_var_cat <- function(variables, thes) {
         sep = ''
       )
     )
+  return(invisible(NULL))
+}
+
+lidar_describe_var_cat <- function(variables, thes) {
+  no_returned <- thes %>%
+    dplyr::filter(var_id %in% variables) %>%
+    dplyr::collect() %>%
+    dplyr::group_by(var_id) %>%
+    dplyr::group_walk(
+      ~ cat(
+        # var name
+        crayon::yellow$bold(.x$translation_eng),
+        "\n",
+        # var units
+        "Units:  ",
+        crayon::blue$bold("[") %+%
+          crayon::blue$italic$bold(
+            glue::glue("{(.x$var_units %na% ' - ') %>% unique()}")
+          ) %+%
+          crayon::blue$bold("]"),
+        "\n",
+        "Details:  ",
+        crayon::blue$italic$bold(
+          glue::glue("{(.x$var_description_eng %na% ' - ') %>% unique()}")
+        ),
+        "\n\n",
+        sep = ''
+      )
+    )
+  return(invisible(NULL))
 }
