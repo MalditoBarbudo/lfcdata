@@ -1,6 +1,8 @@
 # lfcdata (development version)
 
-* Added `lfcNFI$describe_table` method
+* Added `lfcNFI$describe_table` method, as well as its external counterpart
+  `nif_describe_table`
+* Better logic for describe methods in all classes
 
 # lfcdata 0.0.3
 
