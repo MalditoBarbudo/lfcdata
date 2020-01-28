@@ -26,7 +26,7 @@ LiDAR database provides the eco-physiological variables data obtained by
 LiDAR flights from the [ICGC](https://www.icgc.cat/en/) in combination with the
 Spanish National Forest Inventory data.
 
-Access the data with the `lidar()` function:
+Access the database with the `lidar()` function:
 
 ```{r lidar_data}
 lidardb <- lidar()
@@ -43,7 +43,7 @@ ab_raster
 
 ### Data formats
 
-Raster data can be retrieved in two formats, `stars` and `RasterLayer`:
+Raster data can be retrieved in two formats, `stars` (default) and `RasterLayer`:
 
 ```{r rasters}
 lidar_get_data(lidardb, 'AB', 'stars') %>%
