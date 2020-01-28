@@ -1,5 +1,6 @@
 test_that("class object creation works", {
   expect_is(nfi(), c('lfcNFI'))
+  expect_equal(lfcdata:::lfcNFI$new(), nfi())
   expect_true(rlang::is_function(nfi()$get_data))
   expect_true(rlang::is_function(nfi()$avail_tables))
   expect_true(rlang::is_function(nfi()$describe_var))

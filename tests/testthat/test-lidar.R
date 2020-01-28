@@ -1,5 +1,6 @@
 test_that("class object creation works", {
   expect_is(lidar(), c('lfcLiDAR'))
+  expect_equal(lfcdata:::lfcLiDAR$new(), lidar())
   expect_true(rlang::is_function(lidar()$get_data))
 })
 
