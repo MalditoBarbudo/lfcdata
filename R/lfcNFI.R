@@ -109,40 +109,14 @@ lfcNFI <- R6::R6Class(
       tables_dict <- nfi_table_dictionary()
       variables_thes <- suppressMessages(self$get_data('variables_thesaurus'))
 
-      # function for each table
-      invisible_cats <- function(table) {
-        variable_names <- variables_thes %>%
-          dplyr::filter(var_table == table) %>%
-          dplyr::pull(var_id) %>%
-          unique()
-
-        table_decomposed <- stringr::str_split(table, '_') %>%
-          purrr::flatten_chr()
-
-        # browser()
-
-        # table name
-        cat(crayon::yellow$bold(table), '\n')
-        # table description
-        cat(
-          glue::glue("{tables_dict[table_decomposed] %>% purrr::discard(is.na)}") %>%
-            glue::glue_collapse() %>%
-            crayon::green() %>%
-            strwrap(width = 75),
-          # '\n',
-          fill = 80, sep = ''
+      # map to apply to all tables
+      tables %>%
+        purrr::map(
+          nfi_describe_table_cat,
+          tables_dict = tables_dict, variables_thes = variables_thes
         )
-        # table variables
-        cat('Variables in table:\n')
-        cat(
-          glue::glue(" - {sort(variable_names)}") %>%
-            glue::glue_collapse(sep = '\n') %>%
-            crayon::magenta()
-        )
-        invisible(NULL)
-      }
 
-      lapply(tables, invisible_cats)
+      # as the print method, this should return invisible(self) to allow $ piping
       return(invisible(self))
     },
 
@@ -152,54 +126,18 @@ lfcNFI <- R6::R6Class(
       # argument checking
       check_args_for(character = list(variables = variables))
 
-      # get the var thes, the numerical var thes filter by the variable and
-      # prepare the result with cat, glue and crayon, as a function to apply to
-      # a vector of variables suppresMessages is used to avoid the querying
-      # database message
-      invisible_cats <- function(variable) {
-        no_returned <- suppressMessages(self$get_data('variables_thesaurus')) %>%
-          dplyr::filter(var_id == variable) %>% {
-            check_filter_for(., glue::glue("{variable} variable not found"))
-            .
-          } %>%
-          dplyr::left_join(
-            suppressMessages(self$get_data('variables_numerical')),
-            by = c("var_id", "var_table")
-          ) %>%
-          dplyr::group_by(var_description_eng) %>%
-          dplyr::group_walk(
-            ~ cat(
-              "\n",
-              # var name
-              crayon::yellow$bold(glue::glue(
-                "{.x$translation_eng %>% unique()} ({.x$var_id %>% unique()})"
-              )),
-              "\n",
-              # var description
-              strwrap(crayon::green(.y$var_description_eng), width = 72),
-              "\n",
-              # var units
-              crayon::blue$bold(
-                "Units: [" %+%
-                  crayon::blue$italic$bold(
-                    glue::glue("{(.x$var_units %na% ' - ') %>% unique()}")
-                  ) %+%
-                  "]"
-              ),
-              "\n",
-              # tables present
-              "Present in the following tables:\n",
-              crayon::magenta(glue::glue_collapse(
-                  glue::glue(" - {sort(.x$var_table)}"), sep = '\n'
-              )),
-              # cat options
-              sep = '', fill = 80
-            )
-          )
-        invisible(variable)
-      }
+      # numerical and variables thesauruses
+      variables_thes <- suppressMessages(self$get_data('variables_thesaurus'))
+      numerical_thes <- suppressMessages(self$get_data('variables_numerical'))
 
-      lapply(variables, invisible_cats)
+      # map to apply to all variables
+      variables %>%
+        purrr::map(
+          nfi_describe_var_cat,
+          variables_thes = variables_thes, numerical_thes = numerical_thes
+        )
+
+      # as the print method, this should return invisible(self) to allow $ piping
       invisible(self)
 
     },
