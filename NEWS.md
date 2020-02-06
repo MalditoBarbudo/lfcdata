@@ -1,3 +1,5 @@
+# lfcdata (development version)
+
 # lfcdata 0.0.4
 
 * Added `lfcNFI$describe_table` method, as well as its external counterpart
