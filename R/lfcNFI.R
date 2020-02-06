@@ -32,6 +32,7 @@ nfi <- function() {
 
 #' @importFrom R6 R6Class
 #' @importFrom crayon %+%
+#' @importFrom rlang .data
 lfcNFI <- R6::R6Class(
   # specs
   classname = "lfcNFI",

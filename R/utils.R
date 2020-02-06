@@ -147,8 +147,8 @@ nfi_describe_table_cat <- function(table, tables_dict, variables_thes) {
 
   # variables present in the table (courtesy of variables_thesaurus)
   variable_names <- variables_thes %>%
-    dplyr::filter(var_table == table) %>%
-    dplyr::pull(var_id) %>%
+    dplyr::filter(.data$var_table == table) %>%
+    dplyr::pull(.data$var_id) %>%
     unique()
 
   # table name deconstructed to query the nfi table dictionary
@@ -181,16 +181,20 @@ nfi_describe_table_cat <- function(table, tables_dict, variables_thes) {
 }
 
 nfi_describe_var_cat <- function(variable, variables_thes, numerical_thes) {
+
+  # trick to use "." withou CRAN note
+  . <- NULL
+
   # get the var thes, the numerical var thes filter by the variable and
   # prepare the result with cat, glue and crayon, as a function to apply to
   # a vector of variables.
   variables_thes %>%
-    dplyr::filter(var_id == variable) %>% {
+    dplyr::filter(.data$var_id == variable) %>% {
       check_filter_for(., glue::glue("{variable} variable not found"))
       .
     } %>%
     dplyr::left_join(numerical_thes, by = c("var_id", "var_table")) %>%
-    dplyr::group_by(var_description_eng) %>%
+    dplyr::group_by(.data$var_description_eng) %>%
     dplyr::group_walk(
       ~ cat(
         "\n",
@@ -225,12 +229,16 @@ nfi_describe_var_cat <- function(variable, variables_thes, numerical_thes) {
 }
 
 allometries_describe_var_cat <- function(variables, thes) {
+
+  # trick to use "." withou CRAN note
+  . <- NULL
+
   no_returned <- thes %>%
-    dplyr::filter(text_id %in% variables) %>% {
+    dplyr::filter(.data$text_id %in% variables) %>% {
       check_filter_for(., glue::glue("one or more variables not found"))
       .
     } %>%
-    dplyr::group_by(translation_eng) %>%
+    dplyr::group_by(.data$translation_eng) %>%
     dplyr::group_walk(
       ~ cat(
         # var name
@@ -262,9 +270,9 @@ allometries_describe_var_cat <- function(variables, thes) {
 
 lidar_describe_var_cat <- function(variables, thes) {
   no_returned <- thes %>%
-    dplyr::filter(var_id %in% variables) %>%
+    dplyr::filter(.data$var_id %in% variables) %>%
     dplyr::collect() %>%
-    dplyr::group_by(var_id) %>%
+    dplyr::group_by(.data$var_id) %>%
     dplyr::group_walk(
       ~ cat(
         # var name
