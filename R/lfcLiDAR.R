@@ -125,12 +125,7 @@ lfcLiDAR <- R6::R6Class(
       # as the print method, to allow $ piping
       return(invisible(self))
 
-    }
-  ),
-  # private methods and values
-  private = list(
-    # connection values
-    dbname = 'lidargis',
+    },
 
     # clip method
     clip_and_mean = function(sf, table_name, safe = TRUE) {
@@ -199,6 +194,11 @@ lfcLiDAR <- R6::R6Class(
           !!var_name := calculate_poly_mean(user_polygons, self$get_data(table_name))
         )
     }
+  ),
+  # private methods and values
+  private = list(
+    # connection values
+    dbname = 'lidargis'
   )
 )
 
