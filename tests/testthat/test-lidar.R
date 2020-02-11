@@ -11,7 +11,11 @@ test_that("get method works", {
   skip_on_cran()
   skip_on_travis()
   expect_is(foo$get_data('AB', 'raster'), 'RasterLayer')
+  expect_is(foo$get_data(c('AB', 'DBH'), 'raster'), 'RasterBrick')
+  expect_is(foo$get_data(c('DBH', 'AB'), 'raster'), 'RasterBrick')
   expect_s3_class(foo$get_data('AB', 'stars'), 'stars')
+  expect_s3_class(foo$get_data(c('AB', 'DBH'), 'stars'), 'stars')
+  expect_s3_class(foo$get_data(c('DBH', 'AB'), 'stars'), 'stars')
   expect_error(foo$get_data(1, 'raster'), 'not character')
   expect_error(foo$get_data('non_existent_table', 'raster'), 'Must be one of')
   expect_error(foo$get_data('AB', 1), 'not character')
@@ -39,14 +43,25 @@ test_that("cache works", {
   expect_length(foo$.__enclos_env__$private$data_cache, 2)
   bar <- foo$get_data('AB', 'raster')
   expect_is(foo$get_data('AB', 'raster'), 'RasterLayer')
-  temp_postgresql_conn <- pool::poolCheckout(foo$.__enclos_env__$private$pool_conn)
+  temp_postgresql_conn <- pool::poolCheckout(
+    foo$.__enclos_env__$private$pool_conn
+  )
   expect_identical(
-    bar, rpostgis::pgGetRast(temp_postgresql_conn, c('public', 'lidar_stack_utm'), bands = 1)
+    bar,
+    rpostgis::pgGetRast(
+      temp_postgresql_conn, c('public', 'lidar_stack_utm'), bands = 1
+    )
+  )
+  expect_identical(
+    foo$get_data(c('DBH', 'AB', 'BAT'), 'raster'),
+    rpostgis::pgGetRast(
+      temp_postgresql_conn, c('public', 'lidar_stack_utm'), bands = c(1,6,2)
+    )
   )
   pool::poolReturn(temp_postgresql_conn)
-  expect_length(foo$.__enclos_env__$private$data_cache, 2)
-  baz <- foo$get_data('DBH', 'raster')
   expect_length(foo$.__enclos_env__$private$data_cache, 3)
+  baz <- foo$get_data('DBH', 'raster')
+  expect_length(foo$.__enclos_env__$private$data_cache, 4)
 })
 
 test_that("external get data wrapper works", {
@@ -60,12 +75,11 @@ test_that("external get data wrapper works", {
     lidar_get_data('foo', 'AB', 'raster'),
     "class lfcLiDAR"
   )
-  xyz <- lidar_get_data(foo, 'REC', 'stars')
-  expect_length(foo$.__enclos_env__$private$data_cache, 4)
   expect_identical(
-    foo$get_data('REC', 'stars'),
-    lidar_get_data(foo, 'REC', 'stars')
+    foo$get_data(c('REC', 'BAT'), 'stars'),
+    lidar_get_data(foo, c('REC', 'BAT'), 'stars')
   )
+  expect_length(foo$.__enclos_env__$private$data_cache, 5)
 })
 
 test_that("external describe_var wrapper works", {
