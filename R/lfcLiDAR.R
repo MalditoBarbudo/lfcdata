@@ -130,7 +130,75 @@ lfcLiDAR <- R6::R6Class(
   # private methods and values
   private = list(
     # connection values
-    dbname = 'lidargis'
+    dbname = 'lidargis',
+
+    # clip method
+    clip_and_mean = function(sf, table_name, safe = TRUE) {
+      # @param table_name table name
+      # @param sf sf object with the polygons to clip
+      # @param safe logical indicating if memory and time safeguards are active
+
+      # argument checks
+      check_args_for(
+        sf = list(sf = sf),
+        character = list(table_name = table_name),
+        logical = list(safe = safe)
+      )
+      check_if_in_for(table_name, c('AB', 'BAT', 'BF', 'CAT', 'DBH', 'HM', 'REC', 'VAE'))
+
+      # load the temp sf table (check for geom instead of geometry)
+      user_polygons <-
+        sf %>%
+        sf::st_transform(crs = 3043) %>%
+        sf::st_set_crs(3043) %>% {
+          temp_data <- .
+          if ('geom' %in% names(temp_data)) {
+            temp_data <- dplyr::rename(temp_data, geometry = geom)
+          }
+          temp_data
+        }
+
+      # if safeguards are active, enforce them.
+      if (isTRUE(safe)) {
+        # area check
+        user_area <- sf::st_area(user_polygons) %>% sum() %>% as.numeric()
+        if (user_area > 500000000) {
+          stop(glue::glue(
+            'Polygon area (or polygons sum of areas) are above the maximum value',
+            ' ({round(user_area/1000000, 1)} > 500 km2)'
+          ))
+        }
+        # feature number
+        user_features <- sf::st_geometry(user_polygons) %>% length()
+        if (user_features > 10) {
+          stop(glue::glue(
+            'Number of features (polygons) is above the maximum value',
+            ' ({user_features} > 10 polygons)'
+          ))
+        }
+      }
+
+      # ok, cutting to the cheese. We need to clip the polygons, and after that calculate
+      # the mean value for the left raster
+      calculate_poly_mean <- function(data, raster_table) {
+        res <- numeric()
+
+        for (i in seq_along(data[['geometry']])) {
+          res[i] <- sf::st_crop(raster_table, data[['geometry']][i]) %>%
+            magrittr::extract2(1) %>%
+            mean(na.rm = TRUE)
+        }
+
+        return(res)
+      }
+
+      var_name <- glue::glue("{table_name}_mean")
+
+      user_polygons %>%
+        dplyr::mutate(
+          !!var_name := calculate_poly_mean(user_polygons, self$get_data(table_name))
+        )
+    }
   )
 )
 

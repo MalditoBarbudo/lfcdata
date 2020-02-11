@@ -12,7 +12,7 @@
 ## argument and other checks ####
 # argument checking
 check_args_for <- function(
-  character = NULL, numerical = NULL, logical = NULL, na = NULL
+  character = NULL, numerical = NULL, logical = NULL, na = NULL, sf = NULL
 ) {
 
   # browser()
@@ -67,6 +67,20 @@ check_args_for <- function(
     if (length(not_complying) > 0) {
       error_message <- glue::glue(
         "Argument {glue::glue_collapse(not_complying)} is missing\n"
+      )
+      stop(error_message)
+    }
+  }
+
+  # sf
+  if (!rlang::is_null(sf)) {
+    not_complying <- sf %>%
+      purrr::map(inherits, what = 'sf') %>%
+      purrr::keep(.p = ~ !isTRUE(.x)) %>%
+      names()
+    if (length(not_complying) > 0) {
+      error_message <- glue::glue(
+        "Argument {glue::glue_collapse(not_complying)} is not a simple feature (sf)\n"
       )
       stop(error_message)
     }
