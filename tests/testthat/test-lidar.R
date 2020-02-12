@@ -41,7 +41,7 @@ test_that("clip_and_mean method works", {
   skip_on_cran()
   skip_on_travis()
   sf_object <-
-    tibble::tibble(
+    dplyr::tibble(
       x = c(
         (256000 + ((680/2)*400)) - (400*2), (256000 + ((680/2)*400)) - (400*2),
         (256000 + ((680/2)*400)) + (400*2), (256000 + ((680/2)*400)) + (400*2),
