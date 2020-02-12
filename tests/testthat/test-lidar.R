@@ -37,6 +37,40 @@ test_that("describe_var method works", {
   expect_error(foo$describe_var(25), 'not character')
 })
 
+test_that("clip_and_mean method works", {
+  skip_on_cran()
+  skip_on_travis()
+  sf_object <-
+    tibble::tibble(
+      x = c(
+        (256000 + ((680/2)*400)) - (400*2), (256000 + ((680/2)*400)) - (400*2),
+        (256000 + ((680/2)*400)) + (400*2), (256000 + ((680/2)*400)) + (400*2),
+        (256000 + ((680/2)*400)) - (400*2)
+      ),
+      y = c(
+        (4752000 - ((660/2)*400)) - (400*2), (4752000 - ((660/2)*400)) + (400*2),
+        (4752000 - ((660/2)*400)) + (400*2), (4752000 - ((660/2)*400)) - (400*2),
+        (4752000 - ((660/2)*400)) - (400*2)
+      )
+    ) %>%
+    sf::st_as_sf(coords = c("x", "y"), crs = 3043) %>%
+    sf::st_combine() %>%
+    sf::st_as_sf() %>%
+    dplyr::mutate(poly_id = 'example') %>%
+    dplyr::rename(geometry = x)
+  expect_error(foo$clip_and_mean('sf', c('AB', 'DBH')), 'not a simple feature')
+  expect_error(foo$clip_and_mean(sf_object, c(1, 2)), 'not character')
+  expect_error(
+    foo$clip_and_mean(sf_object, c('AB', 'DBH'), safe = 'FALSE'), 'not logical'
+  )
+  expect_true(inherits(foo$clip_and_mean(sf_object, c('AB', 'DBH')), 'sf'))
+  expect_identical(
+    names(foo$clip_and_mean(sf_object, c('AB', 'DBH'))),
+    c('poly_id', 'geometry', 'AB', 'DBH')
+  )
+  expect_equal(nrow(foo$clip_and_mean(sf_object, c('AB', 'DBH'))), 1)
+})
+
 test_that("cache works", {
   skip_on_cran()
   skip_on_travis()

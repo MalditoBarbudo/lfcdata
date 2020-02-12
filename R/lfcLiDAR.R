@@ -251,37 +251,34 @@ lfcLiDAR <- R6::R6Class(
       # ok, cutting to the cheese. We need to clip the polygons, and after that calculate
       # the mean value for the left raster
       calculate_poly_mean <- function(data, raster_table) {
-        res <- numeric()
 
-        for (i in seq_along(data[['geometry']])) {
-          res[i] <- sf::st_crop(raster_table, data[['geometry']][i]) %>%
-            ###
-            # This Eder Pebezsma snippet from print.stars method seems the way to allow
-            # multiple
-            # as.data.frame(lapply(foo, function(y) structure(y, dim = NULL)), optional = TRUE) %>% str()
+        # This Eder Pebezsma snippet from print.stars method seems the way
+        # to allow multiple attributes checking:
+        # as.data.frame(
+        #   lapply(foo, function(y) structure(y, dim = NULL)),
+        #   optional = TRUE
+        # )
+        # So, we need to iterate for each attribute (lapply/purrr) and remove the
+        # dim attrb (structure), resulting in a list of each attribute
+        # containing a vector of all cell values that we transform in a
+        # dataframe and summarise all
+        means_data <-
+          seq_along(data[['geometry']]) %>%
+          purrr::map_dfr(
+            .f = ~ sf::st_crop(raster_table, data[['geometry']][.x]) %>%
+              purrr::map(~ structure(.x, dim = NULL)) %>%
+              tibble::as_tibble() %>%
+              dplyr::summarise_all(.funs = mean, na.rm = TRUE)
+          )
 
-            # We need to iterate for each attribute (purrr) and remove the dim attrb (structure),
-            # resulting in a list of each attribute containing a vector of all cell values
-            # that we transform in a dataframe and summarise all
-            purrr::map(~ structure(.x, dim = NULL)) %>%
-            tibble::as_tibble() %>%
-            dplyr::summarise_all(.funs = mean, na.rm = TRUE)
-
-
-            ###
-            # magrittr::extract2(1) %>%
-            # mean(na.rm = TRUE)
-        }
-
+        # now we join the means for each polygon (rows) and each attribute
+        # (columns) with the polygons data
+        res <- dplyr::bind_cols(data, means_data)
+        # return the updated data
         return(res)
       }
 
-      var_name <- glue::glue("{table_name}_mean")
-
-      user_polygons %>%
-        dplyr::mutate(
-          !!var_name := calculate_poly_mean(user_polygons, self$get_data(table_name))
-        )
+      return(calculate_poly_mean(user_polygons, self$get_data(table_name)))
     }
   ),
   # private methods and values
