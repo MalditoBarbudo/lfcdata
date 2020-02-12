@@ -255,8 +255,22 @@ lfcLiDAR <- R6::R6Class(
 
         for (i in seq_along(data[['geometry']])) {
           res[i] <- sf::st_crop(raster_table, data[['geometry']][i]) %>%
-            magrittr::extract2(1) %>%
-            mean(na.rm = TRUE)
+            ###
+            # This Eder Pebezsma snippet from print.stars method seems the way to allow
+            # multiple
+            # as.data.frame(lapply(foo, function(y) structure(y, dim = NULL)), optional = TRUE) %>% str()
+
+            # We need to iterate for each attribute (purrr) and remove the dim attrb (structure),
+            # resulting in a list of each attribute containing a vector of all cell values
+            # that we transform in a dataframe and summarise all
+            purrr::map(~ structure(.x, dim = NULL)) %>%
+            tibble::as_tibble() %>%
+            dplyr::summarise_all(.funs = mean, na.rm = TRUE)
+
+
+            ###
+            # magrittr::extract2(1) %>%
+            # mean(na.rm = TRUE)
         }
 
         return(res)
