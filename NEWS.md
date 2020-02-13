@@ -1,5 +1,8 @@
 # lfcdata (development version)
 
+* Added `lfcLiDAR$clip_and_mean` method, as weel as its external counterpart
+  `lidar_clip_and_mean`
+
 # lfcdata 0.0.4
 
 * Added `lfcNFI$describe_table` method, as well as its external counterpart

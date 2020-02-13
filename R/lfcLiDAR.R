@@ -48,6 +48,8 @@ lfcLiDAR <- R6::R6Class(
           " to know which tables are available.\n",
         "Use " %+% crayon::yellow$bold("lidar_describe_var") %+%
           " to get the information available on the variables.\n",
+        "Use " %+% crayon::yellow$bold("lidar_clip_and_mean") %+%
+          " to summarise the raster by provided polygons.\n",
         "See " %+%
           crayon::yellow$bold("vignette('tables_and_variables', package = 'lfcdata')") %+%
           " to learn more about the tables and variables."
@@ -168,13 +170,7 @@ lfcLiDAR <- R6::R6Class(
       user_polygons <-
         sf %>%
         sf::st_transform(crs = 3043) %>%
-        sf::st_set_crs(3043) %>% {
-          temp_data <- .
-          if ('geom' %in% names(temp_data)) {
-            temp_data <- dplyr::rename(temp_data, geometry = geom)
-          }
-          temp_data
-        }
+        sf::st_set_crs(3043)
 
       # if safeguards are active, enforce them.
       if (isTRUE(safe)) {
@@ -200,6 +196,9 @@ lfcLiDAR <- R6::R6Class(
       # the mean value for the left raster
       calculate_poly_mean <- function(data, raster_table) {
 
+        # get the geom column name
+        sf_column <- attr(data, 'sf_column')
+
         # This Eder Pebezsma snippet from print.stars method seems the way
         # to allow multiple attributes checking in a fast way:
         # as.data.frame(
@@ -211,9 +210,9 @@ lfcLiDAR <- R6::R6Class(
         # containing a vector of all cell values that we transform in a
         # dataframe and summarise all
         means_data <-
-          seq_along(data[['geometry']]) %>%
+          seq_along(data[[sf_column]]) %>%
           purrr::map_dfr(
-            .f = ~ sf::st_crop(raster_table, data[['geometry']][.x]) %>%
+            .f = ~ sf::st_crop(raster_table, data[[sf_column]][.x]) %>%
               purrr::map(~ structure(.x, dim = NULL)) %>%
               tibble::as_tibble() %>%
               dplyr::summarise_all(.funs = mean, na.rm = TRUE)
@@ -221,7 +220,7 @@ lfcLiDAR <- R6::R6Class(
 
         # now we join the means for each polygon (rows) and each attribute
         # (columns) with the polygons data
-        res <- dplyr::bind_cols(data, means_data)
+        res <- dplyr::bind_cols(data, means_data) # pun intended
         # return the updated data
         return(res)
       }
@@ -242,7 +241,7 @@ lfcLiDAR <- R6::R6Class(
 #'   \code{lfcLiDAR} objects. See also \code{\link{lidar}}.
 #'
 #' @param object \code{lfcLiDAR} object, as created by \code{\link{lidar}}
-#' @param table_name character vector of lenght 1 indicating the requested raster name
+#' @param table_name character vector indicating the requested raster name/s
 #' @param spatial character vector of lenght 1 indicating the type of raster object to
 #'   return, "raster" or "stars", the default.
 #'
@@ -269,6 +268,10 @@ lfcLiDAR <- R6::R6Class(
 #'   # we can use pipes
 #'   lidardb %>%
 #'     lidar_get_data('AB', 'raster')
+#'
+#'   # or retrieve several tables at one time
+#'   lidardb %>%
+#'     lidar_get_data(c('AB', 'DBH'), 'stars')
 #'
 #'   # lidardb is an R6 object, so the previous examples are the same as:
 #'   lidardb$get_data('AB', 'raster')

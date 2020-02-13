@@ -9,7 +9,7 @@ lidar_get_data(object, table_name, spatial = "stars")
 \arguments{
 \item{object}{\code{lfcLiDAR} object, as created by \code{\link{lidar}}}
 
-\item{table_name}{character vector of lenght 1 indicating the requested raster name}
+\item{table_name}{character vector indicating the requested raster name/s}
 
 \item{spatial}{character vector of lenght 1 indicating the type of raster object to
 return, "raster" or "stars", the default.}
@@ -41,6 +41,10 @@ if (interactive()) {
   # we can use pipes
   lidardb \%>\%
     lidar_get_data('AB', 'raster')
+
+  # or retrieve several tables at one time
+  lidardb \%>\%
+    lidar_get_data(c('AB', 'DBH'), 'stars')
 
   # lidardb is an R6 object, so the previous examples are the same as:
   lidardb$get_data('AB', 'raster')

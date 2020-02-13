@@ -3,8 +3,10 @@ title: "LiDAR"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{LiDAR}
-  %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
+  %\VignetteEngine{knitr::rmarkdown}
+editor_options: 
+  chunk_output_type: console
 ---
 
 ```{r, include = FALSE}
@@ -37,6 +39,7 @@ and retrieve the desired variable with `lidar_get_data`:
 
 ```{r get_data}
 lidar_avail_tables(lidardb)
+lidar_describe_var(lidardb, 'AB')
 ab_raster <- lidar_get_data(lidardb, 'AB', 'stars')
 ab_raster
 ```
@@ -51,5 +54,43 @@ lidar_get_data(lidardb, 'AB', 'stars') %>%
 
 lidar_get_data(lidardb, 'AB', 'raster') %>%
   class()
+```
+
+More than one table can be accessed at the same time, resulting in a `RasterBrick` object
+or an `stars` object with attributes for each table:
+
+```{r bricks}
+lidar_get_data(lidardb, c('AB', 'DBH'), 'stars')
+lidar_get_data(lidardb, c('AB', 'DBH'), 'raster')
+```
+
+
+### Clip and mean
+
+Given a set of polygons (`sf` object), `lidar_clip_and_mean` calculate the raster means
+for each polygon:
+
+```{r clip}
+# we create a polygon set
+polygon_set <-
+  data.frame(
+    x = c(
+      (256000 + ((680/2)*400)) - (400*2), (256000 + ((680/2)*400)) - (400*2),
+      (256000 + ((680/2)*400)) + (400*2), (256000 + ((680/2)*400)) + (400*2),
+      (256000 + ((680/2)*400)) - (400*2)
+    ),
+    y = c(
+      (4752000 - ((660/2)*400)) - (400*2), (4752000 - ((660/2)*400)) + (400*2),
+      (4752000 - ((660/2)*400)) + (400*2), (4752000 - ((660/2)*400)) - (400*2),
+      (4752000 - ((660/2)*400)) - (400*2)
+    )
+  ) %>%
+  sf::st_as_sf(coords = c("x", "y"), crs = 3043) %>%
+  sf::st_combine() %>%
+  sf::st_as_sf()
+
+lidardb <- lidar()
+lidardb %>%
+  lidar_clip_and_mean(polygon_set, c('AB', 'DBH', 'REC'))
 ```
 
