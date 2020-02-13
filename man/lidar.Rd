@@ -19,6 +19,13 @@ An \code{lfcLiDAR} class object (inherits from \code{\link[R6]{R6Class}}),
   \itemize{
     \item{\code{$get_data}: Retrieve and collect LiDAR database rasters. See
           \code{\link{lidar_get_data}} for more details}
+    \item{\code{$avail_tables}: List all the tables that can be consulted. See
+          \code{\link{lidar_avail_tables}} for more details}
+    \item{\code{$describe_var}: Describe the variables, with their units and details.
+          See \code{\link{lidar_describe_var}} for more details}
+    \item{\code{$clip_and_mean}: Clip the specified tables with the provided set of
+          polygons and calculate the raster mean for each polygon. See
+          \code{\link{lidar_clip_and_mean}} for more details}
   }
 }
 
@@ -28,6 +35,7 @@ lidardb
 }
 \seealso{
 Other LiDAR functions: \code{\link{lidar_avail_tables}},
+  \code{\link{lidar_clip_and_mean}},
   \code{\link{lidar_describe_var}},
   \code{\link{lidar_get_data}}
 }

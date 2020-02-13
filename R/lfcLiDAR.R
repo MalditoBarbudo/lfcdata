@@ -10,6 +10,13 @@
 #'   \itemize{
 #'     \item{\code{$get_data}: Retrieve and collect LiDAR database rasters. See
 #'           \code{\link{lidar_get_data}} for more details}
+#'     \item{\code{$avail_tables}: List all the tables that can be consulted. See
+#'           \code{\link{lidar_avail_tables}} for more details}
+#'     \item{\code{$describe_var}: Describe the variables, with their units and details.
+#'           See \code{\link{lidar_describe_var}} for more details}
+#'     \item{\code{$clip_and_mean}: Clip the specified tables with the provided set of
+#'           polygons and calculate the raster mean for each polygon. See
+#'           \code{\link{lidar_clip_and_mean}} for more details}
 #'   }
 #'
 #' @family LiDAR functions
@@ -393,4 +400,31 @@ lidar_describe_var <- function(object, variables) {
   check_class_for(object, 'lfcLiDAR')
   # call to the class method
   object$describe_var(variables)
+}
+
+#' Clip and calculate the mean of raster tables
+#'
+#' @description \code{lidar_clip_and_mean} is a wrapper for the \code{$clip_and_mean}
+#'   method of \code{lfcLiDAR} objects. See \code{\link{lidar}}.
+#'
+#' @param object \code{lfcLiDAR} object, as created by \code{\link{lidar}}
+#' @param sf sf object with the polygon/s to clip
+#' @param table_names character vector with the names of the tables to access
+#'
+#' @return This function returns the same sf object provided with new columns with the
+#'   mean of each polygon for each table requested.
+#'
+#' @family LiDAR functions
+#'
+#' @examples
+#' if (interactive()) {
+#' lidardb <- lidar()
+#' }
+#'
+#' @export
+lidar_clip_and_mean <- function(object, sf, table_names) {
+  # argument validation
+  check_class_for(object, 'lfcLiDAR')
+  # call to the class method
+  object$clip_and_mean(sf, table_names, safe = FALSE)
 }

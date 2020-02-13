@@ -37,27 +37,29 @@ test_that("describe_var method works", {
   expect_error(foo$describe_var(25), 'not character')
 })
 
+# sf object to test
+sf_object <-
+  dplyr::tibble(
+    x = c(
+      (256000 + ((680/2)*400)) - (400*2), (256000 + ((680/2)*400)) - (400*2),
+      (256000 + ((680/2)*400)) + (400*2), (256000 + ((680/2)*400)) + (400*2),
+      (256000 + ((680/2)*400)) - (400*2)
+    ),
+    y = c(
+      (4752000 - ((660/2)*400)) - (400*2), (4752000 - ((660/2)*400)) + (400*2),
+      (4752000 - ((660/2)*400)) + (400*2), (4752000 - ((660/2)*400)) - (400*2),
+      (4752000 - ((660/2)*400)) - (400*2)
+    )
+  ) %>%
+  sf::st_as_sf(coords = c("x", "y"), crs = 3043) %>%
+  sf::st_combine() %>%
+  sf::st_as_sf() %>%
+  dplyr::mutate(poly_id = 'example') %>%
+  dplyr::rename(geometry = x)
+
 test_that("clip_and_mean method works", {
   skip_on_cran()
   skip_on_travis()
-  sf_object <-
-    dplyr::tibble(
-      x = c(
-        (256000 + ((680/2)*400)) - (400*2), (256000 + ((680/2)*400)) - (400*2),
-        (256000 + ((680/2)*400)) + (400*2), (256000 + ((680/2)*400)) + (400*2),
-        (256000 + ((680/2)*400)) - (400*2)
-      ),
-      y = c(
-        (4752000 - ((660/2)*400)) - (400*2), (4752000 - ((660/2)*400)) + (400*2),
-        (4752000 - ((660/2)*400)) + (400*2), (4752000 - ((660/2)*400)) - (400*2),
-        (4752000 - ((660/2)*400)) - (400*2)
-      )
-    ) %>%
-    sf::st_as_sf(coords = c("x", "y"), crs = 3043) %>%
-    sf::st_combine() %>%
-    sf::st_as_sf() %>%
-    dplyr::mutate(poly_id = 'example') %>%
-    dplyr::rename(geometry = x)
   expect_error(foo$clip_and_mean('sf', c('AB', 'DBH')), 'not a simple feature')
   expect_error(foo$clip_and_mean(sf_object, c(1, 2)), 'not character')
   expect_error(
@@ -121,4 +123,13 @@ test_that("external describe_var wrapper works", {
   skip_on_travis()
   expect_identical(foo$describe_var('AB'), lidar_describe_var(foo, 'AB'))
   expect_error(lidar_describe_var('foo', 'density'), "class lfcLiDAR")
+})
+
+test_that("external clip_and_mean wrapper works", {
+  skip_on_cran()
+  skip_on_travis()
+  expect_identical(
+    foo$clip_and_mean(sf_object, 'AB', FALSE), lidar_clip_and_mean(foo, sf_object, 'AB')
+  )
+  expect_error(lidar_clip_and_mean('foo', sf_object, 'DBH'), "class lfcLiDAR")
 })

@@ -50,6 +50,7 @@ if (interactive()) {
 }
 \seealso{
 Other LiDAR functions: \code{\link{lidar_avail_tables}},
+  \code{\link{lidar_clip_and_mean}},
   \code{\link{lidar_describe_var}}, \code{\link{lidar}}
 }
 \concept{LiDAR functions}
