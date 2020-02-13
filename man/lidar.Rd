@@ -15,7 +15,7 @@ An \code{lfcLiDAR} class object (inherits from \code{\link[R6]{R6Class}}),
 }
 \section{Methods}{
 
-  \code{lfcLiDAR} objects has one public method:
+  \code{lfcLiDAR} objects has the following methods available:
   \itemize{
     \item{\code{$get_data}: Retrieve and collect LiDAR database rasters. See
           \code{\link{lidar_get_data}} for more details}

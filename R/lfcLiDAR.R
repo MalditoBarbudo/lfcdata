@@ -6,7 +6,7 @@
 #'   with methods to access the data. See Methods section.
 #'
 #' @section Methods:
-#'   \code{lfcLiDAR} objects has one public method:
+#'   \code{lfcLiDAR} objects has the following methods available:
 #'   \itemize{
 #'     \item{\code{$get_data}: Retrieve and collect LiDAR database rasters. See
 #'           \code{\link{lidar_get_data}} for more details}
@@ -126,65 +126,6 @@ lfcLiDAR <- R6::R6Class(
 
       # return the raster
       return(res)
-
-
-
-      # # argument validation
-      # check_args_for(
-      #   character = list(table_name = table_name, spatial = spatial),
-      # )
-      # check_length_for(table_name, 1)
-      # check_length_for(spatial, 1)
-      # check_if_in_for(spatial, c('stars', 'raster'))
-      # check_if_in_for(
-      #   table_name, c('AB', 'BAT', 'BF', 'CAT', 'DBH', 'HM', 'REC', 'VAE')
-      # )
-      #
-      # # check cache, retrieve it or make the query
-      # res <- private$data_cache[[
-      #   glue::glue("{table_name}_{as.character(spatial)}")
-      # ]] %||%
-      #   {
-      #     table_name_as_number <- switch(
-      #       table_name,
-      #       'AB' = 1,
-      #       'BAT' = 6,
-      #       'BF' = 4,
-      #       'CAT' = 7,
-      #       'DBH' = 2,
-      #       'HM' = 3,
-      #       'REC' = 5,
-      #       'VAE' = 8
-      #     )
-      #
-      #     # temp persistent conn object (rpostgis not working with pool objects)
-      #     temp_postgresql_conn <- pool::poolCheckout(private$pool_conn)
-      #     message('Querying raster from LFC database, this can take a while...')
-      #     # let's try to get the raster. With any error, the pool checkout is not returned
-      #     # resulting in dangling db connections, so we use try
-      #     lidar_raster <- try(
-      #       rpostgis::pgGetRast(
-      #         temp_postgresql_conn, c('public', 'lidar_stack_utm'),
-      #         bands = table_name_as_number
-      #       )
-      #     )
-      #     # return the pool checkout, before anything else
-      #     pool::poolReturn(temp_postgresql_conn)
-      #     # check if lidar_raster inherits from try-error to stop
-      #     if (inherits(lidar_raster, "try-error")) {
-      #       stop("Can not connect to the database:\n", lidar_raster[1])
-      #     }
-      #     # well, now we can return a raster (just as is) or a stars
-      #     res <- switch(
-      #       spatial,
-      #       'raster' = lidar_raster,
-      #       'stars' = lidar_raster %>% stars::st_as_stars()
-      #     )
-      #     message('Done')
-      #     # update cache
-      #     private$data_cache[[glue::glue("{table_name}_{as.character(spatial)}")]] <- res
-      #     res
-      #   }
     },
 
     # available tables method
@@ -260,7 +201,7 @@ lfcLiDAR <- R6::R6Class(
       calculate_poly_mean <- function(data, raster_table) {
 
         # This Eder Pebezsma snippet from print.stars method seems the way
-        # to allow multiple attributes checking:
+        # to allow multiple attributes checking in a fast way:
         # as.data.frame(
         #   lapply(foo, function(y) structure(y, dim = NULL)),
         #   optional = TRUE
