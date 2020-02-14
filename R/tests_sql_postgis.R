@@ -96,34 +96,34 @@ clip_and_mean_vectorized_for_polys <- function(data, id_var_name, var_name, lida
 }
 
 
-supposedly_good_results <- sf::read_sf(
-  lidardb$.__enclos_env__$private$pool_conn, 'lidar_municipios'
-) %>%
-  dplyr::select(poly_id, mean_dbh)
-
-library(tictoc)
-tic()
-clip_and_mean_vectorized_for_polys(
-  dplyr::slice(supposedly_good_results, 1:50), 'poly_id', 'dbh', lidardb
-)
-toc()
-sum(dplyr::slice(supposedly_good_results, 1:50) %>% sf::st_area())/1000000
-
-tic()
-clip_and_mean_vectorized_for_polys(
-  supposedly_good_results, 'poly_id', 'dbh', lidardb
-)
-toc()
-sum(supposedly_good_results %>% sf::st_area())/1000000
-
-provincias_test <- sf::read_sf(
-  lidardb$.__enclos_env__$private$pool_conn, 'lidar_provincias'
-) %>%
-  dplyr::select(poly_id, mean_dbh)
-tic()
-clip_and_mean_vectorized_for_polys(
-  provincias_test, 'poly_id', 'dbh', lidardb
-)
-toc()
-
-sum(provincias_test %>% sf::st_area())/1000000
+# supposedly_good_results <- sf::read_sf(
+#   lidardb$.__enclos_env__$private$pool_conn, 'lidar_municipios'
+# ) %>%
+#   dplyr::select(poly_id, mean_dbh)
+#
+# library(tictoc)
+# tic()
+# clip_and_mean_vectorized_for_polys(
+#   dplyr::slice(supposedly_good_results, 1:50), 'poly_id', 'dbh', lidardb
+# )
+# toc()
+# sum(dplyr::slice(supposedly_good_results, 1:50) %>% sf::st_area())/1000000
+#
+# tic()
+# clip_and_mean_vectorized_for_polys(
+#   supposedly_good_results, 'poly_id', 'dbh', lidardb
+# )
+# toc()
+# sum(supposedly_good_results %>% sf::st_area())/1000000
+#
+# provincias_test <- sf::read_sf(
+#   lidardb$.__enclos_env__$private$pool_conn, 'lidar_provincias'
+# ) %>%
+#   dplyr::select(poly_id, mean_dbh)
+# tic()
+# clip_and_mean_vectorized_for_polys(
+#   provincias_test, 'poly_id', 'dbh', lidardb
+# )
+# toc()
+#
+# sum(provincias_test %>% sf::st_area())/1000000
