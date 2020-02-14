@@ -1,7 +1,22 @@
+# Combine statistics for different groups. ST_SummaryStats in postgis SQL returns the
+# statistics for each tile the polygon intersects. This means that calcualting the n and
+# the mean is easy, but we need to combine the statistics to calculate the standard
+# deviation of the entire sample.
+# We use the Cochrane Reviews formulae:
+# https://handbook-5-1.cochrane.org/front_page.htm
+# https://handbook-5-1.cochrane.org/chapter_7/table_7_7_a_formulae_for_combining_groups.htm
 cochrane_sd_reduce <- function(n, m, s) {
 
   res_vec <- seq_along(n) %>%
+    # we need to work with vectors of c(n1,m1,s1); c(n2,m2,s2)...
     purrr::map(~ c(n = n[.x], m = m[.x], s = s[.x])) %>%
+    # and we reduce those vectors to create a new vector with the groups combined stats
+    # to use with the following vector:
+    #
+    # at start:         list(c(n1,m1,s1), c(n2,m2,s2), ..., c(nn,mn,sn))
+    # after first step: list(c(nc1-2,mc1-2,sc1-2), ..., c(nn,mn,sn))
+    # after ... steps:  list(c(nc1-...,mc1-...,sc1-...), c(nn,mn,sn))
+    # after last step:  list(c(nc1-n,mc1-n,sc1-n))
     purrr::reduce(
       .f = function(first, second) {
         stddev <- sqrt(
@@ -17,15 +32,17 @@ cochrane_sd_reduce <- function(n, m, s) {
         return(c(n = count, m = mean_temp, s = stddev))
       }
     )
-
+  # we have the final vector and we retrieve sc1-n (the combined standard deviation)
   return(res_vec['s'])
 }
 
-# clip and mean
+# clip and mean for one polygon, one raster
+# we build a query to get the ST_SummaryStats of the raster values where the polygon
+# intersect. After that we summarise to get the stats, using cochrane for calculate the sd
 clip_and_mean_simple_case <- function(sf, poly_id, var_name, lidardb) {
 
   cat(
-    crayon::yellow$bold(glue::glue("Processing {poly_id} polygon..."))
+    crayon::green$bold(glue::glue("Processing {poly_id} polygon..."))
   )
 
   # poly as wkt, to avoid table creation
@@ -40,9 +57,9 @@ clip_and_mean_simple_case <- function(sf, poly_id, var_name, lidardb) {
     .con = lidardb$.__enclos_env__$private$pool_conn
   )
 
-  # stats query. In this query, IIUC, we join the raster to the geature on the tiles
+  # stats query. In this query, IIUC, we join the raster to the feature on the tiles
   # intersecting, and we calculate the summary stats for the tiles. We return this, as
-  # in this way we can calculate not on ly the mean, but also the std deviation.
+  # in this way we can calculate not only the mean, but also the std deviation.
   b_stats_query <- glue::glue_sql(
     "SELECT poly_id, geometry, (ST_SummaryStats(ST_Clip(rast,1,geometry, true),1,true)).*
          FROM {`var_name`}
@@ -64,28 +81,30 @@ clip_and_mean_simple_case <- function(sf, poly_id, var_name, lidardb) {
     dplyr::mutate(count = as.integer(count)) %>%
     dplyr::summarise(
       !! glue::glue("{var_name}_pixels") := sum(.data[['count']]),
-      !! glue::glue("{var_name}_average") := sum(.data[['count']]*.data[['mean']])/sum(.data[['count']]),
+      !! glue::glue("{var_name}_average") := sum(
+        .data[['count']]*.data[['mean']])/sum(.data[['count']]
+      ),
       !! glue::glue("{var_name}_min") := min(.data[['min']]),
       !! glue::glue("{var_name}_max") := max(.data[['max']]),
-      !! glue::glue("{var_name}_sd") := cochrane_sd_reduce(n = .data[['count']], m = .data[['mean']], s = .data[['stddev']])
-      # pixels = sum(.data[['count']]),
-      # average = sum(.data[['count']]*.data[['mean']])/sum(.data[['count']]),
-      # min = min(.data[['min']]),
-      # max = max(.data[['max']]),
-      # sd = cochrane_sd_reduce(n = .data[['count']], m = .data[['mean']], s = .data[['stddev']])
+      !! glue::glue("{var_name}_sd") := cochrane_sd_reduce(
+        n = .data[['count']], m = .data[['mean']], s = .data[['stddev']]
+      )
     )
 
   cat(
-    crayon::yellow$bold(glue::glue(" done.")), '\n'
+    crayon::green$bold(glue::glue(" done.")), '\n'
   )
 
   return(polygon_stats)
 }
 
+# clip and mean vectorized for more than one polygon.
+# With map_dfr we build a dataframe with the statistics for each polygon supplied
 clip_and_mean_vectorized_for_polys <- function(data, id_var_name, var_name, lidardb) {
+
   # get the geom column name
   sf_column <- attr(data, 'sf_column')
-
+  # rowbinding the summarises
   summ_polys_data <-
     seq_along(data[[sf_column]]) %>%
     purrr::map_dfr(
