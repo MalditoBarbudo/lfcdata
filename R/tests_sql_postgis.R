@@ -63,11 +63,16 @@ clip_and_mean_simple_case <- function(sf, poly_id, var_name, lidardb) {
     dplyr::group_by(poly_id) %>%
     dplyr::mutate(count = as.integer(count)) %>%
     dplyr::summarise(
-      pixels = sum(.data[['count']]),
-      average = sum(.data[['count']]*.data[['mean']])/sum(.data[['count']]),
-      min = min(.data[['min']]),
-      max = max(.data[['max']]),
-      sd = cochrane_sd_reduce(n = .data[['count']], m = .data[['mean']], s = .data[['stddev']])
+      !! glue::glue("{var_name}_pixels") := sum(.data[['count']]),
+      !! glue::glue("{var_name}_average") := sum(.data[['count']]*.data[['mean']])/sum(.data[['count']]),
+      !! glue::glue("{var_name}_min") := min(.data[['min']]),
+      !! glue::glue("{var_name}_max") := max(.data[['max']]),
+      !! glue::glue("{var_name}_sd") := cochrane_sd_reduce(n = .data[['count']], m = .data[['mean']], s = .data[['stddev']])
+      # pixels = sum(.data[['count']]),
+      # average = sum(.data[['count']]*.data[['mean']])/sum(.data[['count']]),
+      # min = min(.data[['min']]),
+      # max = max(.data[['max']]),
+      # sd = cochrane_sd_reduce(n = .data[['count']], m = .data[['mean']], s = .data[['stddev']])
     )
 
   cat(
