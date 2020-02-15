@@ -81,14 +81,16 @@ clip_and_mean_simple_case <- function(sf, poly_id, var_name, lidardb) {
     dplyr::mutate(count = as.integer(count)) %>%
     dplyr::summarise(
       !! glue::glue("{var_name}_pixels") := sum(.data[['count']]),
-      !! glue::glue("{var_name}_average") := sum(
-        .data[['count']]*.data[['mean']])/sum(.data[['count']]
-      ),
+      !! glue::glue("{var_name}_average") := sum(.data[['count']]*.data[['mean']])/sum(.data[['count']]),
       !! glue::glue("{var_name}_min") := min(.data[['min']]),
       !! glue::glue("{var_name}_max") := max(.data[['max']]),
       !! glue::glue("{var_name}_sd") := cochrane_sd_reduce(
         n = .data[['count']], m = .data[['mean']], s = .data[['stddev']]
-      )
+      ),
+      # area covered by raster (km2). Each pixel 20x20m=400m2=4e-04km2
+      !! glue::glue("{var_name}_km2") := !! rlang::sym(glue::glue("{var_name}_pixels")) * 4e-04,
+      # prop of poly area covered by raster
+      !! glue::glue("{var_name}_km2_perc") := 100 * !! rlang::sym(glue::glue("{var_name}_km2")) / (sum(sf::st_area(geometry) %>% as.numeric())/1000000)
     )
 
   cat(
@@ -120,34 +122,34 @@ clip_and_mean_vectorized_for_polys <- function(data, id_var_name, var_name, lida
 }
 
 
-# supposedly_good_results <- sf::read_sf(
-#   lidardb$.__enclos_env__$private$pool_conn, 'lidar_municipios'
-# ) %>%
-#   dplyr::select(poly_id, mean_dbh)
-#
-# library(tictoc)
-# tic()
-# clip_and_mean_vectorized_for_polys(
-#   dplyr::slice(supposedly_good_results, 1:50), 'poly_id', 'dbh', lidardb
-# )
-# toc()
-# sum(dplyr::slice(supposedly_good_results, 1:50) %>% sf::st_area())/1000000
-#
-# tic()
-# clip_and_mean_vectorized_for_polys(
-#   supposedly_good_results, 'poly_id', 'dbh', lidardb
-# )
-# toc()
-# sum(supposedly_good_results %>% sf::st_area())/1000000
-#
-# provincias_test <- sf::read_sf(
-#   lidardb$.__enclos_env__$private$pool_conn, 'lidar_provincias'
-# ) %>%
-#   dplyr::select(poly_id, mean_dbh)
-# tic()
-# clip_and_mean_vectorized_for_polys(
-#   provincias_test, 'poly_id', 'dbh', lidardb
-# )
-# toc()
-#
-# sum(provincias_test %>% sf::st_area())/1000000
+supposedly_good_results <- sf::read_sf(
+  lidardb$.__enclos_env__$private$pool_conn, 'lidar_municipios'
+) %>%
+  dplyr::select(poly_id, mean_dbh)
+
+library(tictoc)
+tic()
+clip_and_mean_vectorized_for_polys(
+  dplyr::slice(supposedly_good_results, 1:2), 'poly_id', 'dbh', lidardb
+)
+toc()
+sum(dplyr::slice(supposedly_good_results, 1:50) %>% sf::st_area())/1000000
+
+tic()
+clip_and_mean_vectorized_for_polys(
+  supposedly_good_results, 'poly_id', 'dbh', lidardb
+)
+toc()
+sum(supposedly_good_results %>% sf::st_area())/1000000
+
+provincias_test <- sf::read_sf(
+  lidardb$.__enclos_env__$private$pool_conn, 'lidar_provincias'
+) %>%
+  dplyr::select(poly_id, mean_dbh)
+tic()
+clip_and_mean_vectorized_for_polys(
+  provincias_test, 'poly_id', 'dbh', lidardb
+)
+toc()
+
+sum(provincias_test %>% sf::st_area())/1000000
