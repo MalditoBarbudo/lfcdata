@@ -1,24 +1,24 @@
 test_that("class object creation works", {
   expect_is(lidar(), c('lfcLiDAR'))
   expect_equal(lfcdata:::lfcLiDAR$new(), lidar())
-  expect_true(rlang::is_function(lidar()$get_data))
+  expect_true(rlang::is_function(lidar()$get_lowres_raster))
 })
 
 # foo to avoid calling the db so often
 foo <- lidar()
 
-test_that("get method works", {
+test_that("get_lowres_raster method works", {
   skip_on_cran()
   skip_on_travis()
-  expect_is(foo$get_data('AB', 'raster'), 'RasterLayer')
-  expect_is(foo$get_data(c('AB', 'DBH'), 'raster'), 'RasterBrick')
-  expect_is(foo$get_data(c('DBH', 'AB'), 'raster'), 'RasterBrick')
-  expect_s3_class(foo$get_data('AB', 'stars'), 'stars')
-  expect_s3_class(foo$get_data(c('AB', 'DBH'), 'stars'), 'stars')
-  expect_s3_class(foo$get_data(c('DBH', 'AB'), 'stars'), 'stars')
-  expect_error(foo$get_data(1, 'raster'), 'not character')
-  expect_error(foo$get_data('non_existent_table', 'raster'), 'Must be one of')
-  expect_error(foo$get_data('AB', 1), 'not character')
+  expect_is(foo$get_lowres_raster('AB', 'raster'), 'RasterLayer')
+  expect_is(foo$get_lowres_raster(c('AB', 'DBH'), 'raster'), 'RasterBrick')
+  expect_is(foo$get_lowres_raster(c('DBH', 'AB'), 'raster'), 'RasterBrick')
+  expect_s3_class(foo$get_lowres_raster('AB', 'stars'), 'stars')
+  expect_s3_class(foo$get_lowres_raster(c('AB', 'DBH'), 'stars'), 'stars')
+  expect_s3_class(foo$get_lowres_raster(c('DBH', 'AB'), 'stars'), 'stars')
+  expect_error(foo$get_lowres_raster(1, 'raster'), 'not character')
+  expect_error(foo$get_lowres_raster('non_existent_table', 'raster'), 'Must be one of')
+  expect_error(foo$get_lowres_raster('AB', 1), 'not character')
 })
 
 test_that("avail_tables method works", {
@@ -77,8 +77,8 @@ test_that("cache works", {
   skip_on_cran()
   skip_on_travis()
   expect_length(foo$.__enclos_env__$private$data_cache, 2)
-  bar <- foo$get_data('AB', 'raster')
-  expect_is(foo$get_data('AB', 'raster'), 'RasterLayer')
+  bar <- foo$get_lowres_raster('AB', 'raster')
+  expect_is(foo$get_lowres_raster('AB', 'raster'), 'RasterLayer')
   temp_postgresql_conn <- pool::poolCheckout(
     foo$.__enclos_env__$private$pool_conn
   )
@@ -89,14 +89,14 @@ test_that("cache works", {
     )
   )
   expect_identical(
-    foo$get_data(c('DBH', 'AB', 'BAT'), 'raster'),
+    foo$get_lowres_raster(c('DBH', 'AB', 'BAT'), 'raster'),
     rpostgis::pgGetRast(
       temp_postgresql_conn, c('public', 'lidar_stack_utm'), bands = c(1,6,2)
     )
   )
   pool::poolReturn(temp_postgresql_conn)
   expect_length(foo$.__enclos_env__$private$data_cache, 3)
-  baz <- foo$get_data('DBH', 'raster')
+  baz <- foo$get_lowres_raster('DBH', 'raster')
   expect_length(foo$.__enclos_env__$private$data_cache, 4)
 })
 
@@ -104,16 +104,16 @@ test_that("external get data wrapper works", {
   skip_on_cran()
   skip_on_travis()
   expect_identical(
-    foo$get_data('AB', 'raster'),
-    lidar_get_data(foo, 'AB', 'raster')
+    foo$get_lowres_raster('AB', 'raster'),
+    lidar_get_lowres_raster(foo, 'AB', 'raster')
   )
   expect_error(
-    lidar_get_data('foo', 'AB', 'raster'),
+    lidar_get_lowres_raster('foo', 'AB', 'raster'),
     "class lfcLiDAR"
   )
   expect_identical(
-    foo$get_data(c('REC', 'BAT'), 'stars'),
-    lidar_get_data(foo, c('REC', 'BAT'), 'stars')
+    foo$get_lowres_raster(c('REC', 'BAT'), 'stars'),
+    lidar_get_lowres_raster(foo, c('REC', 'BAT'), 'stars')
   )
   expect_length(foo$.__enclos_env__$private$data_cache, 5)
 })

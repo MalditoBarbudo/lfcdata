@@ -58,7 +58,7 @@ lfcLiDAR <- R6::R6Class(
     },
     # get_data method. LiDAR db is a postgis db so we need to access with rpostgis and
     # override the super$get_data method.
-    get_data = function(table_name, spatial = 'stars') {
+    get_lowres_raster = function(table_name, spatial = 'stars') {
 
       # argument validation
       check_args_for(
@@ -91,7 +91,10 @@ lfcLiDAR <- R6::R6Class(
 
         # temp persistent conn object (rpostgis not working with pool objects)
         temp_postgresql_conn <- pool::poolCheckout(private$pool_conn)
-        message('Querying raster from LFC database, this can take a while...')
+        message(
+          'Querying low res (400x400m) raster from LFC database',
+          ', this can take a while...'
+        )
         # let's try to get the raster. With any error, the pool checkout is
         # not returned resulting in dangling db connections, so we use `try``
         lidar_raster <- try(
@@ -279,12 +282,12 @@ lfcLiDAR <- R6::R6Class(
 #' }
 #'
 #' @export
-lidar_get_data <- function(object, table_name, spatial = 'stars') {
+lidar_get_lowres_raster <- function(object, table_name, spatial = 'stars') {
   # argument validation
   # NOTE: table_name and spatial are validated in the method
   check_class_for(object, 'lfcLiDAR')
   # call to the class method
-  object$get_data(table_name, spatial)
+  object$get_lowres_raster(table_name, spatial)
 }
 
 #' Get the available tables in LiDAR db
