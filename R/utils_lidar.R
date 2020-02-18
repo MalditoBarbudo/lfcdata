@@ -39,10 +39,10 @@ cochrane_sd_reduce <- function(n, m, s) {
 # clip and mean for one polygon, one raster
 # we build a query to get the ST_SummaryStats of the raster values where the polygon
 # intersect. After that we summarise to get the stats, using cochrane for calculate the sd
-clip_and_mean_simple_case <- function(sf, poly_id, var_name, lidardb) {
+clip_and_stats_simple_case <- function(sf, poly_id, var_name, lidardb) {
 
   cat(
-    crayon::green$bold(glue::glue("Processing {poly_id} polygon..."))
+    crayon::green$bold(glue::glue("Processing {poly_id} polygon for {var_name}..."))
   )
 
   # poly as wkt, to avoid table creation
@@ -105,7 +105,7 @@ clip_and_mean_simple_case <- function(sf, poly_id, var_name, lidardb) {
 
 # clip and mean vectorized for more than one polygon.
 # With map_dfr we build a dataframe with the statistics for each polygon supplied
-clip_and_mean_vectorized_for_polys <- function(data, id_var_name, var_name, lidardb) {
+clip_and_stats_vectorized_for_polys <- function(data, id_var_name, var_name, lidardb) {
 
   # get the geom column name
   sf_column <- attr(data, 'sf_column')
@@ -113,7 +113,7 @@ clip_and_mean_vectorized_for_polys <- function(data, id_var_name, var_name, lida
   summ_polys_data <-
     seq_along(data[[sf_column]]) %>%
     purrr::map_dfr(
-      ~ clip_and_mean_simple_case(
+      ~ clip_and_stats_simple_case(
         sf = data[[sf_column]][.x],
         poly_id = data[[id_var_name]][.x],
         var_name = var_name,
@@ -124,6 +124,16 @@ clip_and_mean_vectorized_for_polys <- function(data, id_var_name, var_name, lida
   return(summ_polys_data)
 }
 
+# clip and stats
+clip_and_stats <- function(data, id_var_name, vars_name, lidardb) {
+  vars_name %>%
+    purrr::map(~ clip_and_stats_vectorized_for_polys(data, id_var_name, .x, lidardb)) %>%
+    purrr::reduce(
+      .f = dplyr::full_join,
+      by = c('poly_id', 'poly_km2')
+    )
+}
+
 
 # supposedly_good_results <- sf::read_sf(
 #   lidardb$.__enclos_env__$private$pool_conn, 'lidar_municipios'
@@ -132,14 +142,14 @@ clip_and_mean_vectorized_for_polys <- function(data, id_var_name, var_name, lida
 #
 # library(tictoc)
 # tic()
-# clip_and_mean_vectorized_for_polys(
+# clip_and_stats_vectorized_for_polys(
 #   dplyr::slice(supposedly_good_results, 1:50), 'poly_id', 'dbh', lidardb
 # )
 # toc()
 # sum(dplyr::slice(supposedly_good_results, 1:50) %>% sf::st_area())/1000000
 #
 # tic()
-# clip_and_mean_vectorized_for_polys(
+# clip_and_stats_vectorized_for_polys(
 #   supposedly_good_results, 'poly_id', 'dbh', lidardb
 # )
 # toc()
@@ -150,9 +160,13 @@ clip_and_mean_vectorized_for_polys <- function(data, id_var_name, var_name, lida
 # ) %>%
 #   dplyr::select(poly_id, mean_dbh)
 # tic()
-# clip_and_mean_vectorized_for_polys(
+# clip_and_stats_vectorized_for_polys(
 #   provincias_test, 'poly_id', 'dbh', lidardb
 # )
 # toc()
 #
 # sum(provincias_test %>% sf::st_area())/1000000
+#
+# tic()
+# clip_and_stats(dplyr::slice(provincias_test, 1:4), 'poly_id', c('dbh', 'ab'), lidardb)
+# toc()
