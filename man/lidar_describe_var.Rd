@@ -32,7 +32,8 @@ lidardb$describe_var(c("DBH", "VAE"))
 }
 \seealso{
 Other LiDAR functions: \code{\link{lidar_avail_tables}},
-  \code{\link{lidar_clip_and_mean}},
-  \code{\link{lidar_get_data}}, \code{\link{lidar}}
+  \code{\link{lidar_clip_and_stats}},
+  \code{\link{lidar_get_lowres_raster}},
+  \code{\link{lidar}}
 }
 \concept{LiDAR functions}

@@ -2,6 +2,8 @@ test_that("class object creation works", {
   expect_is(lidar(), c('lfcLiDAR'))
   expect_equal(lfcdata:::lfcLiDAR$new(), lidar())
   expect_true(rlang::is_function(lidar()$get_lowres_raster))
+  expect_true(rlang::is_function(lidar()$avail_tables))
+  expect_true(rlang::is_function(lidar()$describe_var))
 })
 
 # foo to avoid calling the db so often
@@ -39,38 +41,36 @@ test_that("describe_var method works", {
 
 # sf object to test
 sf_object <-
-  dplyr::tibble(
-    x = c(
-      (256000 + ((680/2)*400)) - (400*2), (256000 + ((680/2)*400)) - (400*2),
-      (256000 + ((680/2)*400)) + (400*2), (256000 + ((680/2)*400)) + (400*2),
-      (256000 + ((680/2)*400)) - (400*2)
-    ),
-    y = c(
-      (4752000 - ((660/2)*400)) - (400*2), (4752000 - ((660/2)*400)) + (400*2),
-      (4752000 - ((660/2)*400)) + (400*2), (4752000 - ((660/2)*400)) - (400*2),
-      (4752000 - ((660/2)*400)) - (400*2)
-    )
+  sf::read_sf(
+    foo$.__enclos_env__$private$pool_conn, 'lidar_municipios'
   ) %>%
-  sf::st_as_sf(coords = c("x", "y"), crs = 3043) %>%
-  sf::st_combine() %>%
-  sf::st_as_sf() %>%
-  dplyr::mutate(poly_id = 'example') %>%
-  dplyr::rename(geometry = x)
+  dplyr::slice(1:5) %>%
+  dplyr::select(poly_id)
 
-test_that("clip_and_mean method works", {
+test_that("clip_and_stats method works", {
   skip_on_cran()
   skip_on_travis()
-  expect_error(foo$clip_and_mean('sf', c('AB', 'DBH')), 'not a simple feature')
-  expect_error(foo$clip_and_mean(sf_object, c(1, 2)), 'not character')
+  expect_error(foo$clip_and_stats('sf', 'poly_id', c('AB', 'DBH')), 'not a simple feature')
+  expect_error(foo$clip_and_stats(sf_object, 1, c('AB', 'DBH')), 'not character')
+  expect_error(foo$clip_and_stats(sf_object, 'poly_id', c(1,2)), 'not character')
   expect_error(
-    foo$clip_and_mean(sf_object, c('AB', 'DBH'), safe = 'FALSE'), 'not logical'
+    foo$clip_and_stats(sf_object, c('poly_id', 'other_poly_id'), c('AB', 'DBH')),
+    'must be of length'
   )
-  expect_true(inherits(foo$clip_and_mean(sf_object, c('AB', 'DBH')), 'sf'))
+  expect_error(foo$clip_and_stats(sf_object, 'poly_id', c('AC', 'DBH')), 'Must be one of')
+  expect_true(inherits(foo$clip_and_stats(sf_object, 'poly_id', c('AB', 'DBH')), 'sf'))
   expect_identical(
-    names(foo$clip_and_mean(sf_object, c('AB', 'DBH'))),
-    c('poly_id', 'geometry', 'AB', 'DBH')
+    names(foo$clip_and_stats(sf_object, 'poly_id', c('AB', 'DBH'))),
+    c(
+      'poly_id', 'poly_km2',
+      'AB_pixels', 'AB_average', 'AB_min', 'AB_max',
+      'AB_sd', 'AB_km2', 'AB_km2_perc',
+      'DBH_pixels', 'DBH_average', 'DBH_min', 'DBH_max',
+      'DBH_sd', 'DBH_km2', 'DBH_km2_perc',
+      'geometry'
+    )
   )
-  expect_equal(nrow(foo$clip_and_mean(sf_object, c('AB', 'DBH'))), 1)
+  expect_equal(nrow(foo$clip_and_stats(sf_object, 'poly_id', c('AB', 'DBH'))), 5)
 })
 
 test_that("cache works", {
@@ -125,11 +125,12 @@ test_that("external describe_var wrapper works", {
   expect_error(lidar_describe_var('foo', 'density'), "class lfcLiDAR")
 })
 
-test_that("external clip_and_mean wrapper works", {
+test_that("external clip_and_stats wrapper works", {
   skip_on_cran()
   skip_on_travis()
   expect_identical(
-    foo$clip_and_mean(sf_object, 'AB', FALSE), lidar_clip_and_mean(foo, sf_object, 'AB')
+    foo$clip_and_stats(sf_object, 'poly_id', 'AB'),
+    lidar_clip_and_stats(foo, sf_object, 'poly_id', 'AB')
   )
-  expect_error(lidar_clip_and_mean('foo', sf_object, 'DBH'), "class lfcLiDAR")
+  expect_error(lidar_clip_and_stats('foo', sf_object, 'poly_id', 'DBH'), "class lfcLiDAR")
 })

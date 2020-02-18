@@ -157,85 +157,205 @@ lfcLiDAR <- R6::R6Class(
     },
 
     # clip method
-    clip_and_mean = function(sf, table_name, safe = TRUE) {
-      # @param table_name table name
-      # @param sf sf object with the polygons to clip
-      # @param safe logical indicating if memory and time safeguards are active
-
-      # argument checks
-      check_args_for(
-        sf = list(sf = sf),
-        character = list(table_name = table_name),
-        logical = list(safe = safe)
-      )
-      check_if_in_for(table_name, c('AB', 'BAT', 'BF', 'CAT', 'DBH', 'HM', 'REC', 'VAE'))
-
-      # load the temp sf table (check for geom instead of geometry)
-      user_polygons <-
-        sf %>%
-        sf::st_transform(crs = 3043) %>%
-        sf::st_set_crs(3043)
-
-      # if safeguards are active, enforce them.
-      if (isTRUE(safe)) {
-        # area check
-        user_area <- sf::st_area(user_polygons) %>% sum() %>% as.numeric()
-        if (user_area > 500000000) {
-          stop(glue::glue(
-            'Polygon area (or polygons sum of areas) are above the maximum value',
-            ' ({round(user_area/1000000, 1)} > 500 km2)'
-          ))
-        }
-        # feature number
-        user_features <- sf::st_geometry(user_polygons) %>% length()
-        if (user_features > 10) {
-          stop(glue::glue(
-            'Number of features (polygons) is above the maximum value',
-            ' ({user_features} > 10 polygons)'
-          ))
-        }
-      }
-
-      # ok, cutting to the cheese. We need to clip the polygons, and after that calculate
-      # the mean value for the left raster
-      calculate_poly_mean <- function(data, raster_table) {
-
-        # get the geom column name
-        sf_column <- attr(data, 'sf_column')
-
-        # This Eder Pebezsma snippet from print.stars method seems the way
-        # to allow multiple attributes checking in a fast way:
-        # as.data.frame(
-        #   lapply(foo, function(y) structure(y, dim = NULL)),
-        #   optional = TRUE
-        # )
-        # So, we need to iterate for each attribute (lapply/purrr) and remove the
-        # dim attrb (structure), resulting in a list of each attribute
-        # containing a vector of all cell values that we transform in a
-        # dataframe and summarise all
-        means_data <-
-          seq_along(data[[sf_column]]) %>%
-          purrr::map_dfr(
-            .f = ~ sf::st_crop(raster_table, data[[sf_column]][.x]) %>%
-              purrr::map(~ structure(.x, dim = NULL)) %>%
-              tibble::as_tibble() %>%
-              dplyr::summarise_all(.funs = mean, na.rm = TRUE)
-          )
-
-        # now we join the means for each polygon (rows) and each attribute
-        # (columns) with the polygons data
-        res <- dplyr::bind_cols(data, means_data) # pun intended
-        # return the updated data
-        return(res)
-      }
-
-      return(calculate_poly_mean(user_polygons, self$get_data(table_name)))
+    clip_and_stats = function(sf, id_var_name, var_names) {
+      res <-
+        var_names %>%
+        purrr::map(
+          ~ private$clip_and_stats_vectorized_for_polys(sf, id_var_name, .x)
+        ) %>%
+        purrr::reduce(
+          .f = dplyr::full_join,
+          by = c(id_var_name, 'poly_km2')
+        ) %>%
+        dplyr::left_join(sf, by = id_var_name) %>%
+        sf::st_as_sf()
+      return(res)
     }
+
+    # clip_and_mean = function(sf, table_name, safe = TRUE) {
+    #   # @param table_name table name
+    #   # @param sf sf object with the polygons to clip
+    #   # @param safe logical indicating if memory and time safeguards are active
+    #
+    #   # argument checks
+    #   check_args_for(
+    #     sf = list(sf = sf),
+    #     character = list(table_name = table_name),
+    #     logical = list(safe = safe)
+    #   )
+    #   check_if_in_for(table_name, c('AB', 'BAT', 'BF', 'CAT', 'DBH', 'HM', 'REC', 'VAE'))
+    #
+    #   # load the temp sf table (check for geom instead of geometry)
+    #   user_polygons <-
+    #     sf %>%
+    #     sf::st_transform(crs = 3043) %>%
+    #     sf::st_set_crs(3043)
+    #
+    #   # if safeguards are active, enforce them.
+    #   if (isTRUE(safe)) {
+    #     # area check
+    #     user_area <- sf::st_area(user_polygons) %>% sum() %>% as.numeric()
+    #     if (user_area > 500000000) {
+    #       stop(glue::glue(
+    #         'Polygon area (or polygons sum of areas) are above the maximum value',
+    #         ' ({round(user_area/1000000, 1)} > 500 km2)'
+    #       ))
+    #     }
+    #     # feature number
+    #     user_features <- sf::st_geometry(user_polygons) %>% length()
+    #     if (user_features > 10) {
+    #       stop(glue::glue(
+    #         'Number of features (polygons) is above the maximum value',
+    #         ' ({user_features} > 10 polygons)'
+    #       ))
+    #     }
+    #   }
+    #
+    #   # ok, cutting to the cheese. We need to clip the polygons, and after that calculate
+    #   # the mean value for the left raster
+    #   calculate_poly_mean <- function(data, raster_table) {
+    #
+    #     # get the geom column name
+    #     sf_column <- attr(data, 'sf_column')
+    #
+    #     # This Eder Pebezsma snippet from print.stars method seems the way
+    #     # to allow multiple attributes checking in a fast way:
+    #     # as.data.frame(
+    #     #   lapply(foo, function(y) structure(y, dim = NULL)),
+    #     #   optional = TRUE
+    #     # )
+    #     # So, we need to iterate for each attribute (lapply/purrr) and remove the
+    #     # dim attrb (structure), resulting in a list of each attribute
+    #     # containing a vector of all cell values that we transform in a
+    #     # dataframe and summarise all
+    #     means_data <-
+    #       seq_along(data[[sf_column]]) %>%
+    #       purrr::map_dfr(
+    #         .f = ~ sf::st_crop(raster_table, data[[sf_column]][.x]) %>%
+    #           purrr::map(~ structure(.x, dim = NULL)) %>%
+    #           tibble::as_tibble() %>%
+    #           dplyr::summarise_all(.funs = mean, na.rm = TRUE)
+    #       )
+    #
+    #     # now we join the means for each polygon (rows) and each attribute
+    #     # (columns) with the polygons data
+    #     res <- dplyr::bind_cols(data, means_data) # pun intended
+    #     # return the updated data
+    #     return(res)
+    #   }
+    #
+    #   return(calculate_poly_mean(user_polygons, self$get_data(table_name)))
+    # }
   ),
   # private methods and values
   private = list(
     # connection values
-    dbname = 'lidargis'
+    dbname = 'lidargis',
+
+    #### clip_and_stats intermediate methods
+
+    # clip and mean for one polygon, one raster
+    # we build a query to get the ST_SummaryStats of the raster values where the polygon
+    # intersect. After that we summarise to get the stats, using cochrane for calculate the sd
+    clip_and_stats_simple_case = function(sf, poly_id, var_name) {
+
+      # argument checks
+      check_args_for(
+        character = list(poly_id = poly_id, var_name = var_name)
+      )
+      check_if_in_for(var_name, c('AB', 'BAT', 'BF', 'CAT', 'DBH', 'HM', 'REC', 'VAE'))
+      check_length_for(var_name, 1)
+      check_length_for(poly_id, 1)
+
+
+      cat(crayon::green$bold(
+        glue::glue("Processing {poly_id} polygon for {var_name} raster...")
+      ))
+
+      # poly as wkt, to avoid table creation
+      wkt_poly <-
+        sf %>%
+        sf::st_geometry() %>%
+        sf::st_as_text(EWKT = TRUE)
+
+      # var name to lowercase
+      var_name <- tolower(var_name)
+
+      # feature query. In this query we create the simple feature table-like
+      feat_query <- glue::glue_sql(
+        "SELECT {poly_id} As poly_id, ST_GeomFromEWKT({wkt_poly}) As geometry",
+        .con = private$pool_conn
+      )
+
+      # stats query. In this query, IIUC, we join the raster to the feature on the tiles
+      # intersecting, and we calculate the summary stats for the tiles. We return this, as
+      # in this way we can calculate not only the mean, but also the std deviation.
+      b_stats_query <- glue::glue_sql(
+        "SELECT poly_id, geometry, (ST_SummaryStats(ST_Clip(rast,1,geometry, true),1,true)).*
+         FROM {`var_name`}
+       INNER JOIN ({feat_query}) AS feat
+       ON ST_Intersects(feat.geometry,rast)",
+        .con = private$pool_conn
+      )
+
+      # execute the query and retrieve the data
+      intersecting_tiles_stats <- sf::st_read(
+        private$pool_conn, query = b_stats_query, as_tibble = TRUE
+      )
+
+      polygon_stats <-
+        intersecting_tiles_stats %>%
+        dplyr::as_tibble() %>%
+        dplyr::mutate(count = as.integer(count)) %>%
+        dplyr::filter(count > 0) %>%
+        dplyr::group_by(poly_id) %>%
+        dplyr::summarise(
+          # area of the polygon
+          poly_km2 = (sf::st_area(dplyr::first(.data[['geometry']])) %>% as.numeric()) / 1000000,
+          # regular stats
+          !! glue::glue("{toupper(var_name)}_pixels") := sum(.data[['count']]),
+          !! glue::glue("{toupper(var_name)}_average") := sum(.data[['count']]*.data[['mean']])/sum(.data[['count']]),
+          !! glue::glue("{toupper(var_name)}_min") := min(.data[['min']]),
+          !! glue::glue("{toupper(var_name)}_max") := max(.data[['max']]),
+          !! glue::glue("{toupper(var_name)}_sd") := cochrane_sd_reduce(
+            n = .data[['count']], m = .data[['mean']], s = .data[['stddev']]
+          ),
+          # area covered by raster (km2). Each pixel 20x20m=400m2=4e-04km2
+          !! glue::glue("{toupper(var_name)}_km2") := !! rlang::sym(glue::glue("{toupper(var_name)}_pixels")) * 4e-04,
+          # prop of poly area covered by raster
+          !! glue::glue("{toupper(var_name)}_km2_perc") := 100 * !! rlang::sym(glue::glue("{toupper(var_name)}_km2")) / poly_km2
+        )
+
+      cat(
+        crayon::green$bold(glue::glue(" done.")), '\n'
+      )
+
+      return(polygon_stats)
+    },
+
+    # clip and mean vectorized for more than one polygon.
+    # With map_dfr we build a dataframe with the statistics for each polygon supplied
+    clip_and_stats_vectorized_for_polys = function(sf, id_var_name, var_name) {
+
+      # argument checks (we only check for id_var_name, as the rest is gonna be
+      # checked on clip_and_stats_simple_case)
+      check_args_for(sf = list(sf = sf), character = list(id_var_name = id_var_name))
+      check_length_for(id_var_name, 1)
+
+      # get the geom column name
+      sf_column <- attr(sf, 'sf_column')
+      # rowbinding the summarises
+      summ_polys_data <-
+        seq_along(sf[[sf_column]]) %>%
+        purrr::map_dfr(
+          ~ private$clip_and_stats_simple_case(
+            sf = sf[[sf_column]][.x], poly_id = sf[[id_var_name]][.x],
+            var_name = var_name
+          )
+        )
+
+      return(summ_polys_data)
+    }
   )
 )
 
@@ -370,9 +490,9 @@ lidar_describe_var <- function(object, variables) {
 #' }
 #'
 #' @export
-lidar_clip_and_mean <- function(object, sf, table_names) {
+lidar_clip_and_stats <- function(object, sf, polygon_id_variable, table_names) {
   # argument validation
   check_class_for(object, 'lfcLiDAR')
   # call to the class method
-  object$clip_and_mean(sf, table_names, safe = FALSE)
+  object$clip_and_stats(sf, polygon_id_variable, table_names)
 }
