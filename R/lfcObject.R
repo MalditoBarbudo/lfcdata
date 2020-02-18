@@ -53,7 +53,8 @@ lfcObject <- R6::R6Class(
         host = 'laboratoriforestal.creaf.uab.cat',
         idleTimeout = 3600,
         user = 'guest',
-        password = 'guest'
+        password = 'guest',
+        options = "-c client_min_messages=warning"
       )
     },
 
