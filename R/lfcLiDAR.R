@@ -56,8 +56,9 @@ lfcLiDAR <- R6::R6Class(
       )
       invisible(self)
     },
-    # get_data method. LiDAR db is a postgis db so we need to access with rpostgis and
-    # override the super$get_data method.
+    # get_lowres_raster method.
+    # LiDAR db is a postgis db so we need to access with rpostgis and retrieve the
+    # 400x400 raster table.
     get_lowres_raster = function(table_name, spatial = 'stars') {
 
       # argument validation
