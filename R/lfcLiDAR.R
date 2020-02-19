@@ -56,31 +56,65 @@ lfcLiDAR <- R6::R6Class(
       )
       invisible(self)
     },
+
+    # get data method. This access to the precalculated data for administrative and
+    # natural areas data. We need to overrride the super$get_data method to return
+    # the spatial object
+    get_data = function(table_name, variables) {
+
+      # argument checks
+      check_args_for(
+        character = list(table_name = table_name, variables = variables)
+      )
+      check_length_for(table_name, 1)
+      check_if_in_for(
+        variables, c('AB', 'BAT', 'BF', 'CAT', 'DBH', 'HM', 'REC', 'VAE')
+      )
+
+      # variables
+      variables <- tolower(variables)
+      regex_detection <- glue::glue(glue::glue_collapse(variables, sep = '$|'), "$")
+
+      # get the data, select the variables. Check first if cache exists
+      cached_data <-
+        private$data_cache[[table_name]] %||% {
+          lidar_agg_data <- sf::st_read(private$pool_conn, table_name, as_tibble = TRUE)
+          private$data_cache[[table_name]] <- lidar_agg_data
+          lidar_agg_data
+        }
+
+      res <-
+        cached_data %>%
+        dplyr::select(dplyr::matches(regex_detection))
+
+      return(res)
+    },
+
     # get_lowres_raster method.
     # LiDAR db is a postgis db so we need to access with rpostgis and retrieve the
     # 400x400 raster table.
-    get_lowres_raster = function(table_name, spatial = 'stars') {
+    get_lowres_raster = function(variables, spatial = 'stars') {
 
       # argument validation
       check_args_for(
-        character = list(table_name = table_name, spatial = spatial)
+        character = list(variables = variables, spatial = spatial)
       )
       check_length_for(spatial, 1)
       check_if_in_for(spatial, c('stars', 'raster'))
       check_if_in_for(
-        table_name, c('AB', 'BAT', 'BF', 'CAT', 'DBH', 'HM', 'REC', 'VAE')
+        variables, c('AB', 'BAT', 'BF', 'CAT', 'DBH', 'HM', 'REC', 'VAE')
       )
 
       # chache name, as to avoid caching the same if the same tables, but in
       # different order, are provided
       cache_name <- glue::glue(
-        glue::glue_collapse(table_name %>% sort(), sep = '_'), '_raster'
+        glue::glue_collapse(variables %>% sort(), sep = '_'), '_raster'
       )
 
       # check cache, retrieve it or make the query
       res <- private$data_cache[[cache_name]] %||% {
-        table_name_as_numbers <-
-          table_name %>%
+        variables_as_numbers <-
+          variables %>%
           sort() %>%
           purrr::map_int(
             ~ switch(
@@ -101,7 +135,7 @@ lfcLiDAR <- R6::R6Class(
         lidar_raster <- try(
           rpostgis::pgGetRast(
             temp_postgresql_conn, c('public', 'lidar_stack_utm'),
-            bands = table_name_as_numbers
+            bands = variables_as_numbers
           )
         )
         # return the pool checkout, before anything else
@@ -125,7 +159,7 @@ lfcLiDAR <- R6::R6Class(
           stars::st_as_stars()
         # we need to split to convert layers to attributes in case more
         # than one band is retrieved
-        if (length(table_name) > 1) {
+        if (length(variables) > 1) {
           res <- res %>% split("band")
         }
       }
@@ -136,7 +170,10 @@ lfcLiDAR <- R6::R6Class(
 
     # available tables method
     avail_tables = function() {
-      c('AB', 'BAT', 'BF', 'CAT', 'DBH', 'HM', 'REC', 'VAE')
+      c(
+        'lidar_catalunya', 'lidar_provincias', 'lidar_veguerias', 'lidar_comarcas',
+        'lidar_municipios'
+      )
     },
 
     # describe method
@@ -359,20 +396,66 @@ lfcLiDAR <- R6::R6Class(
   )
 )
 
-#' Access to the tables in the LiDAR database
+#' Access the aggregated data for administrative and natural areas
 #'
 #' @description \code{lidar_get_data} is a wrapper for the \code{$get_data} method of
 #'   \code{lfcLiDAR} objects. See also \code{\link{lidar}}.
 #'
 #' @param object \code{lfcLiDAR} object, as created by \code{\link{lidar}}
-#' @param table_name character vector indicating the requested raster name/s
+#' @param table_name character vector of lenght 1 indicating the table to retrieve
+#' @param variables character vector indicating variables for which data is returned
+#'
+#' @return An sf object with the aggregated values for each administrative division or
+#'   natural area for the variables requested
+#'
+#' @family LiDAR functions
+#'
+#' @details Precalculated aggregated values for
+#'   \itemize{
+#'     \item{Catalonia, in the \code{lidar_catalunya} table}
+#'     \item{Provinces, in the \code{lidar_provincias} table}
+#'     \item{Veguerias, in the \code{lidar_veguerias} table}
+#'     \item{Regions, in the \code{lidar_comarcas} table}
+#'     \item{Municipalities, in the \code{lidar_municipalities} table}
+#'     \item{National Parks}
+#'     \item{Natura 2000 Network}
+#'   }
+#'
+#' @examples
+#' if (interactive()) {
+#'   lidardb <- lidar()
+#'   # provinces data for DBH and AB
+#'   provinces_data <- lidar_get_data(lidardb, 'lidar_provincias', c('AB', 'DBH'))
+#'   provinces_data
+#'
+#'   # lidardb is an R6 object, so the previous example is the same as:
+#'   lidardb$get_data('lidar_provincias', c('AB', 'DBH'))
+#' }
+#'
+#' @export
+lidar_get_data <- function(object, table_name, variables) {
+  # argument validation
+  check_class_for(object, 'lfcLiDAR')
+  # call to the class method
+  object$get_data(table_name, variables)
+}
+
+#' Access to the low resolution (400x400m) rasters in the LiDAR database
+#'
+#' @description \code{lidar_get_lowres_raster} is a wrapper for the
+#'   \code{$get_lowres_raster} method of \code{lfcLiDAR} objects.
+#'   See also \code{\link{lidar}}.
+#'
+#' @param object \code{lfcLiDAR} object, as created by \code{\link{lidar}}
+#' @param variables character vector indicating the requested raster/s variables
 #' @param spatial character vector of lenght 1 indicating the type of raster object to
 #'   return, "raster" or "stars", the default.
 #'
-#' @return A raster object: \code{RasterLayer} if spatial is \code{raster},
-#'   \code{stars} if spatial is \code{stars}. See https://r-spatial.github.io/stars/index.html
-#'   for details about stars objects and \code{\link[raster]{raster}} for details
-#'   about raster objects.
+#' @return A raster object: \code{RasterLayer} if spatial is \code{raster} and only one
+#'   variable is requested, \code{RasterBrick} if more than one variable is requested.
+#'   \code{stars} if spatial is \code{stars}. See
+#'   https://r-spatial.github.io/stars/index.html for details about stars objects and
+#'   \code{\link[raster]{raster}} for details about raster objects.
 #'
 #' @family LiDAR functions
 #'
@@ -385,30 +468,30 @@ lfcLiDAR <- R6::R6Class(
 #' if (interactive()) {
 #'   lidardb <- lidar()
 #'   # raster
-#'   ab_raster <- lidar_get_data(lidardb, 'AB', 'raster')
+#'   ab_raster <- lidar_get_lowres_raster(lidardb, 'AB', 'raster')
 #'   # stars
-#'   ab_stars <- lidar_get_data(lidardb, 'AB', 'stars')
+#'   ab_stars <- lidar_get_lowres_raster(lidardb, 'AB', 'stars')
 #'
 #'   # we can use pipes
 #'   lidardb %>%
-#'     lidar_get_data('AB', 'raster')
+#'     lidar_get_lowres_raster('AB', 'raster')
 #'
 #'   # or retrieve several tables at one time
 #'   lidardb %>%
-#'     lidar_get_data(c('AB', 'DBH'), 'stars')
+#'     lidar_get_lowres_raster(c('AB', 'DBH'), 'stars')
 #'
 #'   # lidardb is an R6 object, so the previous examples are the same as:
-#'   lidardb$get_data('AB', 'raster')
-#'   lidardb$get_data('AB', 'stars')
+#'   lidardb$get_lowres_raster('AB', 'raster')
+#'   lidardb$get_lowres_raster('AB', 'stars')
 #' }
 #'
 #' @export
-lidar_get_lowres_raster <- function(object, table_name, spatial = 'stars') {
+lidar_get_lowres_raster <- function(object, variables, spatial = 'stars') {
   # argument validation
-  # NOTE: table_name and spatial are validated in the method
+  # NOTE: variables and spatial are validated in the method
   check_class_for(object, 'lfcLiDAR')
   # call to the class method
-  object$get_lowres_raster(table_name, spatial)
+  object$get_lowres_raster(variables, spatial)
 }
 
 #' Get the available tables in LiDAR db

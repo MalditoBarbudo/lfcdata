@@ -37,6 +37,7 @@ lidardb
 Other LiDAR functions: \code{\link{lidar_avail_tables}},
   \code{\link{lidar_clip_and_stats}},
   \code{\link{lidar_describe_var}},
+  \code{\link{lidar_get_data}},
   \code{\link{lidar_get_lowres_raster}}
 }
 \concept{LiDAR functions}

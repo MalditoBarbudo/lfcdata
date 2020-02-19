@@ -2,27 +2,29 @@
 % Please edit documentation in R/lfcLiDAR.R
 \name{lidar_get_lowres_raster}
 \alias{lidar_get_lowres_raster}
-\title{Access to the tables in the LiDAR database}
+\title{Access to the low resolution (400x400m) rasters in the LiDAR database}
 \usage{
-lidar_get_lowres_raster(object, table_name, spatial = "stars")
+lidar_get_lowres_raster(object, variables, spatial = "stars")
 }
 \arguments{
 \item{object}{\code{lfcLiDAR} object, as created by \code{\link{lidar}}}
 
-\item{table_name}{character vector indicating the requested raster name/s}
+\item{variables}{character vector indicating the requested raster/s variables}
 
 \item{spatial}{character vector of lenght 1 indicating the type of raster object to
 return, "raster" or "stars", the default.}
 }
 \value{
-A raster object: \code{RasterLayer} if spatial is \code{raster},
-  \code{stars} if spatial is \code{stars}. See https://r-spatial.github.io/stars/index.html
-  for details about stars objects and \code{\link[raster]{raster}} for details
-  about raster objects.
+A raster object: \code{RasterLayer} if spatial is \code{raster} and only one
+  variable is requested, \code{RasterBrick} if more than one variable is requested.
+  \code{stars} if spatial is \code{stars}. See
+  https://r-spatial.github.io/stars/index.html for details about stars objects and
+  \code{\link[raster]{raster}} for details about raster objects.
 }
 \description{
-\code{lidar_get_data} is a wrapper for the \code{$get_data} method of
-  \code{lfcLiDAR} objects. See also \code{\link{lidar}}.
+\code{lidar_get_lowres_raster} is a wrapper for the
+  \code{$get_lowres_raster} method of \code{lfcLiDAR} objects.
+  See also \code{\link{lidar}}.
 }
 \details{
 Connection to database can be slow. Rasters retrieved from the db are stored
@@ -34,27 +36,28 @@ Connection to database can be slow. Rasters retrieved from the db are stored
 if (interactive()) {
   lidardb <- lidar()
   # raster
-  ab_raster <- lidar_get_data(lidardb, 'AB', 'raster')
+  ab_raster <- lidar_get_lowres_raster(lidardb, 'AB', 'raster')
   # stars
-  ab_stars <- lidar_get_data(lidardb, 'AB', 'stars')
+  ab_stars <- lidar_get_lowres_raster(lidardb, 'AB', 'stars')
 
   # we can use pipes
   lidardb \%>\%
-    lidar_get_data('AB', 'raster')
+    lidar_get_lowres_raster('AB', 'raster')
 
   # or retrieve several tables at one time
   lidardb \%>\%
-    lidar_get_data(c('AB', 'DBH'), 'stars')
+    lidar_get_lowres_raster(c('AB', 'DBH'), 'stars')
 
   # lidardb is an R6 object, so the previous examples are the same as:
-  lidardb$get_data('AB', 'raster')
-  lidardb$get_data('AB', 'stars')
+  lidardb$get_lowres_raster('AB', 'raster')
+  lidardb$get_lowres_raster('AB', 'stars')
 }
 
 }
 \seealso{
 Other LiDAR functions: \code{\link{lidar_avail_tables}},
   \code{\link{lidar_clip_and_stats}},
-  \code{\link{lidar_describe_var}}, \code{\link{lidar}}
+  \code{\link{lidar_describe_var}},
+  \code{\link{lidar_get_data}}, \code{\link{lidar}}
 }
 \concept{LiDAR functions}
