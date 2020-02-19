@@ -8,15 +8,18 @@
 #' @section Methods:
 #'   \code{lfcLiDAR} objects has the following methods available:
 #'   \itemize{
-#'     \item{\code{$get_data}: Retrieve and collect LiDAR database rasters. See
-#'           \code{\link{lidar_get_data}} for more details}
+#'     \item{\code{$get_data}: Retrieve aggregated precalculated data for administrative
+#'           divisions and natural areas. See \code{\link{lidar_get_data}} for more
+#'           details}
+#'     \item{\code{$get_lowres_raster}: Retrieve and collect LiDAR database rasters. See
+#'           \code{\link{lidar_get_lowres_raster}} for more details}
 #'     \item{\code{$avail_tables}: List all the tables that can be consulted. See
 #'           \code{\link{lidar_avail_tables}} for more details}
 #'     \item{\code{$describe_var}: Describe the variables, with their units and details.
 #'           See \code{\link{lidar_describe_var}} for more details}
-#'     \item{\code{$clip_and_mean}: Clip the specified tables with the provided set of
-#'           polygons and calculate the raster mean for each polygon. See
-#'           \code{\link{lidar_clip_and_mean}} for more details}
+#'     \item{\code{$clip_and_stats}: Clip the specified tables with the provided set of
+#'           polygons and calculate the raster statistics for each polygon. See
+#'           \code{\link{lidar_clip_and_stats}} for more details}
 #'   }
 #'
 #' @family LiDAR functions
@@ -40,16 +43,18 @@ lfcLiDAR <- R6::R6Class(
     # override the default print
     print = function(...) {
       cat(
-        " Access to the LiDAR rasters database.\n",
+        " Access to the LiDAR database.\n",
         crayon::blue$underline("laboratoriforestal.creaf.uab.cat\n\n"),
         "Use " %+% crayon::yellow$bold("lidar_get_data") %+%
-          " to access the tables.\n",
+          " to access the administrative divisions aggregated data.\n",
+        "Use " %+% crayon::yellow$bold("lidar_get_lowres_raster") %+%
+          " to access access the low resolution rasters (400x400m).\n",
         "Use " %+% crayon::yellow$bold("lidar_avail_tables") %+%
           " to know which tables are available.\n",
         "Use " %+% crayon::yellow$bold("lidar_describe_var") %+%
           " to get the information available on the variables.\n",
-        "Use " %+% crayon::yellow$bold("lidar_clip_and_mean") %+%
-          " to summarise the raster by provided polygons.\n",
+        "Use " %+% crayon::yellow$bold("lidar_clip_and_stats") %+%
+          " to summarise the raw raster (20x20m) by provided polygons.\n",
         "See " %+%
           crayon::yellow$bold("vignette('tables_and_variables', package = 'lfcdata')") %+%
           " to learn more about the tables and variables."
@@ -569,7 +574,17 @@ lidar_describe_var <- function(object, variables) {
 #'
 #' @examples
 #' if (interactive()) {
+#' library(dplyr)
 #' lidardb <- lidar()
+#'
+#' polygons_data <- lidar_get_data('lidar_provincias', 'DBH') %>%
+#'   select(poly_id, DBH_check = DBH_mean, geometry)
+#'
+#' dbh_provinces <- lidar_clip_and_stats(lidardb, polygons_data, 'poly_id', 'DBH')
+#' dbh_provinces$DBH_check == dbh_provinces$DBH_mean
+#'
+#' # lidardb is an R6 object, so the previous example is the same as:
+#' lidardb$clip_and_stats(polygons_data, 'poly_id', 'DBH')
 #' }
 #'
 #' @export
