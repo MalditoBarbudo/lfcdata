@@ -4,6 +4,7 @@ test_that("class object creation works", {
   expect_true(rlang::is_function(nfi()$get_data))
   expect_true(rlang::is_function(nfi()$avail_tables))
   expect_true(rlang::is_function(nfi()$describe_var))
+  expect_true(rlang::is_function(nfi()$describe_table))
 })
 
 # foo to avoid calling the db so ofter

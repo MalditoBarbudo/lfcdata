@@ -2,9 +2,11 @@
 test_that("class object creation works", {
   expect_is(lidar(), c('lfcLiDAR'))
   expect_equal(lfcdata:::lfcLiDAR$new(), lidar())
+  expect_true(rlang::is_function(lidar()$get_data))
   expect_true(rlang::is_function(lidar()$get_lowres_raster))
   expect_true(rlang::is_function(lidar()$avail_tables))
   expect_true(rlang::is_function(lidar()$describe_var))
+  expect_true(rlang::is_function(lidar()$clip_and_stats))
 })
 
 # foo to avoid calling the db so often
