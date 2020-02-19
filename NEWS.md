@@ -1,7 +1,10 @@
 # lfcdata (development version)
 
-* Added `lfcLiDAR$clip_and_mean` method, as weel as its external counterpart
-  `lidar_clip_and_mean`
+* Refactored lfcLiDAR class and methods. `lfcLiDAR$get_data` method now returns aggregated
+  and precalculated data. `lfcLiDAR$get_lowres_raster` access the low resolution rasters
+  and `lfcLiDAR$clip_and_stats` makes calculation based on raw data. 
+* Added `lfcLiDAR$clip_and_stats` method, as well as its external counterpart
+  `lidar_clip_and_stats`
 
 # lfcdata 0.0.4
 
