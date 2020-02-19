@@ -1,3 +1,4 @@
+## class object creation works ####
 test_that("class object creation works", {
   expect_is(lidar(), c('lfcLiDAR'))
   expect_equal(lfcdata:::lfcLiDAR$new(), lidar())
@@ -9,6 +10,21 @@ test_that("class object creation works", {
 # foo to avoid calling the db so often
 foo <- lidar()
 
+## get data method works ####
+test_that("get_data method works", {
+  skip_on_cran()
+  skip_on_travis()
+  expect_s3_class(foo$get_data('lidar_provincias', c('DBH', 'AB')), 'sf')
+  expect_s3_class(foo$get_data('lidar_provincias', 'REC'), 'sf')
+  expect_equal(nrow(foo$get_data('lidar_provincias', c('DBH', 'AB'))), 4)
+  expect_error(foo$get_data(1, 'REC'), 'not character')
+  expect_error(foo$get_data('lidar_provincias', c(1,2)), 'not character')
+  expect_error(
+    foo$get_data(c('lidar_provincias', 'lidar_municipios'), 'REC'), 'must be of length'
+  )
+})
+
+## get_lowres_raster method works ####
 test_that("get_lowres_raster method works", {
   skip_on_cran()
   skip_on_travis()
@@ -23,11 +39,13 @@ test_that("get_lowres_raster method works", {
   expect_error(foo$get_lowres_raster('AB', 1), 'not character')
 })
 
+## avail_tables method works ####
 test_that("avail_tables method works", {
   expect_type(foo$avail_tables(), 'character')
-  expect_true('BAT' %in% foo$avail_tables())
+  expect_true('lidar_provincias' %in% foo$avail_tables())
 })
 
+## describe_var method works ####
 test_that("describe_var method works", {
   skip_on_cran()
   skip_on_travis()
@@ -47,6 +65,7 @@ sf_object <-
   dplyr::slice(1:5) %>%
   dplyr::select(poly_id)
 
+## clip_and_stats method works ####
 test_that("clip_and_stats method works", {
   skip_on_cran()
   skip_on_travis()
@@ -73,10 +92,11 @@ test_that("clip_and_stats method works", {
   expect_equal(nrow(foo$clip_and_stats(sf_object, 'poly_id', c('AB', 'DBH'))), 5)
 })
 
+## cache works ####
 test_that("cache works", {
   skip_on_cran()
   skip_on_travis()
-  expect_length(foo$.__enclos_env__$private$data_cache, 2)
+  expect_length(foo$.__enclos_env__$private$data_cache, 3)
   bar <- foo$get_lowres_raster('AB', 'raster')
   expect_is(foo$get_lowres_raster('AB', 'raster'), 'RasterLayer')
   temp_postgresql_conn <- pool::poolCheckout(
@@ -95,27 +115,36 @@ test_that("cache works", {
     )
   )
   pool::poolReturn(temp_postgresql_conn)
-  expect_length(foo$.__enclos_env__$private$data_cache, 3)
-  baz <- foo$get_lowres_raster('DBH', 'raster')
   expect_length(foo$.__enclos_env__$private$data_cache, 4)
+  baz <- foo$get_lowres_raster('DBH', 'raster')
+  expect_length(foo$.__enclos_env__$private$data_cache, 5)
 })
 
+## external methods ####
 test_that("external get data wrapper works", {
   skip_on_cran()
   skip_on_travis()
   expect_identical(
-    foo$get_lowres_raster('AB', 'raster'),
-    lidar_get_lowres_raster(foo, 'AB', 'raster')
+    foo$get_data('lidar_provincias', c('DBH', 'AB')),
+    lidar_get_data(foo, 'lidar_provincias', c('DBH', 'AB'))
   )
   expect_error(
-    lidar_get_lowres_raster('foo', 'AB', 'raster'),
-    "class lfcLiDAR"
+    lidar_get_data('foo', 'lidar_provincias', c('DBH', 'AB')), "class lfcLiDAR"
   )
+})
+
+test_that("external get lowres_raster wrapper works", {
+  skip_on_cran()
+  skip_on_travis()
+  expect_identical(
+    foo$get_lowres_raster('AB', 'raster'), lidar_get_lowres_raster(foo, 'AB', 'raster')
+  )
+  expect_error(lidar_get_lowres_raster('foo', 'AB', 'raster'), "class lfcLiDAR")
   expect_identical(
     foo$get_lowres_raster(c('REC', 'BAT'), 'stars'),
     lidar_get_lowres_raster(foo, c('REC', 'BAT'), 'stars')
   )
-  expect_length(foo$.__enclos_env__$private$data_cache, 5)
+  expect_length(foo$.__enclos_env__$private$data_cache, 6)
 })
 
 test_that("external describe_var wrapper works", {
@@ -134,3 +163,5 @@ test_that("external clip_and_stats wrapper works", {
   )
   expect_error(lidar_clip_and_stats('foo', sf_object, 'poly_id', 'DBH'), "class lfcLiDAR")
 })
+
+rm(foo)
