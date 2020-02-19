@@ -4,14 +4,16 @@
 \alias{lidar_get_data}
 \title{Access the aggregated data for administrative and natural areas}
 \usage{
-lidar_get_data(object, table_name, variables)
+lidar_get_data(object, table_name, variables = c("AB", "BAT", "BF",
+  "CAT", "DBH", "HM", "REC", "VAE"))
 }
 \arguments{
 \item{object}{\code{lfcLiDAR} object, as created by \code{\link{lidar}}}
 
 \item{table_name}{character vector of lenght 1 indicating the table to retrieve}
 
-\item{variables}{character vector indicating variables for which data is returned}
+\item{variables}{character vector indicating variables for which data is returned. If
+not provided, all variables stats are returned}
 }
 \value{
 An sf object with the aggregated values for each administrative division or

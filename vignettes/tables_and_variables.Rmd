@@ -130,18 +130,36 @@ allometries_describe_var(allomdb, c('DR', 'DBH'))
 
 ### Tables available
 
-LiDAR database offers raster tables (in the form of `stars` or `raster` objects).
-Available rasters can be consulted:
+The LiDAR database offers precalculated and aggregated data for administrative divisions
+and natural areas in Catalonia. Tables available can be consulted:
 
 ```{r lidar_avail}
 lidardb <- lidar()
 lidar_avail_tables(lidardb)
 ```
 
+And data retrieved:
+
+```{r get_data}
+lidar_get_data(lidardb, 'lidar_provincias')
+```
+
+Also, database offers low resolution raster tables (cell size of 400m x 400m), in the form
+of `stars` or `raster` objects:
+
+```{r lowres}
+lidar_get_lowres_raster(lidardb, c('REC', 'DBH'))
+```
+
+  > Raw data (20m x 20m rasters) can not be downloaded, but data can be consulted for
+    user provided polygons with the `lidar_clip_and_stats` function. See
+    `?lidar_clip_and_stats` for more information.
+
+
 ### Variables info
 
-Table names correspond to the variable stored in the raster, you can access the detailed
-information about the variable:
+Information about the biophysic variables available in the LiDAR database can be
+consulted:
 
 ```{r lidar_describe}
 lidar_describe_var(lidardb, 'AB')

@@ -22,6 +22,8 @@ test_that("get_data method works", {
   expect_error(
     foo$get_data(c('lidar_provincias', 'lidar_municipios'), 'REC'), 'must be of length'
   )
+  expect_error(foo$get_data('lidar_provincilities', c('DBH', 'AB')), 'Must be one of')
+  expect_error(foo$get_data('lidar_provincias', c('AC')), 'Must be one of')
 })
 
 ## get_lowres_raster method works ####
@@ -125,8 +127,10 @@ test_that("external get data wrapper works", {
   skip_on_cran()
   skip_on_travis()
   expect_identical(
-    foo$get_data('lidar_provincias', c('DBH', 'AB')),
-    lidar_get_data(foo, 'lidar_provincias', c('DBH', 'AB'))
+    foo$get_data(
+      'lidar_provincias', c('AB', 'BAT', 'BF', 'CAT', 'DBH', 'HM', 'REC', 'VAE')
+    ),
+    lidar_get_data(foo, 'lidar_provincias')
   )
   expect_error(
     lidar_get_data('foo', 'lidar_provincias', c('DBH', 'AB')), "class lfcLiDAR"

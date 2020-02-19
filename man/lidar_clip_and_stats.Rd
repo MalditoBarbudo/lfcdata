@@ -2,28 +2,53 @@
 % Please edit documentation in R/lfcLiDAR.R
 \name{lidar_clip_and_stats}
 \alias{lidar_clip_and_stats}
-\title{Clip and calculate the mean of raster tables}
+\title{Clip and calculate stats of raster tables}
 \usage{
-lidar_clip_and_stats(object, sf, polygon_id_variable, table_names)
+lidar_clip_and_stats(object, sf, polygon_id_variable, variables)
 }
 \arguments{
 \item{object}{\code{lfcLiDAR} object, as created by \code{\link{lidar}}}
 
 \item{sf}{sf object with the polygon/s to clip}
 
-\item{table_names}{character vector with the names of the tables to access}
+\item{variables}{character vector with the names of the variables to access}
 }
 \value{
 This function returns the same sf object provided with new columns with the
   mean of each polygon for each table requested.
 }
 \description{
-\code{lidar_clip_and_mean} is a wrapper for the \code{$clip_and_mean}
+\code{lidar_clip_and_stats} is a wrapper for the \code{$clip_and_stats}
   method of \code{lfcLiDAR} objects. See \code{\link{lidar}}.
+}
+\details{
+The stats returned are the following:
+\itemize{
+  \item{\code{poly_km2}: Area in square kilometers of the polygon supplied}
+  \item{\code{pixels}: Pixel count intersecting with the polygon supplied. Only pixels with
+        value are counted}
+  \item{\code{average}: Average value for the pixels intersecting with the polygon supplied}
+  \item{\code{min}: Minimum value for the pixels intersecting with the polygon supplied}
+  \item{\code{max}: Maximum value for the pixels intersecting with the polygon supplied}
+  \item{\code{sd}: Standard deviation value for the pixels intersecting with the polygon
+        supplied}
+  \item{\code{km2}: Area covered by the raster intersecting with the polygon supplied}
+  \item{\code{km2_perc}: Percentage of the supplied polygon area covered by the raster}
+}
 }
 \examples{
 if (interactive()) {
+library(dplyr)
 lidardb <- lidar()
+
+polygons_data <- lidar_get_data('lidar_provincias', 'DBH') \%>\%
+  select(poly_id, DBH_check = DBH_mean, geometry)
+
+dbh_provinces <- lidar_clip_and_stats(lidardb, polygons_data, 'poly_id', 'DBH')
+dbh_provinces$DBH_check == dbh_provinces$DBH_mean
+
+# lidardb is an R6 object, so the previous example is the same as:
+lidardb$clip_and_stats(polygons_data, 'poly_id', 'DBH')
 }
 
 }

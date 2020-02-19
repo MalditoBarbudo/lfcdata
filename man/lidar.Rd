@@ -17,15 +17,18 @@ An \code{lfcLiDAR} class object (inherits from \code{\link[R6]{R6Class}}),
 
   \code{lfcLiDAR} objects has the following methods available:
   \itemize{
-    \item{\code{$get_data}: Retrieve and collect LiDAR database rasters. See
-          \code{\link{lidar_get_data}} for more details}
+    \item{\code{$get_data}: Retrieve aggregated precalculated data for administrative
+          divisions and natural areas. See \code{\link{lidar_get_data}} for more
+          details}
+    \item{\code{$get_lowres_raster}: Retrieve and collect LiDAR database rasters. See
+          \code{\link{lidar_get_lowres_raster}} for more details}
     \item{\code{$avail_tables}: List all the tables that can be consulted. See
           \code{\link{lidar_avail_tables}} for more details}
     \item{\code{$describe_var}: Describe the variables, with their units and details.
           See \code{\link{lidar_describe_var}} for more details}
-    \item{\code{$clip_and_mean}: Clip the specified tables with the provided set of
-          polygons and calculate the raster mean for each polygon. See
-          \code{\link{lidar_clip_and_mean}} for more details}
+    \item{\code{$clip_and_stats}: Clip the specified tables with the provided set of
+          polygons and calculate the raster statistics for each polygon. See
+          \code{\link{lidar_clip_and_stats}} for more details}
   }
 }
 

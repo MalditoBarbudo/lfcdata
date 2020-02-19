@@ -75,6 +75,9 @@ lfcLiDAR <- R6::R6Class(
       check_if_in_for(
         variables, c('AB', 'BAT', 'BF', 'CAT', 'DBH', 'HM', 'REC', 'VAE')
       )
+      check_if_in_for(
+        table_name, self$avail_tables()
+      )
 
       # variables
       variables <- tolower(variables)
@@ -90,7 +93,7 @@ lfcLiDAR <- R6::R6Class(
 
       res <-
         cached_data %>%
-        dplyr::select(dplyr::matches(regex_detection))
+        dplyr::select(poly_id, dplyr::matches(regex_detection))
 
       return(res)
     },
@@ -199,95 +202,20 @@ lfcLiDAR <- R6::R6Class(
     },
 
     # clip method
-    clip_and_stats = function(sf, id_var_name, var_names) {
+    clip_and_stats = function(sf, polygon_id_variable, variables) {
       res <-
-        var_names %>%
+        variables %>%
         purrr::map(
-          ~ private$clip_and_stats_vectorized_for_polys(sf, id_var_name, .x)
+          ~ private$clip_and_stats_vectorized_for_polys(sf, polygon_id_variable, .x)
         ) %>%
         purrr::reduce(
           .f = dplyr::full_join,
-          by = c(id_var_name, 'poly_km2')
+          by = c(polygon_id_variable, 'poly_km2')
         ) %>%
-        dplyr::left_join(sf, by = id_var_name) %>%
+        dplyr::left_join(sf, by = polygon_id_variable) %>%
         sf::st_as_sf()
       return(res)
     }
-
-    # clip_and_mean = function(sf, table_name, safe = TRUE) {
-    #   # @param table_name table name
-    #   # @param sf sf object with the polygons to clip
-    #   # @param safe logical indicating if memory and time safeguards are active
-    #
-    #   # argument checks
-    #   check_args_for(
-    #     sf = list(sf = sf),
-    #     character = list(table_name = table_name),
-    #     logical = list(safe = safe)
-    #   )
-    #   check_if_in_for(table_name, c('AB', 'BAT', 'BF', 'CAT', 'DBH', 'HM', 'REC', 'VAE'))
-    #
-    #   # load the temp sf table (check for geom instead of geometry)
-    #   user_polygons <-
-    #     sf %>%
-    #     sf::st_transform(crs = 3043) %>%
-    #     sf::st_set_crs(3043)
-    #
-    #   # if safeguards are active, enforce them.
-    #   if (isTRUE(safe)) {
-    #     # area check
-    #     user_area <- sf::st_area(user_polygons) %>% sum() %>% as.numeric()
-    #     if (user_area > 500000000) {
-    #       stop(glue::glue(
-    #         'Polygon area (or polygons sum of areas) are above the maximum value',
-    #         ' ({round(user_area/1000000, 1)} > 500 km2)'
-    #       ))
-    #     }
-    #     # feature number
-    #     user_features <- sf::st_geometry(user_polygons) %>% length()
-    #     if (user_features > 10) {
-    #       stop(glue::glue(
-    #         'Number of features (polygons) is above the maximum value',
-    #         ' ({user_features} > 10 polygons)'
-    #       ))
-    #     }
-    #   }
-    #
-    #   # ok, cutting to the cheese. We need to clip the polygons, and after that calculate
-    #   # the mean value for the left raster
-    #   calculate_poly_mean <- function(data, raster_table) {
-    #
-    #     # get the geom column name
-    #     sf_column <- attr(data, 'sf_column')
-    #
-    #     # This Eder Pebezsma snippet from print.stars method seems the way
-    #     # to allow multiple attributes checking in a fast way:
-    #     # as.data.frame(
-    #     #   lapply(foo, function(y) structure(y, dim = NULL)),
-    #     #   optional = TRUE
-    #     # )
-    #     # So, we need to iterate for each attribute (lapply/purrr) and remove the
-    #     # dim attrb (structure), resulting in a list of each attribute
-    #     # containing a vector of all cell values that we transform in a
-    #     # dataframe and summarise all
-    #     means_data <-
-    #       seq_along(data[[sf_column]]) %>%
-    #       purrr::map_dfr(
-    #         .f = ~ sf::st_crop(raster_table, data[[sf_column]][.x]) %>%
-    #           purrr::map(~ structure(.x, dim = NULL)) %>%
-    #           tibble::as_tibble() %>%
-    #           dplyr::summarise_all(.funs = mean, na.rm = TRUE)
-    #       )
-    #
-    #     # now we join the means for each polygon (rows) and each attribute
-    #     # (columns) with the polygons data
-    #     res <- dplyr::bind_cols(data, means_data) # pun intended
-    #     # return the updated data
-    #     return(res)
-    #   }
-    #
-    #   return(calculate_poly_mean(user_polygons, self$get_data(table_name)))
-    # }
   ),
   # private methods and values
   private = list(
@@ -408,7 +336,8 @@ lfcLiDAR <- R6::R6Class(
 #'
 #' @param object \code{lfcLiDAR} object, as created by \code{\link{lidar}}
 #' @param table_name character vector of lenght 1 indicating the table to retrieve
-#' @param variables character vector indicating variables for which data is returned
+#' @param variables character vector indicating variables for which data is returned. If
+#'   not provided, all variables stats are returned
 #'
 #' @return An sf object with the aggregated values for each administrative division or
 #'   natural area for the variables requested
@@ -438,7 +367,9 @@ lfcLiDAR <- R6::R6Class(
 #' }
 #'
 #' @export
-lidar_get_data <- function(object, table_name, variables) {
+lidar_get_data <- function(
+  object, table_name, variables = c('AB', 'BAT', 'BF', 'CAT', 'DBH', 'HM', 'REC', 'VAE')
+) {
   # argument validation
   check_class_for(object, 'lfcLiDAR')
   # call to the class method
@@ -558,17 +489,33 @@ lidar_describe_var <- function(object, variables) {
   object$describe_var(variables)
 }
 
-#' Clip and calculate the mean of raster tables
+#' Clip and calculate stats of raster tables
 #'
-#' @description \code{lidar_clip_and_mean} is a wrapper for the \code{$clip_and_mean}
+#' @description \code{lidar_clip_and_stats} is a wrapper for the \code{$clip_and_stats}
 #'   method of \code{lfcLiDAR} objects. See \code{\link{lidar}}.
 #'
 #' @param object \code{lfcLiDAR} object, as created by \code{\link{lidar}}
 #' @param sf sf object with the polygon/s to clip
-#' @param table_names character vector with the names of the tables to access
+#' @param variables character vector with the names of the variables to access
 #'
 #' @return This function returns the same sf object provided with new columns with the
 #'   mean of each polygon for each table requested.
+#'
+#' @details
+#'
+#' The stats returned are the following:
+#' \itemize{
+#'   \item{\code{poly_km2}: Area in square kilometers of the polygon supplied}
+#'   \item{\code{pixels}: Pixel count intersecting with the polygon supplied. Only pixels with
+#'         value are counted}
+#'   \item{\code{average}: Average value for the pixels intersecting with the polygon supplied}
+#'   \item{\code{min}: Minimum value for the pixels intersecting with the polygon supplied}
+#'   \item{\code{max}: Maximum value for the pixels intersecting with the polygon supplied}
+#'   \item{\code{sd}: Standard deviation value for the pixels intersecting with the polygon
+#'         supplied}
+#'   \item{\code{km2}: Area covered by the raster intersecting with the polygon supplied}
+#'   \item{\code{km2_perc}: Percentage of the supplied polygon area covered by the raster}
+#' }
 #'
 #' @family LiDAR functions
 #'
@@ -588,9 +535,9 @@ lidar_describe_var <- function(object, variables) {
 #' }
 #'
 #' @export
-lidar_clip_and_stats <- function(object, sf, polygon_id_variable, table_names) {
+lidar_clip_and_stats <- function(object, sf, polygon_id_variable, variables) {
   # argument validation
   check_class_for(object, 'lfcLiDAR')
   # call to the class method
-  object$clip_and_stats(sf, polygon_id_variable, table_names)
+  object$clip_and_stats(sf, polygon_id_variable, variables)
 }

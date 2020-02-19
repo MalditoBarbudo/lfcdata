@@ -35,12 +35,25 @@ lidardb <- lidar()
 lidardb
 ```
 
-and retrieve the desired variable with `lidar_get_data`:
+## Access precalculated and aggregated data
+
+Preacalculated data for different levels of administrative divisions are available with
+the `lidar_get_data` function. To see the available tables use `lidar_avail_tables`:
 
 ```{r get_data}
 lidar_avail_tables(lidardb)
+lidar_get_data(lidardb, 'lidar_provincias')
+# lidar_get_data(lidardb, 'lidar_natural_parks')
+```
+
+## Access the low resolution rasters (400x400m)
+
+Low resolution rasters can be retrieved with `lidar_get_lowres_raster`:
+
+```{r get_lowres_raster}
+lidar_avail_tables(lidardb)
 lidar_describe_var(lidardb, 'AB')
-ab_raster <- lidar_get_data(lidardb, 'AB', 'stars')
+ab_raster <- lidar_get_lowres_raster(lidardb, 'AB', 'stars')
 ab_raster
 ```
 
@@ -49,10 +62,10 @@ ab_raster
 Raster data can be retrieved in two formats, `stars` (default) and `RasterLayer`:
 
 ```{r rasters}
-lidar_get_data(lidardb, 'AB', 'stars') %>%
+lidar_get_lowres_raster(lidardb, 'AB', 'stars') %>%
   class()
 
-lidar_get_data(lidardb, 'AB', 'raster') %>%
+lidar_get_lowres_raster(lidardb, 'AB', 'raster') %>%
   class()
 ```
 
@@ -60,37 +73,29 @@ More than one table can be accessed at the same time, resulting in a `RasterBric
 or an `stars` object with attributes for each table:
 
 ```{r bricks}
-lidar_get_data(lidardb, c('AB', 'DBH'), 'stars')
-lidar_get_data(lidardb, c('AB', 'DBH'), 'raster')
+lidar_get_lowres_raster(lidardb, c('AB', 'DBH'), 'stars')
+lidar_get_lowres_raster(lidardb, c('AB', 'DBH'), 'raster')
 ```
 
+## Access the raw raster data
 
-### Clip and mean
+Raw rasters (20x20m) are available for calculations only, no for download
 
-Given a set of polygons (`sf` object), `lidar_clip_and_mean` calculate the raster means
+### Clip and stats
+
+Given a set of polygons (`sf` object), `lidar_clip_and_stats` calculate the raster stats
 for each polygon:
 
 ```{r clip}
-# we create a polygon set
-polygon_set <-
-  data.frame(
-    x = c(
-      (256000 + ((680/2)*400)) - (400*2), (256000 + ((680/2)*400)) - (400*2),
-      (256000 + ((680/2)*400)) + (400*2), (256000 + ((680/2)*400)) + (400*2),
-      (256000 + ((680/2)*400)) - (400*2)
-    ),
-    y = c(
-      (4752000 - ((660/2)*400)) - (400*2), (4752000 - ((660/2)*400)) + (400*2),
-      (4752000 - ((660/2)*400)) + (400*2), (4752000 - ((660/2)*400)) - (400*2),
-      (4752000 - ((660/2)*400)) - (400*2)
-    )
-  ) %>%
-  sf::st_as_sf(coords = c("x", "y"), crs = 3043) %>%
-  sf::st_combine() %>%
-  sf::st_as_sf()
-
 lidardb <- lidar()
+# we get the provinces polygons
+polygon_set <-
+  lidardb %>%
+  lidar_get_data('lidar_municipios', 'AB') %>%
+  dplyr::select(poly_id, geometry) %>%
+  dplyr::slice(1:2)
+# we calculate the stats
 lidardb %>%
-  lidar_clip_and_mean(polygon_set, c('AB', 'DBH', 'REC'))
+  lidar_clip_and_stats(polygon_set, 'poly_id', c('AB', 'DBH', 'REC'))
 ```
 
