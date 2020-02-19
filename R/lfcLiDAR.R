@@ -496,6 +496,8 @@ lidar_describe_var <- function(object, variables) {
 #'
 #' @param object \code{lfcLiDAR} object, as created by \code{\link{lidar}}
 #' @param sf sf object with the polygon/s to clip
+#' @param polygon_id_variable character vector of length 1 with the name of the
+#'   variable of \code{sf} that contains the polygon identificator (name, code...)
 #' @param variables character vector with the names of the variables to access
 #'
 #' @return This function returns the same sf object provided with new columns with the

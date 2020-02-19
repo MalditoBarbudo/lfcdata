@@ -11,6 +11,9 @@ lidar_clip_and_stats(object, sf, polygon_id_variable, variables)
 
 \item{sf}{sf object with the polygon/s to clip}
 
+\item{polygon_id_variable}{character vector of length 1 with the name of the
+variable of \code{sf} that contains the polygon identificator (name, code...)}
+
 \item{variables}{character vector with the names of the variables to access}
 }
 \value{
