@@ -13,8 +13,8 @@ lidar_avail_tables(object)
 A character vector with the table names
 }
 \description{
-\code{lidar_avail_tables} is a wrapper for the \code{$avail_tables} method of
-  \code{lfcLiDAR} objects. See \code{\link{lidar}}.
+\code{lidar_avail_tables} is a wrapper for the \code{$avail_tables} method
+  of \code{lfcLiDAR} objects. See \code{\link{lidar}}.
 }
 \examples{
 if (interactive()) {

@@ -72,6 +72,13 @@ sf_points <-
   dplyr::slice(1:5) %>%
   dplyr::select(plot_id)
 
+sf_multipoints <-
+  dplyr::tibble(
+    point_id = 'wrong',
+    geometry = sf::st_multipoint(matrix(1:10, , 2)) %>% sf::st_sfc()
+  ) %>%
+  sf::st_as_sf(sf_column_name = 'geometry')
+
 ## clip_and_stats method works ####
 test_that("clip_and_stats method works", {
   skip_on_cran()
@@ -84,6 +91,11 @@ test_that("clip_and_stats method works", {
     'must be of length'
   )
   expect_error(foo$clip_and_stats(sf_polygons, 'tururu', c('AC', 'DBH')), 'Must be one of')
+  expect_error(foo$clip_and_stats(sf_polygons, 'fake_id', 'AB'), 'Must be one of')
+  expect_error(
+    foo$clip_and_stats(sf_multipoints, 'point_id', c('AB', 'DBH')),
+    'not a POLYGON or a MULTIPOLYGON'
+  )
   expect_true(inherits(foo$clip_and_stats(sf_polygons, 'tururu', c('AB', 'DBH')), 'sf'))
   expect_identical(
     names(foo$clip_and_stats(sf_polygons, 'tururu', c('AB', 'DBH'))),
@@ -111,6 +123,10 @@ test_that("point_value method works", {
     'must be of length'
   )
   expect_error(foo$point_value(sf_points, 'plot_id', c('AC', 'DBH')), 'Must be one of')
+  expect_error(foo$point_value(sf_points, 'fake_id', 'AB'), 'Must be one of')
+  expect_error(
+    foo$point_value(sf_multipoints, 'point_id', c('AB', 'DBH')), 'not a POINT'
+  )
   expect_true(inherits(foo$point_value(sf_points, 'plot_id', c('AB', 'DBH')), 'sf'))
   expect_identical(
     names(foo$point_value(sf_points, 'plot_id', c('AB', 'DBH'))),
@@ -187,10 +203,10 @@ test_that("external clip_and_stats wrapper works", {
   skip_on_cran()
   skip_on_travis()
   expect_identical(
-    foo$clip_and_stats(sf_polygons, 'poly_id', 'AB'),
-    lidar_clip_and_stats(foo, sf_polygons, 'poly_id', 'AB')
+    foo$clip_and_stats(sf_polygons, 'tururu', 'AB'),
+    lidar_clip_and_stats(foo, sf_polygons, 'tururu', 'AB')
   )
-  expect_error(lidar_clip_and_stats('foo', sf_polygons, 'poly_id', 'DBH'), "class lfcLiDAR")
+  expect_error(lidar_clip_and_stats('foo', sf_polygons, 'tururu', 'DBH'), "class lfcLiDAR")
 })
 
 rm(foo)

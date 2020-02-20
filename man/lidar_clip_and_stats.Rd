@@ -28,13 +28,16 @@ This function returns the same sf object provided with new columns with the
 The stats returned are the following:
 \itemize{
   \item{\code{poly_km2}: Area in square kilometers of the polygon supplied}
-  \item{\code{pixels}: Pixel count intersecting with the polygon supplied. Only pixels with
-        value are counted}
-  \item{\code{average}: Average value for the pixels intersecting with the polygon supplied}
-  \item{\code{min}: Minimum value for the pixels intersecting with the polygon supplied}
-  \item{\code{max}: Maximum value for the pixels intersecting with the polygon supplied}
-  \item{\code{sd}: Standard deviation value for the pixels intersecting with the polygon
+  \item{\code{pixels}: Pixel count intersecting with the polygon supplied. Only pixels
+        with value are counted}
+  \item{\code{average}: Average value for the pixels intersecting with the polygon
         supplied}
+  \item{\code{min}: Minimum value for the pixels intersecting with the polygon
+        supplied}
+  \item{\code{max}: Maximum value for the pixels intersecting with the polygon
+        supplied}
+  \item{\code{sd}: Standard deviation value for the pixels intersecting with the
+        polygon supplied}
   \item{\code{km2}: Area covered by the raster intersecting with the polygon supplied}
   \item{\code{km2_perc}: Percentage of the supplied polygon area covered by the raster}
 }

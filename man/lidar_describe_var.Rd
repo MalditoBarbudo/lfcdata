@@ -15,8 +15,8 @@ lidar_describe_var(object, variables)
 A character vector with the variable names to describe
 }
 \description{
-\code{lidar_describe_var} is a wrapper for the \code{$describe_var} method of
-  \code{lfcLiDAR} objects. See \code{\link{lidar}}.
+\code{lidar_describe_var} is a wrapper for the \code{$describe_var} method
+  of \code{lfcLiDAR} objects. See \code{\link{lidar}}.
 }
 \examples{
 if (interactive()) {

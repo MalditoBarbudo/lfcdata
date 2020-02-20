@@ -28,9 +28,9 @@ A raster object: \code{RasterLayer} if spatial is \code{raster} and only one
 }
 \details{
 Connection to database can be slow. Rasters retrieved from the db are stored
-  in a temporary cache inside the lfcLiDAR object created by \code{\link{lidar}}, making
-  subsequent calls to the same table are faster. But, be warned that in-memory rasters
-  can use a lot of memory!
+  in a temporary cache inside the lfcLiDAR object created by \code{\link{lidar}},
+  making subsequent calls to the same table are faster. But, be warned that in-memory
+  rasters can use a lot of memory!
 }
 \examples{
 if (interactive()) {

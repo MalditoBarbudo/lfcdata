@@ -242,12 +242,14 @@ lfcLiDAR <- R6::R6Class(
 
     # clip and mean for one polygon, one raster
     # we build a query to get the ST_SummaryStats of the raster values where the polygon
-    # intersect. After that we summarise to get the stats, using cochrane for calculate the sd
+    # intersect. After that we summarise to get the stats, using cochrane for calculate
+    # the sd
     clip_and_stats_simple_case = function(sf, poly_id, var_name) {
 
       # argument checks
       check_args_for(
-        character = list(poly_id = poly_id, var_name = var_name)
+        character = list(poly_id = poly_id, var_name = var_name),
+        polygons = list(sf = sf)
       )
       check_if_in_for(var_name, c('AB', 'BAT', 'BF', 'CAT', 'DBH', 'HM', 'REC', 'VAE'))
       check_length_for(var_name, 1)
@@ -277,7 +279,8 @@ lfcLiDAR <- R6::R6Class(
       # intersecting, and we calculate the summary stats for the tiles. We return this, as
       # in this way we can calculate not only the mean, but also the std deviation.
       b_stats_query <- glue::glue_sql(
-        "SELECT poly_id, geometry, (ST_SummaryStats(ST_Clip(rast,1,geometry, true),1,true)).*
+        "SELECT poly_id, geometry,
+           (ST_SummaryStats(ST_Clip(rast,1,geometry, true),1,true)).*
          FROM {`var_name`}
        INNER JOIN ({feat_query}) AS feat
        ON ST_Intersects(feat.geometry,rast)",
@@ -297,19 +300,23 @@ lfcLiDAR <- R6::R6Class(
         dplyr::group_by(poly_id) %>%
         dplyr::summarise(
           # area of the polygon
-          poly_km2 = (sf::st_area(dplyr::first(.data[['geometry']])) %>% as.numeric()) / 1000000,
+          poly_km2 = (sf::st_area(dplyr::first(.data[['geometry']])) %>%
+                        as.numeric()) / 1000000,
           # regular stats
           !! glue::glue("{toupper(var_name)}_pixels") := sum(.data[['count']]),
-          !! glue::glue("{toupper(var_name)}_average") := sum(.data[['count']]*.data[['mean']])/sum(.data[['count']]),
+          !! glue::glue("{toupper(var_name)}_average") :=
+            sum(.data[['count']]*.data[['mean']])/sum(.data[['count']]),
           !! glue::glue("{toupper(var_name)}_min") := min(.data[['min']]),
           !! glue::glue("{toupper(var_name)}_max") := max(.data[['max']]),
           !! glue::glue("{toupper(var_name)}_sd") := cochrane_sd_reduce(
             n = .data[['count']], m = .data[['mean']], s = .data[['stddev']]
           ),
           # area covered by raster (km2). Each pixel 20x20m=400m2=4e-04km2
-          !! glue::glue("{toupper(var_name)}_km2") := !! rlang::sym(glue::glue("{toupper(var_name)}_pixels")) * 4e-04,
+          !! glue::glue("{toupper(var_name)}_km2") :=
+            !! rlang::sym(glue::glue("{toupper(var_name)}_pixels")) * 4e-04,
           # prop of poly area covered by raster
-          !! glue::glue("{toupper(var_name)}_km2_perc") := 100 * !! rlang::sym(glue::glue("{toupper(var_name)}_km2")) / poly_km2
+          !! glue::glue("{toupper(var_name)}_km2_perc") :=
+            100 * !! rlang::sym(glue::glue("{toupper(var_name)}_km2")) / poly_km2
         )
 
       cat(
@@ -327,6 +334,10 @@ lfcLiDAR <- R6::R6Class(
       # checked on clip_and_stats_simple_case)
       check_args_for(sf = list(sf = sf), character = list(id_var_name = id_var_name))
       check_length_for(id_var_name, 1)
+      check_if_in_for(
+        id_var_name,
+        names(sf %>% dplyr::as_tibble() %>% dplyr::select(-geometry))
+      )
 
       # get the geom column name
       sf_column <- attr(sf, 'sf_column')
@@ -338,7 +349,8 @@ lfcLiDAR <- R6::R6Class(
             sf = sf[[sf_column]][.x], poly_id = sf[[id_var_name]][.x],
             var_name = var_name
           )
-        )
+        ) %>%
+        dplyr::rename(!! id_var_name := poly_id)
 
       return(summ_polys_data)
     },
@@ -392,8 +404,12 @@ lfcLiDAR <- R6::R6Class(
         character = list(id_point_variable = id_point_variable, variable = variable),
         sf = list(sf = sf)
       )
-      check_length_for(variable, 1)
-      check_length_for(id_point_variable, 1)
+      check_length_for(variable, 1, 'variable')
+      check_length_for(id_point_variable, 1, 'id_point_variable')
+      check_if_in_for(
+        id_point_variable,
+        names(sf %>% dplyr::as_tibble() %>% dplyr::select(-geometry))
+      )
 
       # get the geom column name
       sf_column <- attr(sf, 'sf_column')
@@ -480,9 +496,9 @@ lidar_get_data <- function(
 #' @family LiDAR functions
 #'
 #' @details Connection to database can be slow. Rasters retrieved from the db are stored
-#'   in a temporary cache inside the lfcLiDAR object created by \code{\link{lidar}}, making
-#'   subsequent calls to the same table are faster. But, be warned that in-memory rasters
-#'   can use a lot of memory!
+#'   in a temporary cache inside the lfcLiDAR object created by \code{\link{lidar}},
+#'   making subsequent calls to the same table are faster. But, be warned that in-memory
+#'   rasters can use a lot of memory!
 #'
 #' @examples
 #' if (interactive()) {
@@ -516,8 +532,8 @@ lidar_get_lowres_raster <- function(object, variables, spatial = 'stars') {
 
 #' Get the available tables in LiDAR db
 #'
-#' @description \code{lidar_avail_tables} is a wrapper for the \code{$avail_tables} method of
-#'   \code{lfcLiDAR} objects. See \code{\link{lidar}}.
+#' @description \code{lidar_avail_tables} is a wrapper for the \code{$avail_tables} method
+#'   of \code{lfcLiDAR} objects. See \code{\link{lidar}}.
 #'
 #' @param object \code{lfcLiDAR} object, as created by \code{\link{lidar}}
 #'
@@ -544,8 +560,8 @@ lidar_avail_tables <- function(object) {
 
 #' Print info about the variables present in the LiDAR db
 #'
-#' @description \code{lidar_describe_var} is a wrapper for the \code{$describe_var} method of
-#'   \code{lfcLiDAR} objects. See \code{\link{lidar}}.
+#' @description \code{lidar_describe_var} is a wrapper for the \code{$describe_var} method
+#'   of \code{lfcLiDAR} objects. See \code{\link{lidar}}.
 #'
 #' @param object \code{lfcLiDAR} object, as created by \code{\link{lidar}}
 #' @param variables character vector with the names of the variables to describe
@@ -592,13 +608,16 @@ lidar_describe_var <- function(object, variables) {
 #' The stats returned are the following:
 #' \itemize{
 #'   \item{\code{poly_km2}: Area in square kilometers of the polygon supplied}
-#'   \item{\code{pixels}: Pixel count intersecting with the polygon supplied. Only pixels with
-#'         value are counted}
-#'   \item{\code{average}: Average value for the pixels intersecting with the polygon supplied}
-#'   \item{\code{min}: Minimum value for the pixels intersecting with the polygon supplied}
-#'   \item{\code{max}: Maximum value for the pixels intersecting with the polygon supplied}
-#'   \item{\code{sd}: Standard deviation value for the pixels intersecting with the polygon
+#'   \item{\code{pixels}: Pixel count intersecting with the polygon supplied. Only pixels
+#'         with value are counted}
+#'   \item{\code{average}: Average value for the pixels intersecting with the polygon
 #'         supplied}
+#'   \item{\code{min}: Minimum value for the pixels intersecting with the polygon
+#'         supplied}
+#'   \item{\code{max}: Maximum value for the pixels intersecting with the polygon
+#'         supplied}
+#'   \item{\code{sd}: Standard deviation value for the pixels intersecting with the
+#'         polygon supplied}
 #'   \item{\code{km2}: Area covered by the raster intersecting with the polygon supplied}
 #'   \item{\code{km2_perc}: Percentage of the supplied polygon area covered by the raster}
 #' }
