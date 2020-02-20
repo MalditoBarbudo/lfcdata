@@ -228,7 +228,7 @@ lfcLiDAR <- R6::R6Class(
           .f = dplyr::full_join,
           by = c(point_id_variable)
         ) %>%
-        dplyr::left_join(sf, by = polygon_id_variable) %>%
+        dplyr::left_join(sf, by = point_id_variable) %>%
         sf::st_as_sf()
       return(res)
     }
@@ -345,6 +345,15 @@ lfcLiDAR <- R6::R6Class(
 
     point_value_simple_case = function(sf, point_id, variable) {
 
+      # argument checks
+      check_args_for(
+        character = list(point_id = point_id, variable = variable),
+        points = list(sf = sf)
+      )
+      check_length_for(point_id, 1, 'point_id')
+      check_length_for(variable, 1, 'variable')
+      check_if_in_for(variable, c('AB', 'BAT', 'BF', 'CAT', 'DBH', 'HM', 'REC', 'VAE'))
+
       # we need the point in wkt to create the query on the fly
       wkt_point <-
         sf %>%
@@ -356,27 +365,35 @@ lfcLiDAR <- R6::R6Class(
 
       # SQL query
       point_query <- glue::glue_sql(
-        "SELECT ST_Value(
+        "SELECT {point_id} As point_id, ST_Value(
            rast,
            ST_Transform(ST_GeomFromEWKT({wkt_point}),3043)
-         ) As point_val, {point_id} As point_id
+         ) As point_val
          FROM {`var_name`}
          WHERE ST_Intersects(
            rast,
            ST_Transform(ST_GeomFromEWKT({wkt_point}),3043)
          );",
-        .con = lidardb$.__enclos_env__$private$pool_conn
+        .con = private$pool_conn
       )
 
       # execute the query and return the result
       res <-
-        sf::st_read(private$pool_conn, query = point_query) %>%
+        pool::dbGetQuery(private$pool_conn, statement = point_query) %>%
         dplyr::as_tibble() %>%
         dplyr::rename(!! variable := point_val)
       return(res)
     },
 
     point_value_vectorized = function(sf, id_point_variable, variable) {
+
+      # argument check
+      check_args_for(
+        character = list(id_point_variable = id_point_variable, variable = variable),
+        sf = list(sf = sf)
+      )
+      check_length_for(variable, 1)
+      check_length_for(id_point_variable, 1)
 
       # get the geom column name
       sf_column <- attr(sf, 'sf_column')

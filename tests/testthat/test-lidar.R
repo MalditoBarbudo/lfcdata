@@ -76,19 +76,19 @@ sf_points <-
 test_that("clip_and_stats method works", {
   skip_on_cran()
   skip_on_travis()
-  expect_error(foo$clip_and_stats('sf', 'poly_id', c('AB', 'DBH')), 'not a simple feature')
+  expect_error(foo$clip_and_stats('sf', 'tururu', c('AB', 'DBH')), 'not a simple feature')
   expect_error(foo$clip_and_stats(sf_polygons, 1, c('AB', 'DBH')), 'not character')
-  expect_error(foo$clip_and_stats(sf_polygons, 'poly_id', c(1,2)), 'not character')
+  expect_error(foo$clip_and_stats(sf_polygons, 'tururu', c(1,2)), 'not character')
   expect_error(
-    foo$clip_and_stats(sf_polygons, c('poly_id', 'other_poly_id'), c('AB', 'DBH')),
+    foo$clip_and_stats(sf_polygons, c('tururu', 'other_tururu'), c('AB', 'DBH')),
     'must be of length'
   )
-  expect_error(foo$clip_and_stats(sf_polygons, 'poly_id', c('AC', 'DBH')), 'Must be one of')
-  expect_true(inherits(foo$clip_and_stats(sf_polygons, 'poly_id', c('AB', 'DBH')), 'sf'))
+  expect_error(foo$clip_and_stats(sf_polygons, 'tururu', c('AC', 'DBH')), 'Must be one of')
+  expect_true(inherits(foo$clip_and_stats(sf_polygons, 'tururu', c('AB', 'DBH')), 'sf'))
   expect_identical(
-    names(foo$clip_and_stats(sf_polygons, 'poly_id', c('AB', 'DBH'))),
+    names(foo$clip_and_stats(sf_polygons, 'tururu', c('AB', 'DBH'))),
     c(
-      'poly_id', 'poly_km2',
+      'tururu', 'poly_km2',
       'AB_pixels', 'AB_average', 'AB_min', 'AB_max',
       'AB_sd', 'AB_km2', 'AB_km2_perc',
       'DBH_pixels', 'DBH_average', 'DBH_min', 'DBH_max',
@@ -96,10 +96,10 @@ test_that("clip_and_stats method works", {
       'geometry'
     )
   )
-  expect_equal(nrow(foo$clip_and_stats(sf_polygons, 'poly_id', c('AB', 'DBH'))), 5)
+  expect_equal(nrow(foo$clip_and_stats(sf_polygons, 'tururu', c('AB', 'DBH'))), 5)
 })
 
-## clip_and_stats method works ####
+## point_value method works ####
 test_that("point_value method works", {
   skip_on_cran()
   skip_on_travis()
@@ -123,7 +123,7 @@ test_that("point_value method works", {
 test_that("cache works", {
   skip_on_cran()
   skip_on_travis()
-  expect_length(foo$.__enclos_env__$private$data_cache, 3)
+  expect_length(foo$.__enclos_env__$private$data_cache, 4)
   bar <- foo$get_lowres_raster('AB', 'raster')
   expect_is(foo$get_lowres_raster('AB', 'raster'), 'RasterLayer')
   temp_postgresql_conn <- pool::poolCheckout(
@@ -142,9 +142,9 @@ test_that("cache works", {
     )
   )
   pool::poolReturn(temp_postgresql_conn)
-  expect_length(foo$.__enclos_env__$private$data_cache, 4)
-  baz <- foo$get_lowres_raster('DBH', 'raster')
   expect_length(foo$.__enclos_env__$private$data_cache, 5)
+  baz <- foo$get_lowres_raster('DBH', 'raster')
+  expect_length(foo$.__enclos_env__$private$data_cache, 6)
 })
 
 ## external methods ####
@@ -173,7 +173,7 @@ test_that("external get lowres_raster wrapper works", {
     foo$get_lowres_raster(c('REC', 'BAT'), 'stars'),
     lidar_get_lowres_raster(foo, c('REC', 'BAT'), 'stars')
   )
-  expect_length(foo$.__enclos_env__$private$data_cache, 6)
+  expect_length(foo$.__enclos_env__$private$data_cache, 7)
 })
 
 test_that("external describe_var wrapper works", {

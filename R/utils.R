@@ -12,7 +12,8 @@
 ## argument and other checks ####
 # argument checking
 check_args_for <- function(
-  character = NULL, numerical = NULL, logical = NULL, na = NULL, sf = NULL
+  character = NULL, numerical = NULL, logical = NULL, na = NULL,
+  sf = NULL, points = NULL, polygons = NULL
 ) {
 
   # browser()
@@ -85,6 +86,39 @@ check_args_for <- function(
       stop(error_message)
     }
   }
+
+  # points
+  if (!rlang::is_null(points)) {
+    not_complying <- points %>%
+      purrr::map(sf::st_is, type = 'POINT') %>%
+      purrr::keep(.p = ~ !isTRUE(.x)) %>%
+      names()
+    if (length(not_complying) > 0) {
+      error_message <- glue::glue(
+        "Argument {glue::glue_collapse(not_complying)} is not a POINT (sf)\n"
+      )
+      stop(error_message)
+    }
+  }
+
+  # points
+  if (!rlang::is_null(polygons)) {
+    not_complying <- polygons %>%
+      purrr::map(
+        .f = function(x) {
+          sf::st_is(x, 'POLYGON') | sf::st_is(x, 'MULTIPOLYGON')
+        }
+      ) %>%
+      purrr::keep(.p = ~ !isTRUE(.x)) %>%
+      names()
+    if (length(not_complying) > 0) {
+      error_message <- glue::glue(
+        "Argument {glue::glue_collapse(not_complying)} ",
+        "is not a POLYGON or a MULTIPOLYGON (sf)\n"
+      )
+      stop(error_message)
+    }
+  }
 }
 
 # check for class
@@ -96,9 +130,9 @@ check_class_for <- function(object, class) {
 }
 
 # check for length
-check_length_for <- function(object, expected_length) {
+check_length_for <- function(object, expected_length, arg_name = 'object') {
   if (length(object) != expected_length) {
-    error_message <- glue::glue("object must be of length {expected_length}")
+    error_message <- glue::glue("{arg_name} must be of length {expected_length}")
     stop(error_message)
   }
 }
