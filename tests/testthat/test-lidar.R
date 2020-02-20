@@ -61,29 +61,32 @@ test_that("describe_var method works", {
   expect_error(foo$describe_var(25), 'not character')
 })
 
-# sf object to test
-sf_object <-
-  sf::read_sf(
-    foo$.__enclos_env__$private$pool_conn, 'lidar_municipios'
-  ) %>%
+# sf objects to test
+sf_polygons <-
+  foo$get_data('lidar_municipios', 'DBH') %>%
   dplyr::slice(1:5) %>%
-  dplyr::select(poly_id)
+  dplyr::select(tururu = poly_id)
+
+sf_points <-
+  nfi()$get_data('plots', spatial = TRUE) %>%
+  dplyr::slice(1:5) %>%
+  dplyr::select(plot_id)
 
 ## clip_and_stats method works ####
 test_that("clip_and_stats method works", {
   skip_on_cran()
   skip_on_travis()
   expect_error(foo$clip_and_stats('sf', 'poly_id', c('AB', 'DBH')), 'not a simple feature')
-  expect_error(foo$clip_and_stats(sf_object, 1, c('AB', 'DBH')), 'not character')
-  expect_error(foo$clip_and_stats(sf_object, 'poly_id', c(1,2)), 'not character')
+  expect_error(foo$clip_and_stats(sf_polygons, 1, c('AB', 'DBH')), 'not character')
+  expect_error(foo$clip_and_stats(sf_polygons, 'poly_id', c(1,2)), 'not character')
   expect_error(
-    foo$clip_and_stats(sf_object, c('poly_id', 'other_poly_id'), c('AB', 'DBH')),
+    foo$clip_and_stats(sf_polygons, c('poly_id', 'other_poly_id'), c('AB', 'DBH')),
     'must be of length'
   )
-  expect_error(foo$clip_and_stats(sf_object, 'poly_id', c('AC', 'DBH')), 'Must be one of')
-  expect_true(inherits(foo$clip_and_stats(sf_object, 'poly_id', c('AB', 'DBH')), 'sf'))
+  expect_error(foo$clip_and_stats(sf_polygons, 'poly_id', c('AC', 'DBH')), 'Must be one of')
+  expect_true(inherits(foo$clip_and_stats(sf_polygons, 'poly_id', c('AB', 'DBH')), 'sf'))
   expect_identical(
-    names(foo$clip_and_stats(sf_object, 'poly_id', c('AB', 'DBH'))),
+    names(foo$clip_and_stats(sf_polygons, 'poly_id', c('AB', 'DBH'))),
     c(
       'poly_id', 'poly_km2',
       'AB_pixels', 'AB_average', 'AB_min', 'AB_max',
@@ -93,7 +96,27 @@ test_that("clip_and_stats method works", {
       'geometry'
     )
   )
-  expect_equal(nrow(foo$clip_and_stats(sf_object, 'poly_id', c('AB', 'DBH'))), 5)
+  expect_equal(nrow(foo$clip_and_stats(sf_polygons, 'poly_id', c('AB', 'DBH'))), 5)
+})
+
+## clip_and_stats method works ####
+test_that("point_value method works", {
+  skip_on_cran()
+  skip_on_travis()
+  expect_error(foo$point_value('sf', 'plot_id', c('AB', 'DBH')), 'not a simple feature')
+  expect_error(foo$point_value(sf_points, 1, c('AB', 'DBH')), 'not character')
+  expect_error(foo$point_value(sf_points, 'plot_id', c(1,2)), 'not character')
+  expect_error(
+    foo$point_value(sf_points, c('plot_id', 'other_plot_id'), c('AB', 'DBH')),
+    'must be of length'
+  )
+  expect_error(foo$point_value(sf_points, 'plot_id', c('AC', 'DBH')), 'Must be one of')
+  expect_true(inherits(foo$point_value(sf_points, 'plot_id', c('AB', 'DBH')), 'sf'))
+  expect_identical(
+    names(foo$point_value(sf_points, 'plot_id', c('AB', 'DBH'))),
+    c('plot_id', 'AB', 'DBH', 'geometry')
+  )
+  expect_equal(nrow(foo$point_value(sf_points, 'plot_id', c('AB', 'DBH'))), 5)
 })
 
 ## cache works ####
@@ -164,10 +187,10 @@ test_that("external clip_and_stats wrapper works", {
   skip_on_cran()
   skip_on_travis()
   expect_identical(
-    foo$clip_and_stats(sf_object, 'poly_id', 'AB'),
-    lidar_clip_and_stats(foo, sf_object, 'poly_id', 'AB')
+    foo$clip_and_stats(sf_polygons, 'poly_id', 'AB'),
+    lidar_clip_and_stats(foo, sf_polygons, 'poly_id', 'AB')
   )
-  expect_error(lidar_clip_and_stats('foo', sf_object, 'poly_id', 'DBH'), "class lfcLiDAR")
+  expect_error(lidar_clip_and_stats('foo', sf_polygons, 'poly_id', 'DBH'), "class lfcLiDAR")
 })
 
 rm(foo)

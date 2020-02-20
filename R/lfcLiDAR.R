@@ -215,6 +215,22 @@ lfcLiDAR <- R6::R6Class(
         dplyr::left_join(sf, by = polygon_id_variable) %>%
         sf::st_as_sf()
       return(res)
+    },
+
+    # point method
+    point_value = function(sf, point_id_variable, variables) {
+      res <-
+        variables %>%
+        purrr::map(
+          ~ private$point_value_vectorized(sf, point_id_variable, .x)
+        ) %>%
+        purrr::reduce(
+          .f = dplyr::full_join,
+          by = c(point_id_variable)
+        ) %>%
+        dplyr::left_join(sf, by = polygon_id_variable) %>%
+        sf::st_as_sf()
+      return(res)
     }
   ),
   # private methods and values
@@ -222,7 +238,7 @@ lfcLiDAR <- R6::R6Class(
     # connection values
     dbname = 'lidargis',
 
-    #### clip_and_stats intermediate methods
+    #### point_value and clip_and_stats intermediate methods
 
     # clip and mean for one polygon, one raster
     # we build a query to get the ST_SummaryStats of the raster values where the polygon
@@ -325,6 +341,57 @@ lfcLiDAR <- R6::R6Class(
         )
 
       return(summ_polys_data)
+    },
+
+    point_value_simple_case = function(sf, point_id, variable) {
+
+      # we need the point in wkt to create the query on the fly
+      wkt_point <-
+        sf %>%
+        sf::st_geometry() %>%
+        sf::st_as_text(EWKT = TRUE)
+
+      # var name
+      var_name <- tolower(variable)
+
+      # SQL query
+      point_query <- glue::glue_sql(
+        "SELECT ST_Value(
+           rast,
+           ST_Transform(ST_GeomFromEWKT({wkt_point}),3043)
+         ) As point_val, {point_id} As point_id
+         FROM {`var_name`}
+         WHERE ST_Intersects(
+           rast,
+           ST_Transform(ST_GeomFromEWKT({wkt_point}),3043)
+         );",
+        .con = lidardb$.__enclos_env__$private$pool_conn
+      )
+
+      # execute the query and return the result
+      res <-
+        sf::st_read(private$pool_conn, query = point_query) %>%
+        dplyr::as_tibble() %>%
+        dplyr::rename(!! variable := point_val)
+      return(res)
+    },
+
+    point_value_vectorized = function(sf, id_point_variable, variable) {
+
+      # get the geom column name
+      sf_column <- attr(sf, 'sf_column')
+      # rowbinding the values
+      points_data <-
+        seq_along(sf[[sf_column]]) %>%
+        purrr::map_dfr(
+          ~ private$point_value_simple_case(
+            sf = sf[[sf_column]][.x], point_id = sf[[id_point_variable]][.x],
+            variable = variable
+          )
+        ) %>%
+        dplyr::rename(!! id_point_variable := point_id)
+
+      return(points_data)
     }
   )
 )
