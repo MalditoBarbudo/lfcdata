@@ -7,24 +7,24 @@ test_that("class object creation works", {
   expect_true(rlang::is_function(allometries()$calculate))
 })
 
-# foo to avoid calling the db so often
-foo <- allometries()
+# allomdb to avoid calling the db so often
+allomdb <- allometries()
 
 test_that("get method works", {
   skip_on_cran()
   skip_on_travis()
-  expect_s3_class(foo$get_data('allometries'), 'tbl_df')
+  expect_s3_class(allomdb$get_data('allometries'), 'tbl_df')
   # errors
   expect_error(
-    foo$get_data(1),
+    allomdb$get_data(1),
     "not character"
   )
   expect_error(
-    foo$get_data(c('allometries', 'thesaurus_variables')),
+    allomdb$get_data(c('allometries', 'thesaurus_variables')),
     "of length"
   )
   expect_error(
-    foo$get_data('non_existent_table'),
+    allomdb$get_data('non_existent_table'),
     "Can not connect to the database:"
   )
 })
@@ -32,14 +32,14 @@ test_that("get method works", {
 test_that("description method works", {
   skip_on_cran()
   skip_on_travis()
-  expect_type(foo$description(id = 'BH_287'), 'list')
-  expect_type(foo$description(!is.na(independent_var_2)), 'list')
-  expect_identical(names(foo$description(id = 'BH_287')), 'BH_287')
-  expect_length(foo$description(id = 'BH_287')[[1]], 22)
-  expect_true(length(foo$description(!is.na(independent_var_2))) > 1300)
-  expect_true('VOB_7674' %in% names(foo$description(!is.na(independent_var_2))))
-  expect_error(foo$description(id = 1), 'not character')
-  expect_error(foo$description(Sys.Date()), 'logical')
+  expect_type(allomdb$description(id = 'BH_287'), 'list')
+  expect_type(allomdb$description(!is.na(independent_var_2)), 'list')
+  expect_identical(names(allomdb$description(id = 'BH_287')), 'BH_287')
+  expect_length(allomdb$description(id = 'BH_287')[[1]], 22)
+  expect_true(length(allomdb$description(!is.na(independent_var_2))) > 1300)
+  expect_true('VOB_7674' %in% names(allomdb$description(!is.na(independent_var_2))))
+  expect_error(allomdb$description(id = 1), 'not character')
+  expect_error(allomdb$description(Sys.Date()), 'logical')
 })
 
 test_that("equation formatter method works", {
@@ -53,7 +53,7 @@ test_that("equation formatter method works", {
   )
   eq_test_set_latin <- stringr::str_conv(eq_test_set, 'latin1')
   expect_identical(
-    foo$.__enclos_env__$private$eq_formatter(eq_test_set),
+    allomdb$.__enclos_env__$private$eq_formatter(eq_test_set),
     c(
       "Ht = param_a*DBH^param_b", "BFAT = param_a * PHV^param_b",
       "VLE = param_a + param_b*(DBH*10) + param_c*(DBH*10)^2 + param_d*(DBH*10)^3",
@@ -63,7 +63,7 @@ test_that("equation formatter method works", {
     )
   )
   expect_identical(
-    foo$.__enclos_env__$private$eq_formatter(eq_test_set_latin),
+    allomdb$.__enclos_env__$private$eq_formatter(eq_test_set_latin),
     c(
       "Ht = param_a*DBH^param_b", "BFAT = param_a * PHV^param_b",
       "VLE = param_a + param_b*(DBH*10) + param_c*(DBH*10)^2 + param_d*(DBH*10)^3",
@@ -77,88 +77,88 @@ test_that("equation formatter method works", {
 test_that("calculate method works", {
   skip_on_cran()
   skip_on_travis()
-  expect_type(foo$calculate(DR = c(1,2,3), allometry_id = 'BH_287'), 'double')
-  expect_type(foo$calculate(DBH = c(1,2,3), Ht = c(10,11,12), allometry_id = 'VOB_7674'), 'double')
+  expect_type(allomdb$calculate(DR = c(1,2,3), allometry_id = 'BH_287'), 'double')
+  expect_type(allomdb$calculate(DBH = c(1,2,3), Ht = c(10,11,12), allometry_id = 'VOB_7674'), 'double')
   expect_equal(
-    foo$calculate(DR = c(1,2,3), allometry_id = 'BH_287'),
-    foo$description(id = 'BH_287')[[1]]$param_a * (c(1,2,3)^foo$description(id = 'BH_287')[[1]]$param_b)
+    allomdb$calculate(DR = c(1,2,3), allometry_id = 'BH_287'),
+    allomdb$description(id = 'BH_287')[[1]]$param_a * (c(1,2,3)^allomdb$description(id = 'BH_287')[[1]]$param_b)
   )
   expect_equal(
-    foo$calculate(DBH = c(1,2,3), Ht = c(10,11,12), allometry_id = 'VOB_7674'),
-    foo$description(id = 'VOB_7674')[[1]]$param_a + foo$description(id = 'VOB_7674')[[1]]$param_b * (c(1,2,3)*10)^2 * c(10,11,12)
+    allomdb$calculate(DBH = c(1,2,3), Ht = c(10,11,12), allometry_id = 'VOB_7674'),
+    allomdb$description(id = 'VOB_7674')[[1]]$param_a + allomdb$description(id = 'VOB_7674')[[1]]$param_b * (c(1,2,3)*10)^2 * c(10,11,12)
   )
-  expect_error(foo$calculate(DR = c(1,2,3), allometry_id = 1), 'not character')
-  expect_error(foo$calculate(DR = Sys.Date(), allometry_id = 'BH_287'), 'not numeric')
+  expect_error(allomdb$calculate(DR = c(1,2,3), allometry_id = 1), 'not character')
+  expect_error(allomdb$calculate(DR = Sys.Date(), allometry_id = 'BH_287'), 'not numeric')
   expect_error(
-    foo$calculate(c(1,2,3), allometry_id = 'BH_287'),
+    allomdb$calculate(c(1,2,3), allometry_id = 'BH_287'),
     'DR'
   )
   # errors/warnings expected when bad variable names supplied
   expect_error(
-    foo$calculate(DB = c(1,2,3), allometry_id = 'BH_287'),
+    allomdb$calculate(DB = c(1,2,3), allometry_id = 'BH_287'),
     'DR'
   )
   expect_error(
-    foo$calculate(DC = c(1,2,3), DB = c(1,2,3), allometry_id = 'BH_287'),
+    allomdb$calculate(DC = c(1,2,3), DB = c(1,2,3), allometry_id = 'BH_287'),
     'DR'
   )
   expect_warning(
-    foo$calculate(DR = c(1,2,3), DB = c(1,2,3), allometry_id = 'BH_287'),
+    allomdb$calculate(DR = c(1,2,3), DB = c(1,2,3), allometry_id = 'BH_287'),
     'DB'
   )
   expect_warning(
-    foo$calculate(DC = c(1,2,3), DR = c(1,2,3), DB = c(1,2,3), allometry_id = 'BH_287'),
+    allomdb$calculate(DC = c(1,2,3), DR = c(1,2,3), DB = c(1,2,3), allometry_id = 'BH_287'),
     'DC, DB'
   )
   suppressWarnings(expect_equal(
-    foo$calculate(DR = c(1,2,3), DB = c(1,2,3), allometry_id = 'BH_287'),
-    foo$calculate(DR = c(1,2,3), allometry_id = 'BH_287')
+    allomdb$calculate(DR = c(1,2,3), DB = c(1,2,3), allometry_id = 'BH_287'),
+    allomdb$calculate(DR = c(1,2,3), allometry_id = 'BH_287')
   ))
 })
 
 test_that("describe_var method works", {
   skip_on_cran()
   skip_on_travis()
-  expect_is(foo$describe_var('BR'), c('lfcAllometries'))
-  expect_output(foo$describe_var('BR'))
-  expect_output(foo$describe_var(c('BR', 'DBH')))
-  expect_output(foo$describe_var(c('BR', 'DBH', 'tururu')))
-  expect_error(foo$describe_var('tururu'), 'variables not found')
-  expect_error(foo$describe_var(25), 'not character')
+  expect_is(allomdb$describe_var('BR'), c('lfcAllometries'))
+  expect_output(allomdb$describe_var('BR'))
+  expect_output(allomdb$describe_var(c('BR', 'DBH')))
+  expect_output(allomdb$describe_var(c('BR', 'DBH', 'tururu')))
+  expect_error(allomdb$describe_var('tururu'), 'variables not found')
+  expect_error(allomdb$describe_var(25), 'not character')
 })
 
 test_that("cache works", {
   skip_on_cran()
   skip_on_travis()
-  expect_length(foo$.__enclos_env__$private$data_cache, 2)
-  bar <- foo$get_data('allometries')
+  expect_length(allomdb$.__enclos_env__$private$data_cache, 2)
+  bar <- allomdb$get_data('allometries')
   expect_s3_class(bar, 'tbl_df')
   expect_identical(
     bar,
-    dplyr::tbl(foo$.__enclos_env__$private$pool_conn, 'allometries') %>%
+    dplyr::tbl(allomdb$.__enclos_env__$private$pool_conn, 'allometries') %>%
       dplyr::collect()
   )
-  expect_length(foo$.__enclos_env__$private$data_cache, 2)
-  baz <- foo$get_data('thesaurus_variables')
-  expect_length(foo$.__enclos_env__$private$data_cache, 3)
+  expect_length(allomdb$.__enclos_env__$private$data_cache, 2)
+  baz <- allomdb$get_data('thesaurus_variables')
+  expect_length(allomdb$.__enclos_env__$private$data_cache, 3)
 })
 
 test_that("external get data wrapper works", {
   skip_on_cran()
   skip_on_travis()
   expect_identical(
-    foo$get_data('allometries'),
-    allometries_get_data(foo, 'allometries')
+    allomdb$get_data('allometries'),
+    allometries_get_data(allomdb, 'allometries')
   )
   expect_error(
-    allometries_get_data('foo', 'allometries'),
+    allometries_get_data('allomdb', 'allometries'),
     "class lfcAllometries"
   )
-  xyz <- allometries_get_data(foo, 'thesaurus_sources')
-  expect_length(foo$.__enclos_env__$private$data_cache, 4)
+  xyz <- allometries_get_data(allomdb, 'thesaurus_sources')
+  expect_length(allomdb$.__enclos_env__$private$data_cache, 4)
   expect_identical(
-    foo$get_data('thesaurus_sources'),
-    allometries_get_data(foo, 'thesaurus_sources')
+    allomdb$get_data('thesaurus_sources'),
+    allometries_get_data(allomdb, 'thesaurus_sources')
   )
 })
 
@@ -166,42 +166,42 @@ test_that("external description wrapper works", {
   skip_on_cran()
   skip_on_travis()
   expect_identical(
-    foo$description(id = 'BH_287'),
-    allometries_description(foo, id = 'BH_287')
+    allomdb$description(id = 'BH_287'),
+    allometries_description(allomdb, id = 'BH_287')
   )
   expect_identical(
-    foo$description(!is.na(independent_var_2)),
-    allometries_description(foo, !is.na(independent_var_2))
+    allomdb$description(!is.na(independent_var_2)),
+    allometries_description(allomdb, !is.na(independent_var_2))
   )
-  expect_error(allometries_description('foo', id = 'BH_287'), "class lfcAllometries")
-  expect_error(allometries_description(foo, id = 1), "not character")
+  expect_error(allometries_description('allomdb', id = 'BH_287'), "class lfcAllometries")
+  expect_error(allometries_description(allomdb, id = 1), "not character")
 })
 
 test_that("external calculate wrapper works", {
   skip_on_cran()
   skip_on_travis()
   expect_identical(
-    foo$calculate(DR = c(1,2,3), allometry_id = 'BH_287'),
-    allometries_calculate(foo, DR = c(1,2,3), allometry_id = 'BH_287')
+    allomdb$calculate(DR = c(1,2,3), allometry_id = 'BH_287'),
+    allometries_calculate(allomdb, DR = c(1,2,3), allometry_id = 'BH_287')
   )
   expect_identical(
-    foo$calculate(DBH = c(1,2,3), Ht = c(10,11,12), allometry_id = 'VOB_7674'),
+    allomdb$calculate(DBH = c(1,2,3), Ht = c(10,11,12), allometry_id = 'VOB_7674'),
     allometries_calculate(
-      foo, DBH = c(1,2,3), Ht = c(10,11,12), allometry_id = 'VOB_7674'
+      allomdb, DBH = c(1,2,3), Ht = c(10,11,12), allometry_id = 'VOB_7674'
     )
   )
   expect_error(
-    allometries_calculate('foo', DR = c(1,2,3), allometry_id = 'BH_287'),
+    allometries_calculate('allomdb', DR = c(1,2,3), allometry_id = 'BH_287'),
     "class lfcAllometries"
   )
   expect_error(
     allometries_calculate(
-      'foo', DBH = c(1,2,3), Ht = c(10,11,12), allometry_id = 'VOB_7674'
+      'allomdb', DBH = c(1,2,3), Ht = c(10,11,12), allometry_id = 'VOB_7674'
     ),
     "class lfcAllometries"
   )
   expect_error(
-    allometries_calculate(foo, DR = c(1,2,3), allometry_id = 1),
+    allometries_calculate(allomdb, DR = c(1,2,3), allometry_id = 1),
     'not character'
   )
 })
@@ -209,6 +209,6 @@ test_that("external calculate wrapper works", {
 test_that("external describe_var wrapper works", {
   skip_on_cran()
   skip_on_travis()
-  expect_identical(foo$describe_var('DBH'), allometries_describe_var(foo, 'DBH'))
-  expect_error(allometries_describe_var('foo', 'density'), "class lfcAllometries")
+  expect_identical(allomdb$describe_var('DBH'), allometries_describe_var(allomdb, 'DBH'))
+  expect_error(allometries_describe_var('allomdb', 'density'), "class lfcAllometries")
 })
