@@ -26,9 +26,11 @@ An \code{lfcLiDAR} class object (inherits from \code{\link[R6]{R6Class}}),
           \code{\link{lidar_avail_tables}} for more details}
     \item{\code{$describe_var}: Describe the variables, with their units and details.
           See \code{\link{lidar_describe_var}} for more details}
-    \item{\code{$clip_and_stats}: Clip the specified tables with the provided set of
-          polygons and calculate the raster statistics for each polygon. See
+    \item{\code{$clip_and_stats}: Clip the specified variables with the provided set of
+          polygons and calculate the raw raster statistics for each polygon. See
           \code{\link{lidar_clip_and_stats}} for more details}
+    \item{\code{$point_value}: Extract values from the raw raster for the desired
+          points. See \code{\link{lidar_point_value}} for more details}
   }
 }
 

@@ -79,7 +79,26 @@ lidar_get_lowres_raster(lidardb, c('AB', 'DBH'), 'raster')
 
 ## Access the raw raster data
 
-Raw rasters (20x20m) are available for calculations only, no for download
+Raw rasters (20x20m) are available for data extraction and calculations only, no for
+download
+
+
+### Extract point values
+
+Given a set of points (`sf` object), `lidar_point_value` extracts the raster values for
+the desired variables:
+
+```{r point_value}
+# get a set of points, we can use the national forest inventory data
+point_set <-
+  nfi()$get_data('plots', spatial = TRUE) %>%
+  dplyr::slice(1:25) %>%
+  dplyr::select(plot_id)
+# and extract the values
+lidardb %>%
+  lidar_point_value(point_set, 'plot_id', c('AB', 'DBH', 'REC'))
+```
+
 
 ### Clip and stats
 
@@ -87,7 +106,6 @@ Given a set of polygons (`sf` object), `lidar_clip_and_stats` calculate the rast
 for each polygon:
 
 ```{r clip}
-lidardb <- lidar()
 # we get the provinces polygons
 polygon_set <-
   lidardb %>%
