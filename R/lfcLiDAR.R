@@ -17,9 +17,11 @@
 #'           \code{\link{lidar_avail_tables}} for more details}
 #'     \item{\code{$describe_var}: Describe the variables, with their units and details.
 #'           See \code{\link{lidar_describe_var}} for more details}
-#'     \item{\code{$clip_and_stats}: Clip the specified tables with the provided set of
-#'           polygons and calculate the raster statistics for each polygon. See
+#'     \item{\code{$clip_and_stats}: Clip the specified variables with the provided set of
+#'           polygons and calculate the raw raster statistics for each polygon. See
 #'           \code{\link{lidar_clip_and_stats}} for more details}
+#'     \item{\code{$point_value}: Extract values from the raw raster for the desired
+#'           points. See \code{\link{lidar_point_value}} for more details}
 #'   }
 #'
 #' @family LiDAR functions
@@ -55,6 +57,8 @@ lfcLiDAR <- R6::R6Class(
           " to get the information available on the variables.\n",
         "Use " %+% crayon::yellow$bold("lidar_clip_and_stats") %+%
           " to summarise the raw raster (20x20m) by provided polygons.\n",
+        "Use " %+% crayon::yellow$bold("lidar_point_value") %+%
+          " to extract values from the raw raster (20x20m).\n",
         "See " %+%
           crayon::yellow$bold("vignette('tables_and_variables', package = 'lfcdata')") %+%
           " to learn more about the tables and variables."
