@@ -31,6 +31,6 @@ Other LiDAR functions: \code{\link{lidar_clip_and_stats}},
   \code{\link{lidar_describe_var}},
   \code{\link{lidar_get_data}},
   \code{\link{lidar_get_lowres_raster}},
-  \code{\link{lidar}}
+  \code{\link{lidar_point_value}}, \code{\link{lidar}}
 }
 \concept{LiDAR functions}

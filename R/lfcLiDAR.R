@@ -589,7 +589,7 @@ lidar_describe_var <- function(object, variables) {
   object$describe_var(variables)
 }
 
-#' Clip and calculate stats of raster tables
+#' Clip by polygons and calculate stats from raw raster tables (20x20m)
 #'
 #' @description \code{lidar_clip_and_stats} is a wrapper for the \code{$clip_and_stats}
 #'   method of \code{lfcLiDAR} objects. See \code{\link{lidar}}.
@@ -601,7 +601,7 @@ lidar_describe_var <- function(object, variables) {
 #' @param variables character vector with the names of the variables to access
 #'
 #' @return This function returns the same sf object provided with new columns with the
-#'   mean of each polygon for each table requested.
+#'   mean of each polygon for each variable requested.
 #'
 #' @details
 #'
@@ -645,4 +645,44 @@ lidar_clip_and_stats <- function(object, sf, polygon_id_variable, variables) {
   check_class_for(object, 'lfcLiDAR')
   # call to the class method
   object$clip_and_stats(sf, polygon_id_variable, variables)
+}
+
+#' Extract point value from LiDAR raw raster tables (20x20m)
+#'
+#' @description \code{lidar_point_value} is a wrapper for the \code{$point_value}
+#'   method of \code{lfcLiDAR} objects. See \code{\link{lidar}}.
+#'
+#' @param object \code{lfcLiDAR} object, as created by \code{\link{lidar}}
+#' @param sf sf object with the points to extract
+#' @param point_id_variable character vector of length 1 with the name of the
+#'   variable of \code{sf} that contains the point identificator (name, code...)
+#' @param variables character vector with the names of the variables to access
+#'
+#' @return This function returns the same sf object provided, with new columns with the
+#'   values of each point for each variable requested.
+#'
+#' @family LiDAR functions
+#'
+#' @examples
+#' if (interactive()) {
+#' library(dplyr)
+#' lidardb <- lidar()
+#'
+#' points_data <-
+#'   nfi()$get_data('plots', spatial = TRUE) %>%
+#'   dplyr::slice(1:5) %>%
+#'   dplyr::select(plot_id)
+#'
+#' dbh_plots <- lidar_point_value(lidardb, points_data, 'plot_id', 'DBH')
+#'
+#' # lidardb is an R6 object, so the previous example is the same as:
+#' lidardb$point_value(points_data, 'plot_id', 'DBH')
+#' }
+#'
+#' @export
+lidar_point_value <- function(object, sf, point_id_variable, variables) {
+  # argument validation
+  check_class_for(object, 'lfcLiDAR')
+  # call to the class method
+  object$point_value(sf, point_id_variable, variables)
 }

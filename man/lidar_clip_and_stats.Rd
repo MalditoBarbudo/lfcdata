@@ -2,7 +2,7 @@
 % Please edit documentation in R/lfcLiDAR.R
 \name{lidar_clip_and_stats}
 \alias{lidar_clip_and_stats}
-\title{Clip and calculate stats of raster tables}
+\title{Clip by polygons and calculate stats from raw raster tables (20x20m)}
 \usage{
 lidar_clip_and_stats(object, sf, polygon_id_variable, variables)
 }
@@ -18,7 +18,7 @@ variable of \code{sf} that contains the polygon identificator (name, code...)}
 }
 \value{
 This function returns the same sf object provided with new columns with the
-  mean of each polygon for each table requested.
+  mean of each polygon for each variable requested.
 }
 \description{
 \code{lidar_clip_and_stats} is a wrapper for the \code{$clip_and_stats}
@@ -63,6 +63,6 @@ Other LiDAR functions: \code{\link{lidar_avail_tables}},
   \code{\link{lidar_describe_var}},
   \code{\link{lidar_get_data}},
   \code{\link{lidar_get_lowres_raster}},
-  \code{\link{lidar}}
+  \code{\link{lidar_point_value}}, \code{\link{lidar}}
 }
 \concept{LiDAR functions}
