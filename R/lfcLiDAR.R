@@ -264,14 +264,14 @@ lfcLiDAR <- R6::R6Class(
         glue::glue("Processing {poly_id} polygon for {var_name} raster...")
       ))
 
+      # var name to lowercase
+      var_name <- tolower(var_name)
+
       # poly as wkt, to avoid table creation
       wkt_poly <-
         sf %>%
         sf::st_geometry() %>%
-        sf::st_as_text(EWKT = TRUE)
-
-      # var name to lowercase
-      var_name <- tolower(var_name)
+        sf::st_as_text(EWKT = TRUE, digits = 15)
 
       # feature query. In this query we create the simple feature table-like
       feat_query <- glue::glue_sql(
