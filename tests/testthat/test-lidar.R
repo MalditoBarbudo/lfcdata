@@ -79,6 +79,9 @@ sf_multipoints <-
   ) %>%
   sf::st_as_sf(sf_column_name = 'geometry')
 
+sf_polygons_latlong <-
+  sf_polygons %>% sf::st_transform(crs = 4326)
+
 ## clip_and_stats method works ####
 test_that("clip_and_stats method works", {
   skip_on_cran()
@@ -109,6 +112,14 @@ test_that("clip_and_stats method works", {
     )
   )
   expect_equal(nrow(lidardb$clip_and_stats(sf_polygons, 'tururu', c('AB', 'DBH'))), 5)
+  expect_equal(
+    sf::st_crs(lidardb$clip_and_stats(sf_polygons_latlong, 'tururu', c('AB', 'DBH'))),
+    sf::st_crs(4326)
+  )
+  expect_equal(
+    sf::st_crs(lidardb$clip_and_stats(sf_polygons, 'tururu', c('AB', 'DBH'))),
+    sf::st_crs(3043)
+  )
 })
 
 ## point_value method works ####

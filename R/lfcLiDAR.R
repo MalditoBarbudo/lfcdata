@@ -267,10 +267,14 @@ lfcLiDAR <- R6::R6Class(
       # var name to lowercase
       var_name <- tolower(var_name)
 
+      # crs of the original sf
+      original_crs <- sf::st_crs(sf)
+
       # poly as wkt, to avoid table creation
       wkt_poly <-
         sf %>%
         sf::st_geometry() %>%
+        sf::st_transform(crs = 3043) %>%
         sf::st_as_text(EWKT = TRUE, digits = 15)
 
       # feature query. In this query we create the simple feature table-like
@@ -292,12 +296,12 @@ lfcLiDAR <- R6::R6Class(
       )
 
       # execute the query and retrieve the data
-      intersecting_tiles_stats <- sf::st_read(
-        private$pool_conn, query = b_stats_query, as_tibble = TRUE
-      )
-
+      # intersecting_tiles_stats <-
       polygon_stats <-
-        intersecting_tiles_stats %>%
+        sf::st_read(
+          private$pool_conn, query = b_stats_query, as_tibble = TRUE
+        ) %>%
+        sf::st_transform(crs = original_crs) %>%
         dplyr::as_tibble() %>%
         dplyr::mutate(count = as.integer(count)) %>%
         dplyr::filter(count > 0) %>%
