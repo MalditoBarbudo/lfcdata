@@ -297,7 +297,7 @@ lfcLiDAR <- R6::R6Class(
 
       # execute the query and retrieve the data
       # intersecting_tiles_stats <-
-      polygon_stats <-
+      polygon_stats_pre_check <-
         sf::st_read(
           private$pool_conn, query = b_stats_query, as_tibble = TRUE
         ) %>%
@@ -305,27 +305,49 @@ lfcLiDAR <- R6::R6Class(
         dplyr::as_tibble() %>%
         dplyr::mutate(count = as.integer(count)) %>%
         dplyr::filter(count > 0) %>%
-        dplyr::group_by(poly_id) %>%
-        dplyr::summarise(
+        dplyr::group_by(poly_id)
+
+      # polygon stats could be empty (polygon cover raster area with no data)
+      if (nrow(polygon_stats_pre_check) < 1) {
+        polygon_stats <- dplyr::tibble(
+          poly_id = poly_id,
           # area of the polygon
-          poly_km2 = (sf::st_area(dplyr::first(.data[['geometry']])) %>%
-                        as.numeric()) / 1000000,
+          poly_km2 = round((sf::st_area(sf) %>% as.numeric()) / 1000000, 3),
           # regular stats
-          !! glue::glue("{toupper(var_name)}_pixels") := sum(.data[['count']]),
-          !! glue::glue("{toupper(var_name)}_average") :=
-            sum(.data[['count']]*.data[['mean']])/sum(.data[['count']]),
-          !! glue::glue("{toupper(var_name)}_min") := min(.data[['min']]),
-          !! glue::glue("{toupper(var_name)}_max") := max(.data[['max']]),
-          !! glue::glue("{toupper(var_name)}_sd") := cochrane_sd_reduce(
-            n = .data[['count']], m = .data[['mean']], s = .data[['stddev']]
-          ),
+          !! glue::glue("{toupper(var_name)}_pixels") := NA_real_,
+          !! glue::glue("{toupper(var_name)}_average") := NA_real_,
+          !! glue::glue("{toupper(var_name)}_min") := NA_real_,
+          !! glue::glue("{toupper(var_name)}_max") := NA_real_,
+          !! glue::glue("{toupper(var_name)}_sd") := NA_real_,
           # area covered by raster (km2). Each pixel 20x20m=400m2=4e-04km2
-          !! glue::glue("{toupper(var_name)}_km2") :=
-            !! rlang::sym(glue::glue("{toupper(var_name)}_pixels")) * 4e-04,
+          !! glue::glue("{toupper(var_name)}_km2") := NA_real_,
           # prop of poly area covered by raster
-          !! glue::glue("{toupper(var_name)}_km2_perc") :=
-            100 * !! rlang::sym(glue::glue("{toupper(var_name)}_km2")) / poly_km2
+          !! glue::glue("{toupper(var_name)}_km2_perc") := NA_real_
         )
+      } else {
+        polygon_stats <-
+          polygon_stats_pre_check %>%
+          dplyr::summarise(
+            # area of the polygon
+            poly_km2 = (sf::st_area(dplyr::first(.data[['geometry']])) %>%
+                          as.numeric()) / 1000000,
+            # regular stats
+            !! glue::glue("{toupper(var_name)}_pixels") := sum(.data[['count']]),
+            !! glue::glue("{toupper(var_name)}_average") :=
+              sum(.data[['count']]*.data[['mean']])/sum(.data[['count']]),
+            !! glue::glue("{toupper(var_name)}_min") := min(.data[['min']]),
+            !! glue::glue("{toupper(var_name)}_max") := max(.data[['max']]),
+            !! glue::glue("{toupper(var_name)}_sd") := cochrane_sd_reduce(
+              n = .data[['count']], m = .data[['mean']], s = .data[['stddev']]
+            ),
+            # area covered by raster (km2). Each pixel 20x20m=400m2=4e-04km2
+            !! glue::glue("{toupper(var_name)}_km2") :=
+              !! rlang::sym(glue::glue("{toupper(var_name)}_pixels")) * 4e-04,
+            # prop of poly area covered by raster
+            !! glue::glue("{toupper(var_name)}_km2_perc") :=
+              100 * !! rlang::sym(glue::glue("{toupper(var_name)}_km2")) / poly_km2
+          )
+      }
 
       cat(
         crayon::green$bold(glue::glue(" done.")), '\n'
