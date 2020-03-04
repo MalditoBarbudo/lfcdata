@@ -42,8 +42,8 @@ the `lidar_get_data` function. To see the available tables use `lidar_avail_tabl
 
 ```{r get_data}
 lidar_avail_tables(lidardb)
-lidar_get_data(lidardb, 'lidar_provincias')
-# lidar_get_data(lidardb, 'lidar_natural_parks')
+lidar_get_data(lidardb, 'lidar_provinces')
+lidar_get_data(lidardb, 'lidar_enpes')
 ```
 
 ## Access the low resolution rasters (400x400m)
@@ -109,7 +109,7 @@ for each polygon:
 # we get the provinces polygons
 polygon_set <-
   lidardb %>%
-  lidar_get_data('lidar_municipios', 'AB') %>%
+  lidar_get_data('lidar_municipalities', 'AB') %>%
   dplyr::select(poly_id, geometry) %>%
   dplyr::slice(1:2)
 # we calculate the stats

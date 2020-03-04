@@ -141,7 +141,7 @@ lidar_avail_tables(lidardb)
 And data retrieved:
 
 ```{r get_data}
-lidar_get_data(lidardb, 'lidar_provincias')
+lidar_get_data(lidardb, 'lidar_provinces')
 ```
 
 Also, database offers low resolution raster tables (cell size of 400m x 400m), in the form
