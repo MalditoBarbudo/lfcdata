@@ -271,11 +271,17 @@ lfcLiDAR <- R6::R6Class(
       original_crs <- sf::st_crs(sf)
 
       # poly as wkt, to avoid table creation
-      wkt_poly <-
+      sf_transformed <-
         sf %>%
         sf::st_geometry() %>%
-        sf::st_transform(crs = 3043) %>%
+        sf::st_transform(crs = 3043)
+
+      wkt_poly <-
+        sf_transformed %>%
         sf::st_as_text(EWKT = TRUE, digits = 15)
+
+      # poly area, in 3043 projection
+      poly_area <- as.numeric(sf::st_area(sf_transformed)) / 1000000
 
       # feature query. In this query we create the simple feature table-like
       feat_query <- glue::glue_sql(
@@ -312,7 +318,7 @@ lfcLiDAR <- R6::R6Class(
         polygon_stats <- dplyr::tibble(
           poly_id = poly_id,
           # area of the polygon
-          poly_km2 = round((sf::st_area(sf) %>% as.numeric()) / 1000000, 3),
+          poly_km2 = poly_area,
           # regular stats
           !! glue::glue("{toupper(var_name)}_pixels") := NA_real_,
           !! glue::glue("{toupper(var_name)}_average") := NA_real_,
@@ -329,8 +335,7 @@ lfcLiDAR <- R6::R6Class(
           polygon_stats_pre_check %>%
           dplyr::summarise(
             # area of the polygon
-            poly_km2 = (sf::st_area(dplyr::first(.data[['geometry']])) %>%
-                          as.numeric()) / 1000000,
+            poly_km2 = poly_area,
             # regular stats
             !! glue::glue("{toupper(var_name)}_pixels") := sum(.data[['count']]),
             !! glue::glue("{toupper(var_name)}_average") :=

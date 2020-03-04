@@ -354,6 +354,10 @@ test_that("clip_and_stats method works", {
   expect_true(
     is.na(lidardb$clip_and_stats(sf_empty_polygon, 'poly_id', c('AB', 'DBH'))$AB_average)
   )
+  expect_equal(
+    nrow(lidardb$clip_and_stats(sf_empty_polygon, 'poly_id', c('AB', 'REC'))),
+    1
+  )
 })
 
 ## point_value method works ####
