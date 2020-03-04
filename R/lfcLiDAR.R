@@ -183,8 +183,9 @@ lfcLiDAR <- R6::R6Class(
     # available tables method
     avail_tables = function() {
       c(
-        'lidar_catalunya', 'lidar_provincias', 'lidar_veguerias', 'lidar_comarcas',
-        'lidar_municipios'
+        'lidar_catalonia', 'lidar_provinces', 'lidar_vegueries', 'lidar_counties',
+        'lidar_municipalities',
+        'lidar_pein', 'lidar_enpes', 'lidar_xn2000'
       )
     },
 

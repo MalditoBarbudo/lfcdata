@@ -16,16 +16,16 @@ lidardb <- lidar()
 test_that("get_data method works", {
   skip_on_cran()
   skip_on_travis()
-  expect_s3_class(lidardb$get_data('lidar_provincias', c('DBH', 'AB')), 'sf')
-  expect_s3_class(lidardb$get_data('lidar_provincias', 'REC'), 'sf')
-  expect_equal(nrow(lidardb$get_data('lidar_provincias', c('DBH', 'AB'))), 4)
+  expect_s3_class(lidardb$get_data('lidar_provinces', c('DBH', 'AB')), 'sf')
+  expect_s3_class(lidardb$get_data('lidar_provinces', 'REC'), 'sf')
+  expect_equal(nrow(lidardb$get_data('lidar_provinces', c('DBH', 'AB'))), 4)
   expect_error(lidardb$get_data(1, 'REC'), 'not character')
-  expect_error(lidardb$get_data('lidar_provincias', c(1,2)), 'not character')
+  expect_error(lidardb$get_data('lidar_provinces', c(1,2)), 'not character')
   expect_error(
-    lidardb$get_data(c('lidar_provincias', 'lidar_municipios'), 'REC'), 'must be of length'
+    lidardb$get_data(c('lidar_provinces', 'lidar_municipalities'), 'REC'), 'must be of length'
   )
   expect_error(lidardb$get_data('lidar_provincilities', c('DBH', 'AB')), 'Must be one of')
-  expect_error(lidardb$get_data('lidar_provincias', c('AC')), 'Must be one of')
+  expect_error(lidardb$get_data('lidar_provinces', c('AC')), 'Must be one of')
 })
 
 ## get_lowres_raster method works ####
@@ -46,7 +46,8 @@ test_that("get_lowres_raster method works", {
 ## avail_tables method works ####
 test_that("avail_tables method works", {
   expect_type(lidardb$avail_tables(), 'character')
-  expect_true('lidar_provincias' %in% lidardb$avail_tables())
+  expect_true('lidar_provinces' %in% lidardb$avail_tables())
+  expect_true('lidar_pein' %in% lidardb$avail_tables())
 })
 
 ## describe_var method works ####
@@ -63,7 +64,7 @@ test_that("describe_var method works", {
 
 # sf objects to test
 sf_polygons <-
-  lidardb$get_data('lidar_municipios', 'DBH') %>%
+  lidardb$get_data('lidar_municipalities', 'DBH') %>%
   dplyr::slice(1:5) %>%
   dplyr::select(tururu = poly_id)
 
@@ -418,12 +419,12 @@ test_that("external get data wrapper works", {
   skip_on_travis()
   expect_identical(
     lidardb$get_data(
-      'lidar_provincias', c('AB', 'BAT', 'BF', 'CAT', 'DBH', 'HM', 'REC', 'VAE')
+      'lidar_provinces', c('AB', 'BAT', 'BF', 'CAT', 'DBH', 'HM', 'REC', 'VAE')
     ),
-    lidar_get_data(lidardb, 'lidar_provincias')
+    lidar_get_data(lidardb, 'lidar_provinces')
   )
   expect_error(
-    lidar_get_data('lidardb', 'lidar_provincias', c('DBH', 'AB')), "class lfcLiDAR"
+    lidar_get_data('lidardb', 'lidar_provinces', c('DBH', 'AB')), "class lfcLiDAR"
   )
 })
 
