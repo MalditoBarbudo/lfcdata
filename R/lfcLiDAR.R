@@ -77,13 +77,16 @@ lfcLiDAR <- R6::R6Class(
       )
       check_length_for(table_name, 1)
       check_if_in_for(
-        variables, c('AB', 'BAT', 'BF', 'CAT', 'DBH', 'HM', 'REC', 'VAE')
+        variables, c('AB', 'BAT', 'BF', 'CAT', 'DBH', 'HM', 'REC', 'VAE', 'all')
       )
       check_if_in_for(
         table_name, self$avail_tables()
       )
 
       # variables
+      if (any(variables == 'all')) {
+        variables <- c('AB', 'BAT', 'BF', 'CAT', 'DBH', 'HM', 'REC', 'VAE')
+      }
       regex_detection <- glue::glue("^", glue::glue_collapse(variables, sep = '|^'), "|^poly_km2$")
 
       # get the data, select the variables. Check first if cache exists
@@ -518,7 +521,8 @@ lidar_get_data <- function(
 #'   See also \code{\link{lidar}}.
 #'
 #' @param object \code{lfcLiDAR} object, as created by \code{\link{lidar}}
-#' @param variables character vector indicating the requested raster/s variables
+#' @param variables character vector indicating the requested raster/s variables.
+#'   \code{"all"} can be used to retrieve all variables.
 #' @param spatial character vector of lenght 1 indicating the type of raster object to
 #'   return, "raster" or "stars", the default.
 #'

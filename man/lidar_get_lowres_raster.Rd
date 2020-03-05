@@ -9,7 +9,8 @@ lidar_get_lowres_raster(object, variables, spatial = "stars")
 \arguments{
 \item{object}{\code{lfcLiDAR} object, as created by \code{\link{lidar}}}
 
-\item{variables}{character vector indicating the requested raster/s variables}
+\item{variables}{character vector indicating the requested raster/s variables.
+\code{"all"} can be used to retrieve all variables.}
 
 \item{spatial}{character vector of lenght 1 indicating the type of raster object to
 return, "raster" or "stars", the default.}

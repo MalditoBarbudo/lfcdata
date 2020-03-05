@@ -28,8 +28,20 @@ test_that("get_data method works", {
   expect_error(lidardb$get_data('lidar_provinces', c('AC')), 'Must be one of')
   expect_equal(ncol(lidardb$get_data('lidar_provinces', 'REC')), 10)
   expect_true(all(
-      c('DBH_pixels', 'AB_pixels', 'DBH_sd', 'AB_sd') %in%
-        names(lidardb$get_data('lidar_provinces', c('DBH', 'AB')))
+    c('DBH_pixels', 'AB_pixels', 'DBH_sd', 'AB_sd') %in%
+      names(lidardb$get_data('lidar_provinces', c('DBH', 'AB')))
+  ))
+  expect_true(all(
+    c(
+      'DBH_pixels', 'AB_pixels', 'REC_pixels', 'VAE_pixels', 'BAT_pixels',
+      'BF_pixels', 'CAT_pixels', 'HM_pixels'
+    ) %in% names(lidardb$get_data('lidar_provinces', 'all'))
+  ))
+  expect_true(all(
+    c(
+      'DBH_pixels', 'AB_pixels', 'REC_pixels', 'VAE_pixels', 'BAT_pixels',
+      'BF_pixels', 'CAT_pixels', 'HM_pixels'
+    ) %in% names(lidardb$get_data('lidar_provinces', c('all', 'DBH')))
   ))
 })
 
