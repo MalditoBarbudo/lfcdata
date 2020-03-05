@@ -84,8 +84,7 @@ lfcLiDAR <- R6::R6Class(
       )
 
       # variables
-      variables <- tolower(variables)
-      regex_detection <- glue::glue(glue::glue_collapse(variables, sep = '$|'), "$")
+      regex_detection <- glue::glue("^", glue::glue_collapse(variables, sep = '|^'), "|^poly_km2$")
 
       # get the data, select the variables. Check first if cache exists
       cached_data <-

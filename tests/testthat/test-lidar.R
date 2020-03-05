@@ -26,6 +26,11 @@ test_that("get_data method works", {
   )
   expect_error(lidardb$get_data('lidar_provincilities', c('DBH', 'AB')), 'Must be one of')
   expect_error(lidardb$get_data('lidar_provinces', c('AC')), 'Must be one of')
+  expect_equal(ncol(lidardb$get_data('lidar_provinces', 'REC')), 10)
+  expect_true(all(
+      c('DBH_pixels', 'AB_pixels', 'DBH_sd', 'AB_sd') %in%
+        names(lidardb$get_data('lidar_provinces', c('DBH', 'AB')))
+  ))
 })
 
 ## get_lowres_raster method works ####
