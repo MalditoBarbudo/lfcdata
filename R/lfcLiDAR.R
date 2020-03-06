@@ -210,6 +210,13 @@ lfcLiDAR <- R6::R6Class(
 
     # clip method
     clip_and_stats = function(sf, polygon_id_variable, variables) {
+
+      # variables
+      if (any(variables == 'all')) {
+        variables <- c('AB', 'BAT', 'BF', 'CAT', 'DBH', 'HM', 'REC', 'VAE')
+      }
+
+      # res
       res <-
         variables %>%
         purrr::map(
@@ -226,6 +233,13 @@ lfcLiDAR <- R6::R6Class(
 
     # point method
     point_value = function(sf, point_id_variable, variables) {
+
+      # variables
+      if (any(variables == 'all')) {
+        variables <- c('AB', 'BAT', 'BF', 'CAT', 'DBH', 'HM', 'REC', 'VAE')
+      }
+
+      # res
       res <-
         variables %>%
         purrr::map(
