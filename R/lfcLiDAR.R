@@ -300,10 +300,13 @@ lfcLiDAR <- R6::R6Class(
       # poly area, in 3043 projection
       poly_area <- as.numeric(sf::st_area(sf_transformed)) / 1000000
 
+      # pool checkout
+      pool_checkout <- pool::poolCheckout(private$pool_conn)
+
       # feature query. In this query we create the simple feature table-like
       feat_query <- glue::glue_sql(
         "SELECT {poly_id} As poly_id, ST_GeomFromEWKT({wkt_poly}) As geometry",
-        .con = private$pool_conn
+        .con = pool_checkout
       )
 
       # stats query. In this query, IIUC, we join the raster to the feature on the tiles
@@ -315,8 +318,10 @@ lfcLiDAR <- R6::R6Class(
          FROM {`var_name`}
        INNER JOIN ({feat_query}) AS feat
        ON ST_Intersects(feat.geometry,rast)",
-        .con = private$pool_conn
+        .con = pool_checkout
       )
+
+      pool::poolReturn(pool_checkout)
 
       # execute the query and retrieve the data
       # intersecting_tiles_stats <-
@@ -427,6 +432,9 @@ lfcLiDAR <- R6::R6Class(
       # var name
       var_name <- tolower(variable)
 
+      # pool checkout
+      pool_checkout <- pool::poolCheckout(private$pool_conn)
+
       # SQL query
       point_query <- glue::glue_sql(
         "SELECT {point_id} As point_id, ST_Value(
@@ -438,8 +446,10 @@ lfcLiDAR <- R6::R6Class(
            rast,
            ST_Transform(ST_GeomFromEWKT({wkt_point}),3043)
          );",
-        .con = private$pool_conn
+        .con = pool_checkout
       )
+
+      pool::poolReturn(pool_checkout)
 
       # execute the query and return the result
       res <-
