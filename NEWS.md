@@ -1,4 +1,4 @@
-# lfcdata (development version)
+# lfcdata 0.0.5
 
 * Added `lfcLiDAR$point_value` method, as well as its external counterpart
   `lidar_point_value`
