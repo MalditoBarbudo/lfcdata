@@ -101,8 +101,8 @@ sf_polygons_latlong <-
   sf_polygons %>% sf::st_transform(crs = 4326)
 
 sf_empty_polygon <-
-  lidardb$get_data('lidar_municipalities', 'DBH') %>%
-  dplyr::slice(175) %>%
+  lidardb$get_data('lidar_xn2000', 'DBH') %>%
+  dplyr::slice(19) %>%
   dplyr::select(poly_id)
 
 ## clip_and_stats method works ####
@@ -127,10 +127,10 @@ test_that("clip_and_stats method works", {
     names(lidardb$clip_and_stats(sf_polygons, 'tururu', c('AB', 'DBH'))),
     c(
       'tururu', 'poly_km2',
-      'AB_pixels', 'AB_average', 'AB_min', 'AB_max',
-      'AB_sd', 'AB_km2', 'AB_km2_perc',
-      'DBH_pixels', 'DBH_average', 'DBH_min', 'DBH_max',
-      'DBH_sd', 'DBH_km2', 'DBH_km2_perc',
+      'AB_pixels', 'AB_average', 'AB_sd', 'AB_min', 'AB_max',
+      'AB_km2', 'AB_km2_perc',
+      'DBH_pixels', 'DBH_average', 'DBH_sd', 'DBH_min', 'DBH_max',
+      'DBH_km2', 'DBH_km2_perc',
       'geometry'
     )
   )
@@ -184,7 +184,7 @@ test_that("point_value method works", {
 test_that("cache works", {
   skip_on_cran()
   skip_on_travis()
-  expect_length(lidardb$.__enclos_env__$private$data_cache, 4)
+  expect_length(lidardb$.__enclos_env__$private$data_cache, 5)
   bar <- lidardb$get_lowres_raster('AB', 'raster')
   expect_is(lidardb$get_lowres_raster('AB', 'raster'), 'RasterLayer')
   temp_postgresql_conn <- pool::poolCheckout(
@@ -203,9 +203,9 @@ test_that("cache works", {
     )
   )
   pool::poolReturn(temp_postgresql_conn)
-  expect_length(lidardb$.__enclos_env__$private$data_cache, 5)
-  baz <- lidardb$get_lowres_raster('DBH', 'raster')
   expect_length(lidardb$.__enclos_env__$private$data_cache, 6)
+  baz <- lidardb$get_lowres_raster('DBH', 'raster')
+  expect_length(lidardb$.__enclos_env__$private$data_cache, 7)
 })
 
 ## external methods ####
@@ -234,7 +234,7 @@ test_that("external get lowres_raster wrapper works", {
     lidardb$get_lowres_raster(c('REC', 'BAT'), 'stars'),
     lidar_get_lowres_raster(lidardb, c('REC', 'BAT'), 'stars')
   )
-  expect_length(lidardb$.__enclos_env__$private$data_cache, 7)
+  expect_length(lidardb$.__enclos_env__$private$data_cache, 8)
 })
 
 test_that("external describe_var wrapper works", {

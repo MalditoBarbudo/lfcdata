@@ -313,68 +313,97 @@ lfcLiDAR <- R6::R6Class(
       # intersecting, and we calculate the summary stats for the tiles. We return this, as
       # in this way we can calculate not only the mean, but also the std deviation.
       b_stats_query <- glue::glue_sql(
-        "SELECT poly_id, geometry,
-           (ST_SummaryStats(ST_Clip(rast,1,geometry, true),1,true)).*
-         FROM {`var_name`}
-       INNER JOIN ({feat_query}) AS feat
-       ON ST_Intersects(feat.geometry,rast)",
+        "SELECT
+           poly_id,
+           (ST_SummaryStatsAgg(ST_Clip(rast,geometry, -9999, true),1,true)).*
+         FROM
+           {`var_name`},
+           ({feat_query}) AS feat
+         WHERE
+           ST_Intersects(rast, geometry)
+         GROUP BY poly_id;",
         .con = pool_checkout
       )
 
       pool::poolReturn(pool_checkout)
 
       # execute the query and retrieve the data
-      # intersecting_tiles_stats <-
-      polygon_stats_pre_check <-
-        sf::st_read(
-          private$pool_conn, query = b_stats_query, as_tibble = TRUE
-        ) %>%
-        sf::st_transform(crs = original_crs) %>%
+      # polygon_stats_pre_check <-
+      polygon_stats <-
+        pool::dbGetQuery(private$pool_conn, b_stats_query) %>%
+        # sf::st_read(
+        #   private$pool_conn, query = b_stats_query, as_tibble = TRUE
+        # ) %>%
+        # sf::st_transform(crs = original_crs) %>%
         dplyr::as_tibble() %>%
         dplyr::mutate(count = as.integer(count)) %>%
-        dplyr::filter(count > 0) %>%
-        dplyr::group_by(poly_id)
-
-      # polygon stats could be empty (polygon cover raster area with no data)
-      if (nrow(polygon_stats_pre_check) < 1) {
-        polygon_stats <- dplyr::tibble(
-          poly_id = poly_id,
+        # dplyr::filter(count > 0) %>%
+        # dplyr::group_by(poly_id) %>%
+        dplyr::rename(
+          # stats
+          !! glue::glue("{toupper(var_name)}_pixels") := count,
+          !! glue::glue("{toupper(var_name)}_average") := mean,
+          !! glue::glue("{toupper(var_name)}_min") := min,
+          !! glue::glue("{toupper(var_name)}_max") := max,
+          !! glue::glue("{toupper(var_name)}_sd") := stddev,
+        ) %>%
+        dplyr::mutate(
           # area of the polygon
           poly_km2 = poly_area,
-          # regular stats
-          !! glue::glue("{toupper(var_name)}_pixels") := NA_real_,
-          !! glue::glue("{toupper(var_name)}_average") := NA_real_,
-          !! glue::glue("{toupper(var_name)}_min") := NA_real_,
-          !! glue::glue("{toupper(var_name)}_max") := NA_real_,
-          !! glue::glue("{toupper(var_name)}_sd") := NA_real_,
           # area covered by raster (km2). Each pixel 20x20m=400m2=4e-04km2
-          !! glue::glue("{toupper(var_name)}_km2") := NA_real_,
+          !! glue::glue("{toupper(var_name)}_km2") :=
+            !! rlang::sym(glue::glue("{toupper(var_name)}_pixels")) * 4e-04,
           # prop of poly area covered by raster
-          !! glue::glue("{toupper(var_name)}_km2_perc") := NA_real_
+          !! glue::glue("{toupper(var_name)}_km2_perc") :=
+            100 * !! rlang::sym(glue::glue("{toupper(var_name)}_km2")) / poly_km2
+
+        ) %>%
+        dplyr::select(
+          poly_id, poly_km2, everything(), -sum
         )
-      } else {
-        polygon_stats <-
-          polygon_stats_pre_check %>%
-          dplyr::summarise(
-            # area of the polygon
-            poly_km2 = poly_area,
-            # regular stats
-            !! glue::glue("{toupper(var_name)}_pixels") := sum(.data[['count']]),
-            !! glue::glue("{toupper(var_name)}_average") :=
-              sum(.data[['count']]*.data[['mean']])/sum(.data[['count']]),
-            !! glue::glue("{toupper(var_name)}_min") := min(.data[['min']]),
-            !! glue::glue("{toupper(var_name)}_max") := max(.data[['max']]),
-            !! glue::glue("{toupper(var_name)}_sd") := cochrane_sd_reduce(
-              n = .data[['count']], m = .data[['mean']], s = .data[['stddev']]
-            ),
-            # area covered by raster (km2). Each pixel 20x20m=400m2=4e-04km2
-            !! glue::glue("{toupper(var_name)}_km2") :=
-              !! rlang::sym(glue::glue("{toupper(var_name)}_pixels")) * 4e-04,
-            # prop of poly area covered by raster
-            !! glue::glue("{toupper(var_name)}_km2_perc") :=
-              100 * !! rlang::sym(glue::glue("{toupper(var_name)}_km2")) / poly_km2
-          )
-      }
+
+
+
+      # polygon stats could be empty (polygon cover raster area with no data)
+      # if (nrow(polygon_stats_pre_check) < 1) {
+      #   polygon_stats <- dplyr::tibble(
+      #     poly_id = poly_id,
+      #     # area of the polygon
+      #     poly_km2 = poly_area,
+      #     # regular stats
+      #     !! glue::glue("{toupper(var_name)}_pixels") := NA_real_,
+      #     !! glue::glue("{toupper(var_name)}_average") := NA_real_,
+      #     !! glue::glue("{toupper(var_name)}_min") := NA_real_,
+      #     !! glue::glue("{toupper(var_name)}_max") := NA_real_,
+      #     !! glue::glue("{toupper(var_name)}_sd") := NA_real_,
+      #     # area covered by raster (km2). Each pixel 20x20m=400m2=4e-04km2
+      #     !! glue::glue("{toupper(var_name)}_km2") := NA_real_,
+      #     # prop of poly area covered by raster
+      #     !! glue::glue("{toupper(var_name)}_km2_perc") := NA_real_
+      #   )
+      # } else {
+      #   polygon_stats <-
+      #     polygon_stats_pre_check %>%
+      #     dplyr::summarise(
+      #       # area of the polygon
+      #       poly_km2 = poly_area,
+      #       # regular stats
+      #       !! glue::glue("{toupper(var_name)}_pixels") := sum(.data[['count']]),
+      #       !! glue::glue("{toupper(var_name)}_average") :=
+      #         sum(.data[['count']]*.data[['mean']])/sum(.data[['count']]),
+      #       !! glue::glue("{toupper(var_name)}_min") := min(.data[['min']]),
+      #       !! glue::glue("{toupper(var_name)}_max") := max(.data[['max']]),
+      #       !! glue::glue("{toupper(var_name)}_sd") := cochrane_sd_reduce(
+      #         n = .data[['count']], m = .data[['mean']], s = .data[['stddev']]
+      #       ),
+      #       # area covered by raster (km2). Each pixel 20x20m=400m2=4e-04km2
+      #       !! glue::glue("{toupper(var_name)}_km2") :=
+      #         !! rlang::sym(glue::glue("{toupper(var_name)}_pixels")) * 4e-04,
+      #       # prop of poly area covered by raster
+      #       !! glue::glue("{toupper(var_name)}_km2_perc") :=
+      #         100 * !! rlang::sym(glue::glue("{toupper(var_name)}_km2")) / poly_km2
+      #     )
+      # }
 
       cat(
         crayon::green$bold(glue::glue(" done.")), '\n'
