@@ -7,13 +7,16 @@
 #'   section.
 #'
 #' @section Methods:
-#'   \code{lfcNFI} objects has two public methods:
+#'   \code{lfcNFI} objects has the following public methods:
 #'   \itemize{
 #'     \item{\code{$get_data}: Retrieve and collect NFI database tables. See
 #'           \code{\link{nfi_get_data}} for more details}
 #'     \item{\code{$avail_tables}: Return a character vector with the names of
 #'           the available tables in the database. See
 #'           \code{\link{nfi_avail_tables}} for more details}
+#'     \item{\code{$describe_table}: Print the information available about the
+#'           provided table. See \code{\link{nfi_describe_table}} for more
+#'           details}
 #'     \item{\code{$describe_var}: Print the information available about the
 #'           provided variable. See \code{\link{nfi_describe_var}} for more
 #'           details}

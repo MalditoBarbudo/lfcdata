@@ -190,6 +190,25 @@ nfi_table_dictionary <- function() {
   )
 }
 
+fes_table_dictionary <- function() {
+  c(
+    plot = 'Forest ecosystem service variables',
+
+    comp = ' from the comparision between',
+
+    nfi2 = ' NFI version 2 (1990-1991)',
+    nfi3 = ' NFI version 3 (2000-2001)',
+    nfi4 = ' NFI version 4 (2013-2016)',
+
+    '2' = ' from NFI version 2 (1990-1991)',
+    '3' = ' from NFI version 3 (2000-2001)',
+    '4' = ' from NFI version 4 (2013-2016)',
+
+    variables = 'Thesaurus for variables',
+    static = 'Static forest ecosystem service data'
+  )
+}
+
 ## cats functions (describe_* helpers) ####
 nfi_describe_table_cat <- function(table, tables_dict, variables_thes) {
 
@@ -230,7 +249,7 @@ nfi_describe_table_cat <- function(table, tables_dict, variables_thes) {
 
 nfi_describe_var_cat <- function(variable, variables_thes, numerical_thes) {
 
-  # trick to use "." withou CRAN note
+  # trick to use "." without CRAN note
   . <- NULL
 
   # get the var thes, the numerical var thes filter by the variable and
@@ -345,6 +364,90 @@ lidar_describe_var_cat <- function(variables, thes) {
   return(invisible(NULL))
 }
 
+fes_describe_table_cat <- function(table, tables_dict, variables_thes) {
+
+  # variables present in the table (courtesy of variables_thesaurus)
+  variable_names <- variables_thes %>%
+    dplyr::filter(.data$var_table == table) %>%
+    dplyr::pull(.data$var_id) %>%
+    unique()
+
+  # table name deconstructed to query the nfi table dictionary
+  table_deconstructed <- stringr::str_split(table, '_') %>%
+    purrr::flatten_chr()
+
+  ## cats
+  # table name
+  cat('\n', crayon::yellow$bold(table), '\n', sep = '')
+  # table description
+  cat(
+    glue::glue("{tables_dict[table_deconstructed] %>% purrr::discard(is.na)}") %>%
+      glue::glue_collapse() %>%
+      crayon::green() %>%
+      strwrap(width = 75),
+    # '\n',
+    fill = 80, sep = ''
+  )
+  # table variables
+  cat('Variables in table:\n')
+  cat(
+    glue::glue(" - {sort(variable_names)}") %>%
+      glue::glue_collapse(sep = '\n') %>%
+      crayon::magenta()
+  )
+  cat('\n')
+
+  # return nothing (invisible NULL)
+  return(invisible(NULL))
+}
+
+fes_describe_var_cat <- function(variable, variables_thes) {
+
+  # trick to use "." without CRAN note
+  . <- NULL
+
+  # get the var thes, the numerical var thes filter by the variable and
+  # prepare the result with cat, glue and crayon, as a function to apply to
+  # a vector of variables.
+  variables_thes %>%
+    dplyr::filter(.data$var_id == variable) %>% {
+      check_filter_for(., glue::glue("{variable} variable not found"))
+      .
+    } %>%
+    dplyr::group_by(.data$var_description_eng) %>%
+    dplyr::group_walk(
+      ~ cat(
+        "\n",
+        # var name
+        crayon::yellow$bold(glue::glue(
+          "{.x$translation_eng %>% unique()} ({.x$var_id %>% unique()})"
+        )),
+        "\n",
+        # var description
+        strwrap(crayon::green(.y$var_description_eng), width = 72),
+        "\n",
+        # var units
+        crayon::blue$bold(
+          "Units: [" %+%
+            crayon::blue$italic$bold(
+              glue::glue("{(.x$var_units %na% ' - ') %>% unique()}")
+            ) %+%
+            "]"
+        ),
+        "\n",
+        # tables present
+        "Present in the following tables:\n",
+        crayon::magenta(glue::glue_collapse(
+          glue::glue(" - {sort(.x$var_table)}"), sep = '\n'
+        )),
+        # cat options
+        sep = '', fill = 80
+      )
+    )
+  # return nothing (invisible NULL)
+  return(invisible(NULL))
+}
+
 # Combine statistics for different groups. ST_SummaryStats in postgis SQL returns the
 # statistics for each tile the polygon intersects. This means that calcualting the n and
 # the mean is easy, but we need to combine the statistics to calculate the standard
@@ -352,33 +455,33 @@ lidar_describe_var_cat <- function(variables, thes) {
 # We use the Cochrane Reviews formulae:
 # https://handbook-5-1.cochrane.org/front_page.htm
 # https://handbook-5-1.cochrane.org/chapter_7/table_7_7_a_formulae_for_combining_groups.htm
-cochrane_sd_reduce <- function(n, m, s) {
-
-  res_vec <- seq_along(n) %>%
-    # we need to work with vectors of c(n1,m1,s1); c(n2,m2,s2)...
-    purrr::map(~ c(n = n[.x], m = m[.x], s = s[.x])) %>%
-    # and we reduce those vectors to create a new vector with the groups combined stats
-    # to use with the following vector:
-    #
-    # at start:         list(c(n1,m1,s1), c(n2,m2,s2), ..., c(nn,mn,sn))
-    # after first step: list(c(nc1-2,mc1-2,sc1-2), ..., c(nn,mn,sn))
-    # after ... steps:  list(c(nc1-...,mc1-...,sc1-...), c(nn,mn,sn))
-    # after last step:  list(c(nc1-n,mc1-n,sc1-n))
-    purrr::reduce(
-      .f = function(first, second) {
-        stddev <- sqrt(
-          # numerador
-          (((first['n'] - 1)*(first['s']^2)) + ((second['n'] - 1)*(second['s']^2)) +
-             (((first['n']*second['n'])/(first['n'] + second['n']))*(first['m']^2 + second['m']^2 - (2*first['m']*second['m'])))) /
-            # denominador
-            (first['n'] + second['n'] - 1)
-        ) %>% unname()
-        count <- sum(first['n'], second['n'])
-        mean_temp <- (((first['n']*first['m']) + (second['n']*second['m']))/count) %>% unname()
-
-        return(c(n = count, m = mean_temp, s = stddev))
-      }
-    )
-  # we have the final vector and we retrieve sc1-n (the combined standard deviation)
-  return(res_vec['s'])
-}
+# cochrane_sd_reduce <- function(n, m, s) {
+#
+#   res_vec <- seq_along(n) %>%
+#     # we need to work with vectors of c(n1,m1,s1); c(n2,m2,s2)...
+#     purrr::map(~ c(n = n[.x], m = m[.x], s = s[.x])) %>%
+#     # and we reduce those vectors to create a new vector with the groups combined stats
+#     # to use with the following vector:
+#     #
+#     # at start:         list(c(n1,m1,s1), c(n2,m2,s2), ..., c(nn,mn,sn))
+#     # after first step: list(c(nc1-2,mc1-2,sc1-2), ..., c(nn,mn,sn))
+#     # after ... steps:  list(c(nc1-...,mc1-...,sc1-...), c(nn,mn,sn))
+#     # after last step:  list(c(nc1-n,mc1-n,sc1-n))
+#     purrr::reduce(
+#       .f = function(first, second) {
+#         stddev <- sqrt(
+#           # numerador
+#           (((first['n'] - 1)*(first['s']^2)) + ((second['n'] - 1)*(second['s']^2)) +
+#              (((first['n']*second['n'])/(first['n'] + second['n']))*(first['m']^2 + second['m']^2 - (2*first['m']*second['m'])))) /
+#             # denominador
+#             (first['n'] + second['n'] - 1)
+#         ) %>% unname()
+#         count <- sum(first['n'], second['n'])
+#         mean_temp <- (((first['n']*first['m']) + (second['n']*second['m']))/count) %>% unname()
+#
+#         return(c(n = count, m = mean_temp, s = stddev))
+#       }
+#     )
+#   # we have the final vector and we retrieve sc1-n (the combined standard deviation)
+#   return(res_vec['s'])
+# }
