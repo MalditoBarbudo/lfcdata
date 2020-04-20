@@ -29,7 +29,7 @@
 #' @examples
 #' fesdb <- fes()
 #' fesdb
-nfi <- function() {
+fes <- function() {
   lfcFES$new()
 }
 
