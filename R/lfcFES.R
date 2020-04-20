@@ -84,7 +84,8 @@ lfcFES <- R6::R6Class(
       dplyr::db_list_tables(private$pool_conn) %>%
         tolower() %>%
         unique() %>%
-        sort()
+        sort() %>%
+        magrittr::extract(stringr::str_detect(., 'plot|static|thesaurus'))
     },
 
     # describe table method
