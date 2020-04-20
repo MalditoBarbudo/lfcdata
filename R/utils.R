@@ -200,9 +200,9 @@ fes_table_dictionary <- function() {
     nfi3 = ' NFI version 3 (2000-2001)',
     nfi4 = ' NFI version 4 (2013-2016)',
 
-    '2' = ' from NFI version 2 (1990-1991)',
-    '3' = ' from NFI version 3 (2000-2001)',
-    '4' = ' from NFI version 4 (2013-2016)',
+    '2' = ' corresponding to the NFI version 2 (1990-1991)',
+    '3' = ' corresponding to the NFI version 3 (2000-2001)',
+    '4' = ' corresponding to the NFI version 4 (2013-2016)',
 
     variables = 'Thesaurus for variables',
     static = 'Static forest ecosystem service data'

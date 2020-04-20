@@ -59,10 +59,12 @@ lidardb$clip_and_stats(polygons_data, 'poly_id', 'DBH')
 
 }
 \seealso{
-Other LiDAR functions: \code{\link{lidar_avail_tables}},
-  \code{\link{lidar_describe_var}},
-  \code{\link{lidar_get_data}},
-  \code{\link{lidar_get_lowres_raster}},
-  \code{\link{lidar_point_value}}, \code{\link{lidar}}
+Other LiDAR functions: 
+\code{\link{lidar_avail_tables}()},
+\code{\link{lidar_describe_var}()},
+\code{\link{lidar_get_data}()},
+\code{\link{lidar_get_lowres_raster}()},
+\code{\link{lidar_point_value}()},
+\code{\link{lidar}()}
 }
 \concept{LiDAR functions}

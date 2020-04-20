@@ -27,8 +27,10 @@ if (interactive()) {
 
 }
 \seealso{
-Other NFI functions: \code{\link{nfi_describe_table}},
-  \code{\link{nfi_describe_var}},
-  \code{\link{nfi_get_data}}, \code{\link{nfi}}
+Other NFI functions: 
+\code{\link{nfi_describe_table}()},
+\code{\link{nfi_describe_var}()},
+\code{\link{nfi_get_data}()},
+\code{\link{nfi}()}
 }
 \concept{NFI functions}

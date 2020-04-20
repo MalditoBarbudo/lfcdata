@@ -4,8 +4,11 @@
 \alias{lidar_get_data}
 \title{Access the aggregated data for administrative and natural areas}
 \usage{
-lidar_get_data(object, table_name, variables = c("AB", "BAT", "BF",
-  "CAT", "DBH", "HM", "REC", "VAE"))
+lidar_get_data(
+  object,
+  table_name,
+  variables = c("AB", "BAT", "BF", "CAT", "DBH", "HM", "REC", "VAE")
+)
 }
 \arguments{
 \item{object}{\code{lfcLiDAR} object, as created by \code{\link{lidar}}}
@@ -48,10 +51,12 @@ if (interactive()) {
 
 }
 \seealso{
-Other LiDAR functions: \code{\link{lidar_avail_tables}},
-  \code{\link{lidar_clip_and_stats}},
-  \code{\link{lidar_describe_var}},
-  \code{\link{lidar_get_lowres_raster}},
-  \code{\link{lidar_point_value}}, \code{\link{lidar}}
+Other LiDAR functions: 
+\code{\link{lidar_avail_tables}()},
+\code{\link{lidar_clip_and_stats}()},
+\code{\link{lidar_describe_var}()},
+\code{\link{lidar_get_lowres_raster}()},
+\code{\link{lidar_point_value}()},
+\code{\link{lidar}()}
 }
 \concept{LiDAR functions}

@@ -43,8 +43,9 @@ if (interactive()) {
 
 }
 \seealso{
-Other Allometries functions: \code{\link{allometries_calculate}},
-  \code{\link{allometries_get_data}},
-  \code{\link{allometries}}
+Other Allometries functions: 
+\code{\link{allometries_calculate}()},
+\code{\link{allometries_get_data}()},
+\code{\link{allometries}()}
 }
 \concept{Allometries functions}

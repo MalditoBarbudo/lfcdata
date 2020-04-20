@@ -75,7 +75,7 @@ test_that("describe_var method works", {
 test_that("cache works", {
   skip_on_cran()
   skip_on_travis()
-  expect_length(fesdb$.__enclos_env__$private$data_cache, 4)
+  expect_length(fesdb$.__enclos_env__$private$data_cache, 3)
   bar <- fesdb$get_data('static', FALSE)
   expect_s3_class(bar, 'tbl_df')
   expect_identical(
@@ -83,9 +83,9 @@ test_that("cache works", {
     dplyr::tbl(fesdb$.__enclos_env__$private$pool_conn, 'static') %>%
       dplyr::collect()
   )
-  expect_length(fesdb$.__enclos_env__$private$data_cache, 4)
+  expect_length(fesdb$.__enclos_env__$private$data_cache, 3)
   baz <- fesdb$get_data('plot_nfi_4_results', FALSE)
-  expect_length(fesdb$.__enclos_env__$private$data_cache, 5)
+  expect_length(fesdb$.__enclos_env__$private$data_cache, 4)
 })
 
 
