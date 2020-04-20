@@ -67,12 +67,12 @@ lfcFES <- R6::R6Class(
             query_data_spatial <- sf::st_read(
               private$pool_conn, table_name
             )
+            message('Done')
             # update cache
             private$data_cache[[
               glue::glue("{table_name}_{as.character(spatial)}")
             ]] <- query_data_spatial
             query_data_spatial
-            message('Done')
           }
         }
 
@@ -157,3 +157,139 @@ lfcFES <- R6::R6Class(
     dbname = 'forestecoserv'
   )
 )
+
+#' Access to the tables in the FES database
+#'
+#' @description \code{fes_get_data} is a wrapper for the \code{$get_data} method
+#'   of \code{lfcFES} objects. See also \code{\link{fes}}.
+#'
+#' @param object \code{lfcFES} object, as created by \code{\link{fes}}
+#' @param table_name character vector of lenght 1 indicating the requested table
+#'   name
+#' @param spatial logical indicating if the data must be converted to an spatial
+#'   object
+#'
+#' @return A tbl object: tbl_df if spatial is \code{FALSE}, sf if spatial is
+#'   \code{TRUE}
+#'
+#' @family FES functions
+#'
+#' @details Connection to database can be slow. Tables retrieved from the db are
+#'   stored in a temporary cache inside the lfcFES object created by
+#'   \code{\link{fes}}, making subsequent calls to the same table are faster.
+#'
+#' @examples
+#' if (interactive()) {
+#'   fesdb <- fes()
+#'   # tibble
+#'   fes_get_data(fesdb, 'static')
+#'   # sf tibble
+#'   fes_get_data(fesdb, 'static', TRUE)
+#'
+#'   # we can use pipes
+#'   fesdb %>%
+#'     fes_get_data('static', TRUE)
+#'
+#'   # fesdb is an R6 object, so the previous examples are the same as:
+#'   fesdb$get_data('static')
+#'   fesdb$get_data('static', TRUE)
+#' }
+#'
+#' @export
+fes_get_data <- function(object, table_name, spatial = FALSE) {
+  # argument validation
+  # NOTE: table_name and spatial are validated in the method
+  check_class_for(object, 'lfcFES')
+  # call to the class method
+  object$get_data(table_name, spatial)
+}
+
+#' Get the available tables in FES db
+#'
+#' @description \code{fes_avail_tables} is a wrapper for the \code{$avail_tables}
+#'   method of \code{lfcFES} objects. See \code{\link{fes}}.
+#'
+#' @param object \code{lfcFES} object, as created by \code{\link{fes}}
+#'
+#' @return A character vector with the table names
+#'
+#' @family FES functions
+#'
+#' @examples
+#' if (interactive()) {
+#'   fesdb <- fes()
+#'   fes_avail_tables(fesdb)
+#'
+#'   # fesdb is an R6 object, so the previous example is the same as:
+#'   fesdb$avail_tables()
+#' }
+#'
+#' @export
+fes_avail_tables <- function(object) {
+  # argument validation
+  check_class_for(object, 'lfcFES')
+  # call to the class method
+  object$avail_tables()
+}
+
+#' Print info about the variables present in the FES db
+#'
+#' @description \code{fes_describe_var} is a wrapper for the \code{$describe_var}
+#'   method of \code{lfcFES} objects. See \code{\link{fes}}.
+#'
+#' @param object \code{lfcFES} object, as created by \code{\link{fes}}
+#' @param variables character vector with the names of the variables to describe
+#'
+#' @return Description is printed in the console, nothing is returned
+#'
+#' @family FES functions
+#'
+#' @examples
+#' if (interactive()) {
+#'   fesdb <- fes()
+#'   fes_describe_var(fesdb, "mushrooms_poduction")
+#'   fes_describe_var(fesdb, c("exported_water", "animals_presence"))
+#'
+#'   # fesdb is an R6 object, so the previous example is the same as:
+#'   fesdb$describe_var("mushrooms_poduction")
+#'   fesdb$describe_var(c("exported_water", "animals_presence"))
+#' }
+#'
+#' @export
+fes_describe_var <- function(object, variables) {
+  # argument validation
+  check_class_for(object, 'lfcFES')
+  # call to the class method
+  object$describe_var(variables)
+}
+
+#' Print info about the tables present in the FES db
+#'
+#' @description \code{fes_describe_table} is a wrapper for the \code{$describe_table}
+#'   method of \code{lfcFES} objects. See \code{\link{fes}}.
+#'
+#' @param object \code{lfcFES} object, as created by \code{\link{fes}}
+#' @param tables character vector with the names of the tables to describe
+#'
+#' @return Description is printed in the console, nothing is returned
+#'
+#' @family fes functions
+#'
+#' @examples
+#' if (interactive()) {
+#'   fesdb <- fes()
+#'   fes_describe_table(fesdb, "static")
+#'   fes_describe_table(fesdb, c("static", "plot_nfi_2_results"))
+#'
+#'   # fesdb is an R6 object, so the previous example is the same as:
+#'   fesdb$describe_table("static")
+#'   fesdb$describe_table(c("static", "plot_nfi_2_results"))
+#' }
+#'
+#' @export
+fes_describe_table <- function(object, tables) {
+  # argument validation
+  check_class_for(object, 'lfcFES')
+  # call to the class method
+  object$describe_table(tables)
+}

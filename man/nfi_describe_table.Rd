@@ -21,12 +21,12 @@ Description is printed in the console, nothing is returned
 \examples{
 if (interactive()) {
   nfidb <- nfi()
-  nfi_describe_table(nfidb, "density")
-  nfi_describe_table(nfidb, c("over_bark_volume", "basal_area"))
+  nfi_describe_table(nfidb, "plots")
+  nfi_describe_table(nfidb, c("plots", "plot_nfi_4_results"))
 
   # nfidb is an R6 object, so the previous example is the same as:
-  nfidb$describe_table("density")
-  nfidb$describe_table(c("over_bark_volume", "basal_area"))
+  nfidb$describe_table("plots")
+  nfidb$describe_table(c("plots", "plot_nfi_4_results"))
 }
 
 }

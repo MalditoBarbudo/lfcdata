@@ -88,5 +88,51 @@ test_that("cache works", {
   expect_length(fesdb$.__enclos_env__$private$data_cache, 4)
 })
 
+test_that("external get data wrapper works", {
+  skip_on_cran()
+  skip_on_travis()
+  expect_identical(
+    fesdb$get_data('static', FALSE),
+    fes_get_data(fesdb, 'static', FALSE)
+  )
+  expect_error(
+    fes_get_data('fesdb', 'static', FALSE),
+    "class lfcFES"
+  )
+  xyz <- fes_get_data(fesdb, 'plot_nfi_3_results', FALSE)
+  expect_length(fesdb$.__enclos_env__$private$data_cache, 5)
+  expect_identical(
+    fesdb$get_data('plot_nfi_3_results', FALSE),
+    fes_get_data(fesdb, 'plot_nfi_3_results', FALSE)
+  )
+})
+
+test_that("external avail tables wrapper works", {
+  skip_on_cran()
+  skip_on_travis()
+  expect_identical(fesdb$avail_tables(), fes_avail_tables(fesdb))
+  expect_error(fes_avail_tables('fesdb'), "class lfcFES")
+})
+
+test_that("external describe_var wrapper works", {
+  skip_on_cran()
+  skip_on_travis()
+  expect_identical(
+    fesdb$describe_var('mushrooms_production'),
+    fes_describe_var(fesdb, 'mushrooms_production')
+  )
+  expect_error(
+    fes_describe_var('fesdb', 'mushrooms_production'), "class lfcFES"
+  )
+})
+
+test_that("external describe_table wrapper works", {
+  skip_on_cran()
+  skip_on_travis()
+  expect_identical(
+    fesdb$describe_table('static'), fes_describe_table(fesdb, 'static')
+  )
+  expect_error(fes_describe_table('fesdb', 'density'), "class lfcFES")
+})
 
 rm(fesdb)

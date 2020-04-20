@@ -36,4 +36,10 @@ An \code{lfcFES} class object (inherits from
 fesdb <- fes()
 fesdb
 }
+\seealso{
+Other FES functions: 
+\code{\link{fes_avail_tables}()},
+\code{\link{fes_describe_var}()},
+\code{\link{fes_get_data}()}
+}
 \concept{FES functions}
