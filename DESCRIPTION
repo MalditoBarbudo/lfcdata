@@ -7,7 +7,7 @@ Description: Access the Spanish National Forest Inventory data for Catalonia, ca
   LiDAR data. "lfcdata" allows retrieving data from all the available databases from
   the Catalonian Forest Laboratory (LFC) initiative
   (<http://laboratoriforestal.creaf.uab.cat>). 
-Depends: R (>= 3.5.2)
+Depends: R (>= 3.6.0)
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
