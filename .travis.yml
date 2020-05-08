@@ -50,19 +50,19 @@ after_script: R -q -e 'tic::after_script()'
 
 # Custom user code -------------------------------------------------------------
 
+dist: focal
+
 addons:
   apt:
-    sources:
-      - sourceline: 'ppa:ubuntugis/ubuntugis-unstable'
     packages:
       - libudunits2-dev
       - libproj-dev
       - libgeos-dev
       - libgdal-dev
+    update: true
 
   homebrew:
     taps: osgeo/osgeo4mac
     packages:
       - gdal
       - osgeo-proj@5
-    update: true
