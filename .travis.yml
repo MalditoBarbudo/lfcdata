@@ -59,10 +59,10 @@ addons:
       - libproj-dev
       - libgeos-dev
       - libgdal-dev
-    update: true
 
   homebrew:
     taps: osgeo/osgeo4mac
     packages:
       - gdal
       - osgeo-proj@5
+    update: true
