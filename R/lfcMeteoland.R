@@ -156,7 +156,11 @@ lfcMeteoland <- R6::R6Class(
       meteo_data <-
         table_names %>%
         purrr::map(
-          ~ dplyr::tbl(private$pool_conn, .x) %>% dplyr::collect()
+          ~ dplyr::tbl(private$pool_conn, .x) %>%
+            dplyr::collect() %>%
+            # essential to cross results with meteo stations:
+            as.data.frame() %>%
+            magrittr::set_rownames(.$stationCode)
         )
 
       # meteo stations info
