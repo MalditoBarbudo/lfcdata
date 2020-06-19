@@ -72,13 +72,16 @@ lfcMeteoland <- R6::R6Class(
       # the values from the db.
       user_coords <-
         sf %>%
-        sf::st_geometry()
+        sf::st_geometry() %>%
+        sf::st_transform(
+          crs = 3043
+        )
 
       user_coords_sp <-
         user_coords %>%
-        sf::st_transform(
-          crs = "+proj=utm +zone=31 +ellps=WGS84 +datum=WGS84 +units=m +towgs84=0,0,0"
-        ) %>%
+        # sf::st_transform(
+        #   crs = "+proj=utm +zone=31 +ellps=WGS84 +datum=WGS84 +units=m +towgs84=0,0,0"
+        # ) %>%
         sf::as_Spatial()
 
       user_coords_wkt <-
@@ -89,6 +92,7 @@ lfcMeteoland <- R6::R6Class(
       # pool checkout
       pool_checkout <- pool::poolCheckout(private$pool_conn)
 
+      # browser()
       # SQL queries
       point_queries <-
         user_coords_wkt %>%
@@ -102,7 +106,8 @@ lfcMeteoland <- R6::R6Class(
               ) As slope,
               ST_Value(
               rast, 3, ST_Transform(ST_GeomFromEWKT({.x}),3043)
-              ) As aspect
+              ) As aspect,
+            {.x} As coords_text
             FROM topology_cat
             WHERE ST_Intersects(
               rast,
@@ -115,12 +120,36 @@ lfcMeteoland <- R6::R6Class(
       # return the checkout, we don't want ghost db connections
       pool::poolReturn(pool_checkout)
 
+      query_helper <- function(query) {
+        query_res <- pool::dbGetQuery(private$pool_conn, statement = query)
+        if (nrow(query_res) > 1) {
+          query_res <-
+            query_res %>%
+            dplyr::filter(!is.na(elevation), !is.na(aspect), !is.na(slope))
+        }
+
+        if (nrow(query_res) < 1) {
+          query_res <- data.frame(
+            elevation = NA_real_, slope = NA_real_, aspect = NA_real_,
+            coords_text = NA_character_
+          )
+        }
+        return(query_res)
+      }
+
+      query_helper <- purrr::possibly(
+        query_helper,
+        otherwise = data.frame(
+          elevation = NA_real_, slope = NA_real_, aspect = NA_real_,
+          coords_text = NA_character_
+        )
+      )
+
       # execute the query
       raster_topography_values <-
         point_queries %>%
-        purrr::map_dfr(
-          ~ pool::dbGetQuery(private$pool_conn, statement = .x)
-        )
+        purrr::map_dfr(query_helper)
+
 
       # build the topography object
       user_topo <- meteoland::SpatialPointsTopography(
@@ -153,6 +182,8 @@ lfcMeteoland <- R6::R6Class(
         magrittr::extract(. %in% dplyr::db_list_tables(private$pool_conn))
 
       # meteo data
+      # TODO what happens when no table is found?????? We need to check this
+      # and avoid the error, just maybe purrr::possibly or similar
       meteo_data <-
         table_names %>%
         purrr::map(
@@ -181,7 +212,7 @@ lfcMeteoland <- R6::R6Class(
         magrittr::set_rownames(unique_meteo_stations$stationCode) %>%
         sp::SpatialPoints(sp::CRS("+proj=longlat +datum=WGS84")) %>%
         sp::spTransform(sp::CRS(
-          "+proj=utm +zone=31 +ellps=WGS84 +datum=WGS84 +units=m +towgs84=0,0,0"
+          "+proj=utm +zone=31 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs"
         )) %>%
         meteoland::SpatialPointsMeteorology(meteo_data, datevec, TRUE) %>%
         meteoland::MeteorologyInterpolationData(
@@ -220,11 +251,16 @@ lfcMeteoland <- R6::R6Class(
       return(interpolator_res)
     },
 
-    # interpolation
-    points_interpolation = function(sf, user_dates) {
+    # points interpolation
+    points_interpolation = function(sf, user_dates, .topo = NULL) {
 
       # get user topo
-      user_topo <- private$get_points_topography(sf)
+      if (is.null(.topo)) {
+        user_topo <- private$get_points_topography(sf)
+      } else {
+        user_topo <- .topo
+      }
+
       # get the interpolator
       interpolator <- private$build_points_interpolator(user_dates)
 
@@ -254,6 +290,60 @@ lfcMeteoland <- R6::R6Class(
       )
 
       return(res)
+    },
+
+    # current raster interpolation
+    raster_interpolation_simple_case = function(sf_geom, date) {
+
+      # Interpolation for grids is not made on the fly, but from precalculated
+      # 1km rasters instead. So we need to implement a similar method as the
+      # one in lidar to clip and recover the clipped raster.
+
+      # convert sf
+      sf_spatial <- sf::as_Spatial(sf_geom)
+
+      raster_table_name <- glue::glue(
+        "daily_raster_interpolated_{stringr::str_remove_all(date, '-')}"
+      )
+
+      # pool checkout
+      pool_checkout <- pool::poolCheckout(private$pool_conn)
+      # get raster
+      raster_cropped <- rpostgis::pgGetRast(
+        pool_checkout, raster_table_name,
+        bands = TRUE, boundary = sf_spatial
+      )
+      # close checkout
+      pool::poolReturn(pool_checkout)
+
+      # clip the raster
+      raster_clipped <- raster::mask(raster_cropped, sf_spatial)
+
+      return(raster_clipped)
+    },
+
+    raster_interpolation_vectorized_for_polys = function(sf, date) {
+
+      browser()
+
+      # get the geom column name
+      sf_column <- attr(sf, 'sf_column')
+      # rowbinding the summarises
+      raster_merged <-
+        seq_along(sf[[sf_column]]) %>%
+        purrr::map(
+          ~ private$raster_interpolation_simple_case(sf[[sf_column]][.x], date)
+        ) %>%
+        purrr::reduce(raster::merge)
+
+      names(raster_merged) <- c(
+        "MeanTemperature", "MinTemperature", "MaxTemperature",
+        "MeanRelativeHumidity", "MinRelativeHumidity", "MaxRelativeHumidity",
+        "Precipitation", "Radiation", "WindSpeed", "WindDirection"
+      )
+
+      return(raster_merged)
+
     }
 
   ) # end of private methods
