@@ -254,6 +254,12 @@ lfcMeteoland <- R6::R6Class(
     # points interpolation
     points_interpolation = function(sf, user_dates, .topo = NULL) {
 
+      # argument checks
+      check_args_for(
+        character = list(user_dates = user_dates),
+        sf = list(sf = sf)
+      )
+
       # get user topo
       if (is.null(.topo)) {
         user_topo <- private$get_points_topography(sf)
@@ -324,8 +330,6 @@ lfcMeteoland <- R6::R6Class(
 
     raster_interpolation_vectorized_for_polys = function(sf, date) {
 
-      browser()
-
       # get the geom column name
       sf_column <- attr(sf, 'sf_column')
       # rowbinding the summarises
@@ -343,6 +347,27 @@ lfcMeteoland <- R6::R6Class(
       )
 
       return(raster_merged)
+
+    },
+
+    raster_interpolation = function(sf, user_dates) {
+
+      # This method iterate by dates to get the final rasters, as a list
+      # with one element for each date supplied
+
+      # datevec from user dates
+      user_dates <- as.Date(user_dates)
+      datevec <-
+        user_dates[[1]]:user_dates[[2]] %>%
+        as.Date(format = '%j', origin = as.Date('1970-01-01'))
+
+      res_list <-
+        datevec %>%
+        purrr::map(
+          ~ private$raster_interpolation_vectorized_for_polys(sf, .x)
+        )
+
+      return(res_list)
 
     }
 
