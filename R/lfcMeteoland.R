@@ -32,14 +32,14 @@ lfcMeteoland <- R6::R6Class(
     # override the default print
     print = function(...) {
       cat(
-        " Access to the Meteoland database.\n"#,
-        # crayon::blue$underline("laboratoriforestal.creaf.uab.cat\n\n"),
+        " Access to the Meteoland database.\n",
+        crayon::blue$underline("laboratoriforestal.creaf.uab.cat\n\n"),
         # "Use " %+% crayon::yellow$bold("lidar_get_data") %+%
         #   " to access the administrative divisions aggregated data.\n",
-        # "Use " %+% crayon::yellow$bold("lidar_get_lowres_raster") %+%
-        #   " to access access the low resolution rasters (400x400m).\n",
-        # "Use " %+% crayon::yellow$bold("lidar_avail_tables") %+%
-        #   " to know which tables are available.\n",
+        "Use " %+% crayon::yellow$bold("meteoland_point_interpolation") %+%
+          " to interpolate points in the last 365 days (current mode).\n",
+        "Use " %+% crayon::yellow$bold("meteoland_raster_interpolation") %+%
+          " to interpolate polygons in the last 365 days (current mode).\n",
         # "Use " %+% crayon::yellow$bold("lidar_describe_var") %+%
         #   " to get the information available on the variables.\n",
         # "Use " %+% crayon::yellow$bold("lidar_clip_and_stats") %+%
@@ -51,6 +51,10 @@ lfcMeteoland <- R6::R6Class(
         #   " to learn more about the tables and variables."
       )
       invisible(self)
+    },
+
+    get_data = function() {
+
     },
 
     # current points interpolation
