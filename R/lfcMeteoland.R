@@ -34,27 +34,26 @@ lfcMeteoland <- R6::R6Class(
       cat(
         " Access to the Meteoland database.\n",
         crayon::blue$underline("laboratoriforestal.creaf.uab.cat\n\n"),
-        # "Use " %+% crayon::yellow$bold("lidar_get_data") %+%
-        #   " to access the administrative divisions aggregated data.\n",
         "Use " %+% crayon::yellow$bold("meteoland_point_interpolation") %+%
           " to interpolate points in the last 365 days (current mode).\n",
         "Use " %+% crayon::yellow$bold("meteoland_raster_interpolation") %+%
           " to interpolate polygons in the last 365 days (current mode).\n",
-        # "Use " %+% crayon::yellow$bold("lidar_describe_var") %+%
-        #   " to get the information available on the variables.\n",
-        # "Use " %+% crayon::yellow$bold("lidar_clip_and_stats") %+%
-        #   " to summarise the raw raster (20x20m) by provided polygons.\n",
-        # "Use " %+% crayon::yellow$bold("lidar_point_value") %+%
-        #   " to extract values from the raw raster (20x20m).\n",
-        # "See " %+%
-        #   crayon::yellow$bold("vignette('tables_and_variables', package = 'lfcdata')") %+%
-        #   " to learn more about the tables and variables."
+        "Use " %+% crayon::yellow$bold("meteoland_get_lowres_raster") %+%
+          " to access access the low resolution rasters (1000x1000m).\n",
+        "See " %+%
+          crayon::yellow$bold("vignette('tables_and_variables', package = 'lfcdata')") %+%
+          " to learn more about the tables and variables."
       )
       invisible(self)
     },
 
     get_data = function() {
-
+      # here there is no tables to get, and the method must no go to the
+      # super$get_data method, as there is no tables
+      cat(
+        crayon::red$bold("No get_data method available in this database")
+      )
+      invisible(self)
     },
 
     # current points interpolation
@@ -128,6 +127,11 @@ lfcMeteoland <- R6::R6Class(
         stop('end date must be more recent than the start date')
       }
 
+      raster_interpolation_vectorized_for_polys_safe <- purrr::possibly(
+        .f = raster_interpolation_vectorized_for_polys,
+        otherwise = NA
+      )
+
 
       datevec <-
         user_dates[[1]]:user_dates[[2]] %>%
@@ -137,9 +141,74 @@ lfcMeteoland <- R6::R6Class(
         datevec %>%
         purrr::map(
           ~ private$raster_interpolation_vectorized_for_polys(sf, .x)
-        )
+        ) %>%
+        purrr::keep(.p = ~ !is.na(.x))
+
+      if (length(res_list) < 1) {
+        stop("No data for the specified dates or polygons can be retrieved")
+      }
 
       return(res_list)
+
+    },
+
+    # get_lowres_raster method.
+    # Meteoland db is a postgis db so we need to access with rpostgis and retrieve the
+    # 1000x1000 raster table for the specified date
+    get_lowres_raster = function(date, spatial = 'stars') {
+
+      # argument validation
+      check_args_for(
+        character = list(date = date, spatial = spatial)
+      )
+      check_length_for(spatial, 1)
+      check_if_in_for(spatial, c('stars', 'raster'))
+      check_length_for(date, 1)
+
+      # table name (it also works as cache name)
+      raster_table_name <- glue::glue(
+        "daily_raster_interpolated_{stringr::str_remove_all(date, '-')}"
+      )
+
+      res <- private$data_cache[[raster_table_name]] %||% {
+        # pool checkout
+        pool_checkout <- pool::poolCheckout(private$pool_conn)
+
+        message(
+          'Querying low res (1000x1000 meters) raster from LFC database',
+          ', this can take a while...'
+        )
+
+        # get raster
+        meteoland_raster <- try(
+          rpostgis::pgGetRast(
+            pool_checkout, raster_table_name, bands = TRUE
+          )
+        )
+        # close checkout
+        pool::poolReturn(pool_checkout)
+
+        # check if raster inherits from try-error to stop
+        if (inherits(meteoland_raster, "try-error")) {
+          stop("Can not connect to the database:\n", meteoland_raster[1])
+        }
+
+        message('Done')
+
+        # update cache
+        private$data_cache[[raster_table_name]] <- meteoland_raster
+        # return raster
+        meteoland_raster
+      }
+
+      # now we can return a raster (just as is) or a stars object
+      if (spatial == 'stars') {
+        res <- res %>%
+          stars::st_as_stars()
+      }
+
+      # return the raster
+      return(res)
 
     }
 
@@ -285,15 +354,27 @@ lfcMeteoland <- R6::R6Class(
       # meteo data
       # TODO what happens when no table is found?????? We need to check this
       # and avoid the error, just maybe purrr::possibly or similar
+      helper_station_data_getter <- function(.x) {
+        dplyr::tbl(private$pool_conn, .x) %>%
+          dplyr::collect() %>%
+          # essential to cross results with meteo stations:
+          as.data.frame() %>%
+          magrittr::set_rownames(.$stationCode)
+      }
+
+      helper_station_data_getter <- purrr::possibly(
+        .f = helper_station_data_getter,
+        otherwise = NA
+      )
+
       meteo_data <-
         table_names %>%
-        purrr::map(
-          ~ dplyr::tbl(private$pool_conn, .x) %>%
-            dplyr::collect() %>%
-            # essential to cross results with meteo stations:
-            as.data.frame() %>%
-            magrittr::set_rownames(.$stationCode)
-        )
+        purrr::map(helper_station_data_getter) %>%
+        purrr::keep(.p = ~ !is.na(.x))
+
+      if (length(meteo_data < 1)) {
+        stop("No meteo data found for the dates provided")
+      }
 
       # meteo stations info
       unique_meteo_stations <-
@@ -363,7 +444,7 @@ lfcMeteoland <- R6::R6Class(
 
       # Interpolation for grids is not made on the fly, but from precalculated
       # 1km rasters instead. So we need to implement a similar method as the
-      # one in lidar to clip and recover the clipped raster.
+      # one in meteoland to clip and recover the clipped raster.
 
       # convert sf
       sf_spatial <- sf::as_Spatial(sf_geom)
@@ -375,12 +456,19 @@ lfcMeteoland <- R6::R6Class(
       # pool checkout
       pool_checkout <- pool::poolCheckout(private$pool_conn)
       # get raster
-      raster_cropped <- rpostgis::pgGetRast(
-        pool_checkout, raster_table_name,
-        bands = TRUE, boundary = sf_spatial
+      raster_cropped <- try(
+        rpostgis::pgGetRast(
+          pool_checkout, raster_table_name,
+          bands = TRUE, boundary = sf_spatial
+        )
       )
       # close checkout
       pool::poolReturn(pool_checkout)
+
+      # check if meteoland_raster inherits from try-error to stop
+      if (inherits(raster_cropped, "try-error")) {
+        stop("Cannot retrieve cropped raster:\n", raster_cropped[1])
+      }
 
       # clip the raster
       raster_clipped <- raster::mask(raster_cropped, sf_spatial)
@@ -396,14 +484,20 @@ lfcMeteoland <- R6::R6Class(
         date = list(date = date)
       )
 
+      raster_interpolation_simple_case_safe <- purrr::possibly(
+        .f = private$raster_interpolation_simple_case,
+        otherwise = NA
+      )
+
       # get the geom column name
       sf_column <- attr(sf, 'sf_column')
       # rowbinding the summarises
       raster_merged <-
         seq_along(sf[[sf_column]]) %>%
         purrr::map(
-          ~ private$raster_interpolation_simple_case(sf[[sf_column]][.x], date)
+          ~ raster_interpolation_simple_case_safe(sf[[sf_column]][.x], date)
         ) %>%
+        purrr::keep(.p = ~ !is.na(.x)) %>%
         purrr::reduce(raster::merge)
 
       names(raster_merged) <- c(
@@ -418,3 +512,52 @@ lfcMeteoland <- R6::R6Class(
 
   ) # end of private methods
 )
+
+#' Access to the low resolution (1000x1000m) rasters in the Meteoland database
+#'
+#' @description \code{meteoland_get_lowres_raster} is a wrapper for the
+#'   \code{$get_lowres_raster} method of \code{lfcMeteoland} objects.
+#'   See also \code{\link{meteoland}}.
+#'
+#' @param object \code{lfcMeteoland} object, as created by \code{\link{meteoland}}
+#' @param date character with the date of the raster to retrieve, i.e "2020-04-25"
+#' @param spatial character vector of lenght 1 indicating the type of raster object to
+#'   return, "raster" or "stars", the default.
+#'
+#' @return A raster object: \code{RasterBrick} if spatial is \code{raster},
+#'   \code{stars} if spatial is \code{stars}. See
+#'   https://r-spatial.github.io/stars/index.html for details about stars objects and
+#'   \code{\link[raster]{raster}} for details about raster objects.
+#'
+#' @family Meteoland functions
+#'
+#' @details Connection to database can be slow. Rasters retrieved from the db are stored
+#'   in a temporary cache inside the lfcMeteoland object created by \code{\link{meteoland}},
+#'   making subsequent calls to the same table are faster. But, be warned that in-memory
+#'   rasters can use a lot of memory!
+#'
+#' @examples
+#' if (interactive()) {
+#'   meteolanddb <- meteoland()
+#'   # raster
+#'   ab_raster <- meteoland_get_lowres_raster(meteolanddb, '2020-04-25', 'raster')
+#'   # stars
+#'   ab_stars <- meteoland_get_lowres_raster(meteolanddb, '2020-04-25', 'stars')
+#'
+#'   # we can use pipes
+#'   meteolanddb %>%
+#'     meteoland_get_lowres_raster('2020-04-25', 'raster')
+#'
+#'   # meteolanddb is an R6 object, so the previous examples are the same as:
+#'   meteolanddb$get_lowres_raster('2020-04-25', 'raster')
+#'   meteolanddb$get_lowres_raster('2020-04-25', 'stars')
+#' }
+#'
+#' @export
+meteoland_get_lowres_raster <- function(object, variables, spatial = 'stars') {
+  # argument validation
+  # NOTE: variables and spatial are validated in the method
+  check_class_for(object, 'lfcMeteoland')
+  # call to the class method
+  object$get_lowres_raster(variables, spatial)
+}
