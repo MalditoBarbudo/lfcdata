@@ -51,6 +51,92 @@ lfcMeteoland <- R6::R6Class(
         #   " to learn more about the tables and variables."
       )
       invisible(self)
+    },
+
+    # current points interpolation
+    points_interpolation = function(sf, user_dates, .topo = NULL) {
+
+      # argument checks are done in the ancillary functions, except for sf and
+      # topo
+      check_args_for(sf = list(sf = sf))
+      check_length_for(user_dates, 2, 'user_dates')
+
+      # get user topo
+      if (is.null(.topo)) {
+        user_topo <- private$get_points_topography(sf)
+      } else {
+        # check .topo class
+        check_for_topo <- is(.topo, 'SpatialPointsTopography')
+
+        if (!check_for_topo) {
+          stop(".topo is not a SpatialPointsTopography object")
+        }
+
+        user_topo <- .topo
+      }
+
+      # get the interpolator
+      interpolator <- private$build_points_interpolator(user_dates)
+
+      # default parameters
+      default_params <- meteoland::defaultInterpolationParams()
+      buffer_days <- max(
+        default_params$St_Precipitation, default_params$St_TemperatureRange
+      )
+
+      interpolation_points <-
+        1:length(user_topo@coords[,1]) %>%
+        purrr::map(
+          function(index_coord) {
+            meteoland::interpolationpoints(
+              object = interpolator,
+              points = user_topo[index_coord, ],
+              verbose = FALSE
+            )@data[[1]][-c(1:buffer_days), ] # remove the buffer days
+          }
+        )
+
+      # finally, perform the interpolation
+      res <- meteoland::SpatialPointsMeteorology(
+        points = user_topo,
+        data = interpolation_points,
+        dates = interpolator@dates[-c(1:buffer_days)]
+      )
+
+      return(res)
+    },
+
+    # current raster interpolation
+    raster_interpolation = function(sf, user_dates) {
+
+      # argument checks
+      check_length_for(user_dates, 2, 'user_dates')
+
+      # This method iterate by dates to get the final rasters, as a list
+      # with one element for each date supplied
+
+      # datevec from user dates
+      user_dates <- as.Date(user_dates)
+
+      # previously to create the datevec, we must ensure end date is bigger than
+      # start date
+      if (! user_dates[[2]] > user_dates[[1]]) {
+        stop('end date must be more recent than the start date')
+      }
+
+
+      datevec <-
+        user_dates[[1]]:user_dates[[2]] %>%
+        as.Date(format = '%j', origin = as.Date('1970-01-01'))
+
+      res_list <-
+        datevec %>%
+        purrr::map(
+          ~ private$raster_interpolation_vectorized_for_polys(sf, .x)
+        )
+
+      return(res_list)
+
     }
 
   ), # end of public methods
@@ -262,59 +348,6 @@ lfcMeteoland <- R6::R6Class(
       return(interpolator_res)
     },
 
-    # points interpolation
-    points_interpolation = function(sf, user_dates, .topo = NULL) {
-
-      # argument checks are done in the ancillary functions, except for sf and
-      # topo
-      check_args_for(sf = list(sf = sf))
-      check_length_for(user_dates, 2, 'user_dates')
-
-      # get user topo
-      if (is.null(.topo)) {
-        user_topo <- private$get_points_topography(sf)
-      } else {
-        # check .topo class
-        check_for_topo <- is(.topo, 'SpatialPointsTopography')
-
-        if (!check_for_topo) {
-          stop(".topo is not a SpatialPointsTopography object")
-        }
-
-        user_topo <- .topo
-      }
-
-      # get the interpolator
-      interpolator <- private$build_points_interpolator(user_dates)
-
-      # default parameters
-      default_params <- meteoland::defaultInterpolationParams()
-      buffer_days <- max(
-        default_params$St_Precipitation, default_params$St_TemperatureRange
-      )
-
-      interpolation_points <-
-        1:length(user_topo@coords[,1]) %>%
-        purrr::map(
-          function(index_coord) {
-            meteoland::interpolationpoints(
-              object = interpolator,
-              points = user_topo[index_coord, ],
-              verbose = FALSE
-            )@data[[1]][-c(1:buffer_days), ] # remove the buffer days
-          }
-        )
-
-      # finally, perform the interpolation
-      res <- meteoland::SpatialPointsMeteorology(
-        points = user_topo,
-        data = interpolation_points,
-        dates = interpolator@dates[-c(1:buffer_days)]
-      )
-
-      return(res)
-    },
-
     # current raster interpolation
     raster_interpolation_simple_case = function(sf_geom, date) {
 
@@ -376,38 +409,6 @@ lfcMeteoland <- R6::R6Class(
       )
 
       return(raster_merged)
-
-    },
-
-    raster_interpolation = function(sf, user_dates) {
-
-      # argument checks
-      check_length_for(user_dates, 2, 'user_dates')
-
-      # This method iterate by dates to get the final rasters, as a list
-      # with one element for each date supplied
-
-      # datevec from user dates
-      user_dates <- as.Date(user_dates)
-
-      # previously to create the datevec, we must ensure end date is bigger than
-      # start date
-      if (! user_dates[[2]] > user_dates[[1]]) {
-        stop('end date must be more recent than the start date')
-      }
-
-
-      datevec <-
-        user_dates[[1]]:user_dates[[2]] %>%
-        as.Date(format = '%j', origin = as.Date('1970-01-01'))
-
-      res_list <-
-        datevec %>%
-        purrr::map(
-          ~ private$raster_interpolation_vectorized_for_polys(sf, .x)
-        )
-
-      return(res_list)
 
     }
 
