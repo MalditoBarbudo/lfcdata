@@ -63,6 +63,11 @@ lfcMeteoland <- R6::R6Class(
     # user topography
     get_points_topography = function(sf) {
 
+      # argument checks
+      check_args_for(
+        points = list(sf = sf)
+      )
+
       # we need here to transform the coordinates to UTM, reach the topography
       # raster in the db, get the value vectors for each variable (elevation,
       # aspect, slope) and use the meteoland SpatialPointsTopography function
@@ -165,6 +170,12 @@ lfcMeteoland <- R6::R6Class(
     # meteoland interpolator
     build_points_interpolator = function(user_dates) {
 
+      # argument checks
+      check_args_for(
+        character = list(user_dates = user_dates),
+        date = list(user_dates = user_dates)
+      )
+
       # default parameters
       default_params <- meteoland::defaultInterpolationParams()
 
@@ -254,16 +265,22 @@ lfcMeteoland <- R6::R6Class(
     # points interpolation
     points_interpolation = function(sf, user_dates, .topo = NULL) {
 
-      # argument checks
-      check_args_for(
-        character = list(user_dates = user_dates),
-        sf = list(sf = sf)
-      )
+      # argument checks are done in the ancillary functions, except for sf and
+      # topo
+      check_args_for(sf = list(sf = sf))
+      check_length_for(user_dates, 2, 'user_dates')
 
       # get user topo
       if (is.null(.topo)) {
         user_topo <- private$get_points_topography(sf)
       } else {
+        # check .topo class
+        check_for_topo <- is(.topo, 'SpatialPointsTopography')
+
+        if (!check_for_topo) {
+          stop(".topo is not a SpatialPointsTopography object")
+        }
+
         user_topo <- .topo
       }
 
@@ -301,6 +318,12 @@ lfcMeteoland <- R6::R6Class(
     # current raster interpolation
     raster_interpolation_simple_case = function(sf_geom, date) {
 
+      # argument check
+      check_args_for(
+        polygons = list(sf_geom = sf_geom),
+        date = list(date = date)
+      )
+
       # Interpolation for grids is not made on the fly, but from precalculated
       # 1km rasters instead. So we need to implement a similar method as the
       # one in lidar to clip and recover the clipped raster.
@@ -330,6 +353,12 @@ lfcMeteoland <- R6::R6Class(
 
     raster_interpolation_vectorized_for_polys = function(sf, date) {
 
+      # argument checks
+      check_args_for(
+        sf = list(sf = sf),
+        date = list(date = date)
+      )
+
       # get the geom column name
       sf_column <- attr(sf, 'sf_column')
       # rowbinding the summarises
@@ -352,11 +381,22 @@ lfcMeteoland <- R6::R6Class(
 
     raster_interpolation = function(sf, user_dates) {
 
+      # argument checks
+      check_length_for(user_dates, 2, 'user_dates')
+
       # This method iterate by dates to get the final rasters, as a list
       # with one element for each date supplied
 
       # datevec from user dates
       user_dates <- as.Date(user_dates)
+
+      # previously to create the datevec, we must ensure end date is bigger than
+      # start date
+      if (! user_dates[[2]] > user_dates[[1]]) {
+        stop('end date must be more recent than the start date')
+      }
+
+
       datevec <-
         user_dates[[1]]:user_dates[[2]] %>%
         as.Date(format = '%j', origin = as.Date('1970-01-01'))

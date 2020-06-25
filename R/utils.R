@@ -13,7 +13,7 @@
 # argument checking
 check_args_for <- function(
   character = NULL, numerical = NULL, logical = NULL, na = NULL,
-  sf = NULL, points = NULL, polygons = NULL
+  sf = NULL, points = NULL, polygons = NULL, date = NULL
 ) {
 
   # browser()
@@ -101,7 +101,7 @@ check_args_for <- function(
     }
   }
 
-  # points
+  # polygons
   if (!rlang::is_null(polygons)) {
     not_complying <- polygons %>%
       purrr::map(
@@ -115,6 +115,35 @@ check_args_for <- function(
       error_message <- glue::glue(
         "Argument {glue::glue_collapse(not_complying)} ",
         "is not a POLYGON or a MULTIPOLYGON (sf)\n"
+      )
+      stop(error_message)
+    }
+  }
+
+  # dates
+  if (!rlang::is_null(date)) {
+    not_complying <- date %>%
+      purrr::map(
+        .f = function(x) {
+          date_check <- try(as.Date(x))
+          if (is(date_check, 'try-error')) {
+            return(FALSE)
+          }
+          # if x is a vector, with valid and invalid dates as characters,
+          # as.Date is going to return NAs for invalid ones, check for that too:
+          if (any(is.na(date_check))) {
+            return(FALSE)
+          }
+          return(TRUE)
+        }
+      ) %>%
+      purrr::keep(.p = ~ !isTRUE(.x)) %>%
+      names()
+
+    if (length(not_complying) > 0) {
+      error_message <- glue::glue(
+        "Argument {glue::glue_collapse(not_complying)} ",
+        "cannot be converted to date"
       )
       stop(error_message)
     }
