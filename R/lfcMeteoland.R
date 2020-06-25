@@ -22,6 +22,7 @@ meteoland <- function() {
   lfcMeteoland$new()
 }
 
+## lfcMeteoland Class ####
 lfcMeteoland <- R6::R6Class(
   # specs
   classname = 'lfcMeteoland',
@@ -218,7 +219,7 @@ lfcMeteoland <- R6::R6Class(
     # connection values
     dbname = 'meteoland',
 
-    # point value helper methods ####
+    # point value helper methods #
     # user topography
     get_points_topography = function(sf) {
 
@@ -512,6 +513,8 @@ lfcMeteoland <- R6::R6Class(
 
   ) # end of private methods
 )
+
+## External methods ####
 
 #' Access to the low resolution (1000x1000m) rasters in the Meteoland database
 #'
