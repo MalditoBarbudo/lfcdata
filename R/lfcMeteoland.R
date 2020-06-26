@@ -522,22 +522,23 @@ lfcMeteoland <- R6::R6Class(
 #'   \code{$get_lowres_raster} method of \code{lfcMeteoland} objects.
 #'   See also \code{\link{meteoland}}.
 #'
-#' @param object \code{lfcMeteoland} object, as created by \code{\link{meteoland}}
+#' @param object \code{lfcMeteoland} object, as created by
+#'   \code{\link{meteoland}}
 #' @param date character with the date of the raster to retrieve, i.e "2020-04-25"
-#' @param spatial character vector of lenght 1 indicating the type of raster object to
-#'   return, "raster" or "stars", the default.
+#' @param spatial character vector of lenght 1 indicating the type of raster
+#'   object to return, "raster" or "stars", the default.
 #'
 #' @return A raster object: \code{RasterBrick} if spatial is \code{raster},
 #'   \code{stars} if spatial is \code{stars}. See
-#'   https://r-spatial.github.io/stars/index.html for details about stars objects and
-#'   \code{\link[raster]{raster}} for details about raster objects.
+#'   https://r-spatial.github.io/stars/index.html for details about stars
+#'   objects and \code{\link[raster]{raster}} for details about raster objects.
 #'
 #' @family Meteoland functions
 #'
-#' @details Connection to database can be slow. Rasters retrieved from the db are stored
-#'   in a temporary cache inside the lfcMeteoland object created by \code{\link{meteoland}},
-#'   making subsequent calls to the same table are faster. But, be warned that in-memory
-#'   rasters can use a lot of memory!
+#' @details Connection to database can be slow. Rasters retrieved from the db
+#'   are stored in a temporary cache inside the lfcMeteoland object created by
+#'   \code{\link{meteoland}}, making subsequent calls to the same table are
+#'   faster. But, be warned that in-memory rasters can use a lot of memory!
 #'
 #' @examples
 #' if (interactive()) {
@@ -557,10 +558,85 @@ lfcMeteoland <- R6::R6Class(
 #' }
 #'
 #' @export
-meteoland_get_lowres_raster <- function(object, variables, spatial = 'stars') {
+meteoland_get_lowres_raster <- function(object, date, spatial = 'stars') {
   # argument validation
   # NOTE: variables and spatial are validated in the method
   check_class_for(object, 'lfcMeteoland')
   # call to the class method
-  object$get_lowres_raster(variables, spatial)
+  object$get_lowres_raster(date, spatial)
+}
+
+#' Current points (coordinates) interpolation
+#'
+#' @description \code{meteoland_points_interpolation} is a wrapper for the
+#'   \code{$points_interpolation} method of \code{lfcMeteoland} objects.
+#'   See also \code{\link{meteoland}}.
+#'
+#' @param object \code{lfcMeteoland} object, as created by
+#'   \code{\link{meteoland}}
+#' @param sf sf object with the the point features to interpolate.
+#' @param dates character vector of length 2 with the dates range (start-end) to
+#'   interpolate (i.e. \code{c("2020-04-25", "2020-04-30)}). See details for
+#'   more information.
+#'
+#' @return An SpatialPointsMetereology object (see
+#'   \code{\link[meteoland]{SpatialPointsMetereology}} for more information)
+#'
+#' @family Meteoland functions
+#'
+#' @details Dates must be provided as a two elements character vector, with
+#'  the start date and the end date in a format accepted by
+#'  \code{\link[base]{as.Date}}.
+#'  The allowed range for dates is one natural year (365 days) ending on the
+#'  actual date minus one day.
+#'  Interpolation for points is made based on a 30x30 meters topology grid.
+#'
+#'
+#' @examples
+#'
+#' @export
+meteoland_points_interpolation <- function(object, sf, dates) {
+  # argument validation
+  # NOTE: variables and spatial are validated in the method
+  check_class_for(object, 'lfcMeteoland')
+  # call to the class method
+  object$points_interpolation(sf, dates)
+}
+
+#' Current raster interpolation
+#'
+#' @description \code{meteoland_raster_interpolation} is a wrapper for the
+#'   \code{$raster_interpolation} method of \code{lfcMeteoland} objects.
+#'   See also \code{\link{meteoland}}.
+#'
+#' @param object \code{lfcMeteoland} object, as created by
+#'   \code{\link{meteoland}}
+#' @param sf sf object with the the polygon/multipolygons features to
+#'   interpolate.
+#' @param dates character vector of length 2 with the dates range (start-end) to
+#'   interpolate (i.e. \code{c("2020-04-25", "2020-04-30)}). See details for
+#'   more information.
+#'
+#' @return A list of raster objects (\code{\link[raster]{raster}}), each date
+#'   as an element of that list.
+#'
+#' @family Meteoland functions
+#'
+#' @details Dates must be provided as a two elements character vector, with
+#'  the start date and the end date in a format accepted by
+#'  \code{\link[base]{as.Date}}.
+#'  The allowed range for dates is one natural year (365 days) ending on the
+#'  actual date minus one day.
+#'  Interpolation for polygons is made based on a 1000x1000 meters topology
+#'  raster.
+#'
+#' @examples
+#'
+#' @export
+meteoland_raster_interpolation <- function(object, sf, dates) {
+  # argument validation
+  # NOTE: variables and spatial are validated in the method
+  check_class_for(object, 'lfcMeteoland')
+  # call to the class method
+  object$raster_interpolation(sf, dates)
 }
