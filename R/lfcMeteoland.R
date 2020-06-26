@@ -115,6 +115,9 @@ lfcMeteoland <- R6::R6Class(
 
       # argument checks
       check_length_for(user_dates, 2, 'user_dates')
+      check_args_for(
+        character = list(user_dates = user_dates)
+      )
 
       # This method iterate by dates to get the final rasters, as a list
       # with one element for each date supplied
