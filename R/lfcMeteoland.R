@@ -315,6 +315,30 @@ lfcMeteoland <- R6::R6Class(
         point_queries %>%
         purrr::map_dfr(query_helper)
 
+      # here we need to check for NAs, as we need to warn the user about coords
+      # out of topo. Also we remove the lines. As the most effective way, as per
+      # the code, to check if topo exists is the NA in the coords_text, we
+      # check that
+      offending_coords_index <-
+        which(is.na(raster_topography_values$coords_text))
+
+      if (length(offending_coords_index) == length(user_coords_sp)) {
+        stop("All coordinates are not in Catalonia, no interpolation available")
+      }
+
+      if (length(offending_coords_index) > 0) {
+        warning(glue::glue(
+          "Some points are not in Catalonia ",
+          "and they they will be removed from interpolation ",
+          "(indexes of offending points: {stringr::str_flatten(as.character(offending_coords_index), collapse = ', ')})",
+        ))
+
+        user_coords_sp <-
+          user_coords_sp[which(!is.na(raster_topography_values$coords_text))]
+        raster_topography_values <-
+          raster_topography_values %>%
+          dplyr::filter(!is.na(coords_text))
+      }
 
       # build the topography object
       user_topo <- meteoland::SpatialPointsTopography(
@@ -349,8 +373,8 @@ lfcMeteoland <- R6::R6Class(
         (user_dates[[1]] - buffer_days):user_dates[[2]] %>%
         as.Date(format = '%j', origin = as.Date('1970-01-01'))
       table_names <-
-        glue::glue("daily_meteo_{stringr::str_remove_all(datevec, '-')}") %>%
-        magrittr::extract(. %in% dplyr::db_list_tables(private$pool_conn))
+        glue::glue("daily_meteo_{stringr::str_remove_all(datevec, '-')}") #%>%
+        # magrittr::extract(. %in% dplyr::db_list_tables(private$pool_conn))
 
       # meteo data
       # TODO what happens when no table is found?????? We need to check this
@@ -370,11 +394,29 @@ lfcMeteoland <- R6::R6Class(
 
       meteo_data <-
         table_names %>%
+        magrittr::set_names(datevec) %>%
         purrr::map(helper_station_data_getter) %>%
-        purrr::keep(.p = ~ !is.na(.x))
+        purrr::keep(.p = ~ !rlang::is_na(.x))
 
-      if (length(meteo_data < 1)) {
+      if (length(meteo_data) < 1) {
         stop("No meteo data found for the dates provided")
+      }
+
+      # datevec must be trimmed to those dates really present in the database
+      # in case some date was missing (see meteo_data build). Also, we need to
+      # warn the user about that
+      datevec_trimmed <-
+        datevec[as.character(datevec) %in% names(meteo_data)]
+
+      if (length(datevec_trimmed) != length(datevec)) {
+        offending_dates <-
+          datevec[which(!as.character(datevec) %in% names(meteo_data))] %>%
+          as.character() %>%
+          stringr::str_flatten(collapse = ', ')
+
+        warning(glue::glue(
+          "Some dates ({offending_dates}) are not available on the database, skipping them"
+        ))
       }
 
       # meteo stations info
@@ -397,7 +439,7 @@ lfcMeteoland <- R6::R6Class(
         sp::spTransform(sp::CRS(
           "+proj=utm +zone=31 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs"
         )) %>%
-        meteoland::SpatialPointsMeteorology(meteo_data, datevec, TRUE) %>%
+        meteoland::SpatialPointsMeteorology(meteo_data, datevec_trimmed, TRUE) %>%
         meteoland::MeteorologyInterpolationData(
           elevation = unique_meteo_stations$elevation,
           params = default_params
@@ -576,7 +618,7 @@ meteoland_get_lowres_raster <- function(object, date, spatial = 'stars') {
 #'   \code{\link{meteoland}}
 #' @param sf sf object with the the point features to interpolate.
 #' @param dates character vector of length 2 with the dates range (start-end) to
-#'   interpolate (i.e. \code{c("2020-04-25", "2020-04-30)}). See details for
+#'   interpolate (i.e. \code{c("2020-04-25", "2020-04-30")}). See details for
 #'   more information.
 #'
 #' @return An SpatialPointsMetereology object (see
@@ -614,7 +656,7 @@ meteoland_points_interpolation <- function(object, sf, dates) {
 #' @param sf sf object with the the polygon/multipolygons features to
 #'   interpolate.
 #' @param dates character vector of length 2 with the dates range (start-end) to
-#'   interpolate (i.e. \code{c("2020-04-25", "2020-04-30)}). See details for
+#'   interpolate (i.e. \code{c("2020-04-25", "2020-04-30")}). See details for
 #'   more information.
 #'
 #' @return A list of raster objects (\code{\link[raster]{raster}}), each date

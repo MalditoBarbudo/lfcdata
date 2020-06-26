@@ -90,7 +90,10 @@ check_args_for <- function(
   # points
   if (!rlang::is_null(points)) {
     not_complying <- points %>%
-      purrr::map(sf::st_is, type = 'POINT') %>%
+      purrr::map(
+        ~ all(sf::st_is(.x, type = 'POINT'))
+        # sf::st_is, type = 'POINT'
+      ) %>%
       purrr::keep(.p = ~ !isTRUE(.x)) %>%
       names()
     if (length(not_complying) > 0) {
