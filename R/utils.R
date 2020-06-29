@@ -109,7 +109,7 @@ check_args_for <- function(
     not_complying <- polygons %>%
       purrr::map(
         .f = function(x) {
-          sf::st_is(x, 'POLYGON') | sf::st_is(x, 'MULTIPOLYGON')
+          all(sf::st_is(x, c('POLYGON', 'MULTIPOLYGON')))
         }
       ) %>%
       purrr::keep(.p = ~ !isTRUE(.x)) %>%

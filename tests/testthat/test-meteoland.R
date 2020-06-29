@@ -82,6 +82,16 @@ sf_empty_polygon <-
   dplyr::slice(19) %>%
   dplyr::select(poly_id)
 
+sf_polygons_all_out <- sf_polygons %>%
+  dplyr::mutate(
+    geometry = geometry + c(500000, 0),
+    tururu = paste0("out_", 1:5)
+  ) %>%
+  sf::st_set_crs(3043)
+
+sf_polygons_one_out <- rbind(sf_polygons, sf_polygons_all_out) %>%
+  dplyr::slice(1:6)
+
 ## points interpolation works ####
 test_that("points_interpolation method works", {
   skip_on_cran()
@@ -106,6 +116,11 @@ test_that("points_interpolation method works", {
     meteolanddb$points_interpolation(sf_polygons, c(start_date, end_date)),
     'is not a POINT'
   )
+  expect_error(
+    meteolanddb$points_interpolation(sf_points, c(end_date, start_date)),
+    'end date must be more recent'
+  )
+
   expect_is(
     meteolanddb$points_interpolation(sf_points, c(start_date, end_date)),
     'SpatialPointsMeteorology'
@@ -165,11 +180,80 @@ test_that("points_interpolation method works", {
   )
 })
 
-## raster interolation works
+## raster interolation works ####
 test_that("raster_interpolation method works", {
   skip_on_cran()
   skip_on_travis()
+  expect_error(
+    meteolanddb$raster_interpolation('sf', c(start_date, end_date)),
+    'not a simple feature'
+  )
+  expect_error(
+    meteolanddb$raster_interpolation(sf_polygons, c(start_date)),
+    'must be of length'
+  )
+  expect_error(
+    meteolanddb$raster_interpolation(sf_polygons, c(25, 26)),
+    'not character'
+  )
+  expect_error(
+    meteolanddb$raster_interpolation(sf_polygons, c('tururu', 'larara')),
+    'cannot be converted to date'
+  )
+  expect_error(
+    meteolanddb$raster_interpolation(sf_points, c(start_date, end_date)),
+    'is not a POLYGON'
+  )
+  expect_error(
+    meteolanddb$points_interpolation(sf_points, c(end_date, start_date)),
+    'end date must be more recent'
+  )
+  expect_is(
+    meteolanddb$raster_interpolation(sf_polygons, c(start_date, end_date)),
+    'list'
+  )
 
+  # we need an ok interpolation for testing throughfully
+  ok_raster_interpolation <-
+    meteolanddb$raster_interpolation(sf_polygons, c(start_date, end_date))
 
+  expect_length(ok_raster_interpolation, 3)
+  expect_is(ok_raster_interpolation[[1]], 'RasterBrick')
+
+  expect_warning(
+    meteolanddb$raster_interpolation(
+      # TODO change this when all the raster tables are in the database
+      # sf_polygons, c(as.character(Sys.Date()-2), as.character(Sys.Date()+1))
+      sf_polygons, c('2020-04-26', '2020-04-28')
+    ), "Some dates"
+  )
+  one_day_missing_interpolation <-
+    meteolanddb$raster_interpolation(
+      # sf_polygons, c(as.character(Sys.Date()-2), as.character(Sys.Date()))
+      sf_polygons, c('2020-04-26', '2020-04-28')
+    )
+  expect_length(one_day_missing_interpolation, 2)
+  expect_is(one_day_missing_interpolation[[1]], 'RasterBrick')
+
+  # when all dates are out of range, then error occurs
+  expect_error(
+    meteolanddb$raster_interpolation(
+      sf_polygons, c(as.character(Sys.Date()-369), as.character(Sys.Date()-367))
+    ), "No data for the specified dates"
+  )
+
+  # expect_warning(
+  #   meteolanddb$raster_interpolation(sf_polygons_one_out, c(start_date, end_date)),
+  #   "Some polygons"
+  # )
+  one_coord_missing_interpolation <-
+    meteolanddb$raster_interpolation(sf_polygons_one_out, c(start_date, end_date))
+  expect_length(one_coord_missing_interpolation, 3)
+  expect_is(one_coord_missing_interpolation[[1]], 'RasterBrick')
+
+  expect_error(
+    meteolanddb$raster_interpolation(sf_polygons_all_out, c(start_date, end_date)),
+    "No data for the specified dates"
+  )
 
 })

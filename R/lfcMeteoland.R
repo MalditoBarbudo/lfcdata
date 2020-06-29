@@ -115,8 +115,12 @@ lfcMeteoland <- R6::R6Class(
 
       # argument checks
       check_length_for(user_dates, 2, 'user_dates')
+      # argument checks
       check_args_for(
-        character = list(user_dates = user_dates)
+        character = list(user_dates = user_dates),
+        date = list(user_dates = user_dates),
+        sf = list(sf = sf),
+        polygons = list(sf = sf)
       )
 
       # This method iterate by dates to get the final rasters, as a list
@@ -132,10 +136,9 @@ lfcMeteoland <- R6::R6Class(
       }
 
       raster_interpolation_vectorized_for_polys_safe <- purrr::possibly(
-        .f = raster_interpolation_vectorized_for_polys,
+        .f = private$raster_interpolation_vectorized_for_polys,
         otherwise = NA
       )
-
 
       datevec <-
         user_dates[[1]]:user_dates[[2]] %>%
@@ -143,13 +146,26 @@ lfcMeteoland <- R6::R6Class(
 
       res_list <-
         datevec %>%
+        magrittr::set_names(as.character(datevec)) %>%
         purrr::map(
-          ~ private$raster_interpolation_vectorized_for_polys(sf, .x)
+          ~ raster_interpolation_vectorized_for_polys_safe(sf, .x)
         ) %>%
-        purrr::keep(.p = ~ !is.na(.x))
+        purrr::keep(.p = ~ !rlang::is_na(.x))
 
       if (length(res_list) < 1) {
-        stop("No data for the specified dates or polygons can be retrieved")
+        stop("No data for the specified dates and/or polygons can be retrieved")
+      }
+
+      if (length(res_list) < length(datevec)) {
+
+        offending_dates <-
+          datevec[which(!as.character(datevec) %in% names(res_list))] %>%
+          as.character() %>%
+          stringr::str_flatten(collapse = ', ')
+
+        warning(glue::glue(
+          "Some dates ({offending_dates}) are not available on the database, skipping them"
+        ))
       }
 
       return(res_list)
@@ -363,6 +379,12 @@ lfcMeteoland <- R6::R6Class(
         date = list(user_dates = user_dates)
       )
 
+      # previously to create the datevec, we must ensure end date is bigger than
+      # start date
+      if (! user_dates[[2]] > user_dates[[1]]) {
+        stop('end date must be more recent than the start date')
+      }
+
       # default parameters
       default_params <- meteoland::defaultInterpolationParams()
 
@@ -482,12 +504,6 @@ lfcMeteoland <- R6::R6Class(
     # current raster interpolation
     raster_interpolation_simple_case = function(sf_geom, date) {
 
-      # argument check
-      check_args_for(
-        polygons = list(sf_geom = sf_geom),
-        date = list(date = date)
-      )
-
       # Interpolation for grids is not made on the fly, but from precalculated
       # 1km rasters instead. So we need to implement a similar method as the
       # one in meteoland to clip and recover the clipped raster.
@@ -524,12 +540,6 @@ lfcMeteoland <- R6::R6Class(
 
     raster_interpolation_vectorized_for_polys = function(sf, date) {
 
-      # argument checks
-      check_args_for(
-        sf = list(sf = sf),
-        date = list(date = date)
-      )
-
       raster_interpolation_simple_case_safe <- purrr::possibly(
         .f = private$raster_interpolation_simple_case,
         otherwise = NA
@@ -543,7 +553,7 @@ lfcMeteoland <- R6::R6Class(
         purrr::map(
           ~ raster_interpolation_simple_case_safe(sf[[sf_column]][.x], date)
         ) %>%
-        purrr::keep(.p = ~ !is.na(.x)) %>%
+        purrr::keep(.p = ~ !rlang::is_na(.x)) %>%
         purrr::reduce(raster::merge)
 
       names(raster_merged) <- c(
