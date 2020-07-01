@@ -131,8 +131,8 @@ lfcMeteoland <- R6::R6Class(
 
       # previously to create the datevec, we must ensure end date is bigger than
       # start date
-      if (! user_dates[[2]] > user_dates[[1]]) {
-        stop('end date must be more recent than the start date')
+      if (! user_dates[[2]] >= user_dates[[1]]) {
+        stop('end date must be equal or more recent than the start date')
       }
 
       raster_interpolation_vectorized_for_polys_safe <- purrr::possibly(
@@ -381,8 +381,8 @@ lfcMeteoland <- R6::R6Class(
 
       # previously to create the datevec, we must ensure end date is bigger than
       # start date
-      if (! user_dates[[2]] > user_dates[[1]]) {
-        stop('end date must be more recent than the start date')
+      if (! user_dates[[2]] >= user_dates[[1]]) {
+        stop('end date must be equal or more recent than the start date')
       }
 
       # default parameters

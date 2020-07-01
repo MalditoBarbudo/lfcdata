@@ -118,7 +118,7 @@ test_that("points_interpolation method works", {
   )
   expect_error(
     meteolanddb$points_interpolation(sf_points, c(end_date, start_date)),
-    'end date must be more recent'
+    'end date must be equal or more recent'
   )
 
   expect_is(
@@ -206,7 +206,7 @@ test_that("raster_interpolation method works", {
   )
   expect_error(
     meteolanddb$points_interpolation(sf_points, c(end_date, start_date)),
-    'end date must be more recent'
+    'end date must equal or be more recent'
   )
   expect_is(
     meteolanddb$raster_interpolation(sf_polygons, c(start_date, end_date)),
