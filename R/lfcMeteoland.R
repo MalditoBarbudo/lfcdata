@@ -112,7 +112,6 @@ lfcMeteoland <- R6::R6Class(
 
     # current raster interpolation
     raster_interpolation = function(sf, user_dates) {
-
       # argument checks
       check_length_for(user_dates, 2, 'user_dates')
       # argument checks
@@ -135,22 +134,39 @@ lfcMeteoland <- R6::R6Class(
         stop('end date must be equal or more recent than the start date')
       }
 
-      raster_interpolation_vectorized_for_polys_safe <- purrr::possibly(
-        .f = private$raster_interpolation_vectorized_for_polys,
-        otherwise = NA
-      )
-
       datevec <-
         user_dates[[1]]:user_dates[[2]] %>%
         as.Date(format = '%j', origin = as.Date('1970-01-01'))
 
+      sf_spatial <- sf %>%
+        sf::st_transform(crs = 3043) %>%
+        sf::as_Spatial()
+
+      # safe versions of the fuctions needed
+      get_lowres_raster_safe <- purrr::possibly(
+        .f = self$get_lowres_raster,
+        otherwise = NA
+      )
+
+      crop_safe <- purrr::possibly(
+        .f = raster::crop,
+        otherwise = NA
+      )
+
+      mask_safe <- purrr::possibly(
+        .f = raster::mask,
+        otherwise = NA
+      )
+
       res_list <-
         datevec %>%
-        magrittr::set_names(as.character(datevec)) %>%
-        purrr::map(
-          ~ raster_interpolation_vectorized_for_polys_safe(sf, .x)
-        ) %>%
+        as.character() %>%
+        magrittr::set_names(., .) %>%
+        purrr::map(~ get_lowres_raster_safe(.x, 'raster')) %>%
+        purrr::map(~ crop_safe(.x, sf_spatial)) %>%
+        purrr::map(~ mask_safe(.x, sf_spatial)) %>%
         purrr::keep(.p = ~ !rlang::is_na(.x))
+
 
       if (length(res_list) < 1) {
         stop("No data for the specified dates and/or polygons can be retrieved")
@@ -169,7 +185,6 @@ lfcMeteoland <- R6::R6Class(
       }
 
       return(res_list)
-
     },
 
     # get_lowres_raster method.
@@ -499,73 +514,7 @@ lfcMeteoland <- R6::R6Class(
         latest_calibration$alpha_PrecipitationAmount
 
       return(interpolator_res)
-    },
-
-    # current raster interpolation
-    raster_interpolation_simple_case = function(sf_geom, date) {
-
-      # Interpolation for grids is not made on the fly, but from precalculated
-      # 1km rasters instead. So we need to implement a similar method as the
-      # one in meteoland to clip and recover the clipped raster.
-
-      # convert sf
-      sf_spatial <- sf::as_Spatial(sf_geom)
-
-      raster_table_name <- glue::glue(
-        "daily_raster_interpolated_{stringr::str_remove_all(date, '-')}"
-      )
-
-      # pool checkout
-      pool_checkout <- pool::poolCheckout(private$pool_conn)
-      # get raster
-      raster_cropped <- try(
-        rpostgis::pgGetRast(
-          pool_checkout, raster_table_name,
-          bands = TRUE, boundary = sf_spatial
-        )
-      )
-      # close checkout
-      pool::poolReturn(pool_checkout)
-
-      # check if meteoland_raster inherits from try-error to stop
-      if (inherits(raster_cropped, "try-error")) {
-        stop("Cannot retrieve cropped raster:\n", raster_cropped[1])
-      }
-
-      # clip the raster
-      raster_clipped <- raster::mask(raster_cropped, sf_spatial)
-
-      return(raster_clipped)
-    },
-
-    raster_interpolation_vectorized_for_polys = function(sf, date) {
-
-      raster_interpolation_simple_case_safe <- purrr::possibly(
-        .f = private$raster_interpolation_simple_case,
-        otherwise = NA
-      )
-
-      # get the geom column name
-      sf_column <- attr(sf, 'sf_column')
-      # rowbinding the summarises
-      raster_merged <-
-        seq_along(sf[[sf_column]]) %>%
-        purrr::map(
-          ~ raster_interpolation_simple_case_safe(sf[[sf_column]][.x], date)
-        ) %>%
-        purrr::keep(.p = ~ !rlang::is_na(.x)) %>%
-        purrr::reduce(raster::merge)
-
-      names(raster_merged) <- c(
-        "MeanTemperature", "MinTemperature", "MaxTemperature",
-        "MeanRelativeHumidity", "MinRelativeHumidity", "MaxRelativeHumidity",
-        "Precipitation", "Radiation", "WindSpeed", "WindDirection"
-      )
-
-      return(raster_merged)
-
     }
-
   ) # end of private methods
 )
 
