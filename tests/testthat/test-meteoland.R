@@ -97,86 +97,106 @@ test_that("points_interpolation method works", {
   skip_on_cran()
   skip_on_travis()
   expect_error(
-    meteolanddb$points_interpolation('sf', c(start_date, end_date)),
+    meteolanddb$points_interpolation('sf', c(start_date, end_date), 'plot_id'),
     'not a simple feature'
   )
   expect_error(
-    meteolanddb$points_interpolation(sf_points, c(start_date)),
+    meteolanddb$points_interpolation(sf_points, c(start_date), 'plot_id'),
     'must be of length'
   )
   expect_error(
-    meteolanddb$points_interpolation(sf_points, c(25, 26)),
+    meteolanddb$points_interpolation(sf_points, c(25, 26), 'plot_id'),
     'not character'
   )
   expect_error(
-    meteolanddb$points_interpolation(sf_points, c('tururu', 'larara')),
+    meteolanddb$points_interpolation(sf_points, c(start_date, end_date), 125),
+    'not character'
+  )
+  expect_error(
+    meteolanddb$points_interpolation(sf_points, c('tururu', 'larara'), 'plot_id'),
     'cannot be converted to date'
   )
   expect_error(
-    meteolanddb$points_interpolation(sf_polygons, c(start_date, end_date)),
+    meteolanddb$points_interpolation(sf_polygons, c(start_date, end_date), 'plot_id'),
     'is not a POINT'
   )
   expect_error(
-    meteolanddb$points_interpolation(sf_points, c(end_date, start_date)),
+    meteolanddb$points_interpolation(sf_points, c(end_date, start_date), 'plot_id'),
     'end date must be equal or more recent'
   )
 
   expect_is(
-    meteolanddb$points_interpolation(sf_points, c(start_date, end_date)),
+    meteolanddb$points_interpolation(sf_points, c(start_date, end_date), 'plot_id'),
     'SpatialPointsMeteorology'
   )
   # we need an ok interpolation for testing throughfully
   ok_interpolation <-
-    meteolanddb$points_interpolation(sf_points, c(start_date, end_date))
+    meteolanddb$points_interpolation(sf_points, c(start_date, end_date), 'plot_id')
 
   expect_length(ok_interpolation@dates, 3)
   expect_length(ok_interpolation@data, 5)
   expect_equal(nrow(ok_interpolation@data[[1]]), 3)
   expect_equal(ncol(ok_interpolation@data[[1]]), 12)
+  expect_identical(names(ok_interpolation@data), dplyr::pull(sf_points, plot_id))
 
 
   expect_warning(
     meteolanddb$points_interpolation(
-      sf_points, c(as.character(Sys.Date()-2), as.character(Sys.Date()+1))
+      sf_points, c(as.character(Sys.Date()-2), as.character(Sys.Date()+1)),
+      'plot_id'
     ), "Some dates"
   )
   one_day_missing_interpolation <-
     meteolanddb$points_interpolation(
-      sf_points, c(as.character(Sys.Date()-2), as.character(Sys.Date()))
+      sf_points, c(as.character(Sys.Date()-2), as.character(Sys.Date())), 'plot_id'
     )
 
   expect_length(one_day_missing_interpolation@dates, 2)
   expect_length(one_day_missing_interpolation@data, 5)
   expect_equal(nrow(one_day_missing_interpolation@data[[1]]), 2)
   expect_equal(ncol(one_day_missing_interpolation@data[[1]]), 12)
+  expect_identical(
+    names(one_day_missing_interpolation@data), dplyr::pull(sf_points, plot_id)
+  )
 
   # when all dates are out of range, then error occurs
   expect_error(
     meteolanddb$points_interpolation(
-      sf_points, c(as.character(Sys.Date()-369), as.character(Sys.Date()-367))
+      sf_points, c(as.character(Sys.Date()-369), as.character(Sys.Date()-367)),
+      'plot_id'
     ), "No meteo data found"
   )
 
   expect_warning(
-    meteolanddb$points_interpolation(sf_points_one_out, c(start_date, end_date)),
+    meteolanddb$points_interpolation(
+      sf_points_one_out, c(start_date, end_date), 'plot_id'
+    ),
     "Some points"
   )
   one_coord_missing_interpolation <-
-    meteolanddb$points_interpolation(sf_points_one_out, c(start_date, end_date))
+    meteolanddb$points_interpolation(
+      sf_points_one_out, c(start_date, end_date), 'plot_id'
+    )
 
   expect_length(one_coord_missing_interpolation@dates, 3)
   expect_length(one_coord_missing_interpolation@data, 5)
   expect_equal(nrow(one_coord_missing_interpolation@data[[1]]), 3)
   expect_equal(ncol(one_coord_missing_interpolation@data[[1]]), 12)
+  expect_identical(
+    names(one_coord_missing_interpolation@data),
+    dplyr::pull(sf_points_one_out, plot_id)[-6]
+  )
 
   expect_error(
-    meteolanddb$points_interpolation(sf_points_all_out, c(start_date, end_date)),
+    meteolanddb$points_interpolation(
+      sf_points_all_out, c(start_date, end_date), 'plot_id'
+    ),
     "All coordinates are not in Catalonia"
   )
 
   expect_identical(
-    meteolanddb$points_interpolation(sf_points, c(start_date, end_date)),
-    meteolanddb$points_interpolation(sf_points_3043, c(start_date, end_date))
+    meteolanddb$points_interpolation(sf_points, c(start_date, end_date), 'plot_id'),
+    meteolanddb$points_interpolation(sf_points_3043, c(start_date, end_date), 'plot_id')
   )
 })
 
@@ -205,7 +225,7 @@ test_that("raster_interpolation method works", {
     'is not a POLYGON'
   )
   expect_error(
-    meteolanddb$points_interpolation(sf_points, c(end_date, start_date)),
+    meteolanddb$raster_interpolation(sf_polygons, c(end_date, start_date)),
     'end date must be equal or more recent'
   )
   expect_is(

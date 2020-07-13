@@ -58,11 +58,14 @@ lfcMeteoland <- R6::R6Class(
     },
 
     # current points interpolation
-    points_interpolation = function(sf, user_dates, .topo = NULL) {
+    points_interpolation = function(sf, user_dates, points_id, .topo = NULL) {
 
       # argument checks are done in the ancillary functions, except for sf and
       # topo
-      check_args_for(sf = list(sf = sf))
+      check_args_for(
+        sf = list(sf = sf),
+        character = list(points_id = points_id)
+      )
       check_length_for(user_dates, 2, 'user_dates')
 
       # get user topo
@@ -77,6 +80,9 @@ lfcMeteoland <- R6::R6Class(
         }
 
         user_topo <- .topo
+        # if the topo is provided, then we need to create the attribute of
+        # offending coords, empty
+        attr(user_topo, 'offending_coords') <- numeric(0)
       }
 
       # get the interpolator
@@ -106,6 +112,17 @@ lfcMeteoland <- R6::R6Class(
         data = interpolation_points,
         dates = interpolator@dates[-c(1:buffer_days)]
       )
+
+      # now we need to create the names of the list res@data. Each element is
+      # a point, so, we need to take the names, remove the offending coords
+      # and set the names.
+      points_names <- sf %>%
+        dplyr::filter(
+          !dplyr::row_number() %in% attr(user_topo, 'offending_coords')
+        ) %>%
+        dplyr::pull(!! rlang::sym(points_id))
+
+      names(res@data) <- points_names
 
       return(res)
     },
@@ -381,6 +398,11 @@ lfcMeteoland <- R6::R6Class(
         slope = raster_topography_values[['slope']],
         aspect = raster_topography_values[['aspect']]
       )
+
+      # lets create an attribute with the offending coords, this way we can
+      # name later the SpatialPointsMetereology@data with the identifier of the
+      # geometry
+      attr(user_topo, 'offending_coords') <- offending_coords_index
 
       return(user_topo)
     },
