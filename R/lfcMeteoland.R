@@ -68,10 +68,14 @@ lfcMeteoland <- R6::R6Class(
       )
       check_length_for(user_dates, 2, 'user_dates')
 
+      message("Getting the topography")
       # get user topo
       if (is.null(.topo)) {
+        message("By db")
         user_topo <- private$get_points_topography(sf)
       } else {
+
+        message("By provided topo")
         # check .topo class
         check_for_topo <- is(.topo, 'SpatialPointsTopography')
 
@@ -85,6 +89,7 @@ lfcMeteoland <- R6::R6Class(
         attr(user_topo, 'offending_coords') <- numeric(0)
       }
 
+      message("Getting the interpolator")
       # get the interpolator
       interpolator <- private$build_points_interpolator(user_dates)
 
@@ -94,10 +99,14 @@ lfcMeteoland <- R6::R6Class(
         default_params$St_Precipitation, default_params$St_TemperatureRange
       )
 
+      message("Points interpolation")
       interpolation_points <-
         1:length(user_topo@coords[,1]) %>%
         purrr::map(
           function(index_coord) {
+            message(
+              "Interpolating point ", index_coord, " of ", length(user_topo@coords[,1])
+            )
             meteoland::interpolationpoints(
               object = interpolator,
               points = user_topo[index_coord, ],
@@ -106,6 +115,7 @@ lfcMeteoland <- R6::R6Class(
           }
         )
 
+      message("pointsmeteorology creation")
       # finally, perform the interpolation
       res <- meteoland::SpatialPointsMeteorology(
         points = user_topo,
@@ -113,6 +123,7 @@ lfcMeteoland <- R6::R6Class(
         dates = interpolator@dates[-c(1:buffer_days)]
       )
 
+      message("Naming")
       # now we need to create the names of the list res@data. Each element is
       # a point, so, we need to take the names, remove the offending coords
       # and set the names.
@@ -256,7 +267,8 @@ lfcMeteoland <- R6::R6Class(
       # now we can return a raster (just as is) or a stars object
       if (spatial == 'stars') {
         res <- res %>%
-          stars::st_as_stars()
+          stars::st_as_stars() %>%
+          split("band")
       }
 
       # return the raster

@@ -46,6 +46,16 @@ test_that("get_lowres_raster method works", {
     meteolanddb$get_lowres_raster(start_date, 'tururu'),
     "Must be one of"
   )
+  expect_true(
+    all(
+      names(meteolanddb$get_lowres_raster(start_date, 'stars')) %in%
+        c(
+          "MeanTemperature", "MinTemperature", "MaxTemperature",
+          "MeanRelativeHumidity", "MinRelativeHumidity", "MaxRelativeHumidity",
+          "Precipitation", "Radiation", "WindSpeed", "WindDirection"
+        )
+    )
+  )
 })
 
 # sf objects to test
