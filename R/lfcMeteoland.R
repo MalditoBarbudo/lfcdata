@@ -58,6 +58,86 @@ lfcMeteoland <- R6::R6Class(
     },
 
     # current points interpolation
+    # points_interpolation = function(sf, user_dates, points_id, .topo = NULL) {
+    #
+    #   # argument checks are done in the ancillary functions, except for sf and
+    #   # topo
+    #   check_args_for(
+    #     sf = list(sf = sf),
+    #     character = list(points_id = points_id)
+    #   )
+    #   check_length_for(user_dates, 2, 'user_dates')
+    #
+    #   message("Getting the topography")
+    #   # get user topo
+    #   if (is.null(.topo)) {
+    #     message("By db")
+    #     user_topo <- private$get_points_topography(sf)
+    #   } else {
+    #
+    #     message("By provided topo")
+    #     # check .topo class
+    #     check_for_topo <- is(.topo, 'SpatialPointsTopography')
+    #
+    #     if (!check_for_topo) {
+    #       stop(".topo is not a SpatialPointsTopography object")
+    #     }
+    #
+    #     user_topo <- .topo
+    #     # if the topo is provided, then we need to create the attribute of
+    #     # offending coords, empty
+    #     attr(user_topo, 'offending_coords') <- numeric(0)
+    #   }
+    #
+    #   message("Getting the interpolator")
+    #   # get the interpolator
+    #   interpolator <- private$build_points_interpolator(user_dates)
+    #
+    #   # default parameters
+    #   default_params <- meteoland::defaultInterpolationParams()
+    #   buffer_days <- max(
+    #     default_params$St_Precipitation, default_params$St_TemperatureRange
+    #   )
+    #
+    #   message("Points interpolation")
+    #   interpolation_points <-
+    #     1:length(user_topo@coords[,1]) %>%
+    #     purrr::map(
+    #       function(index_coord) {
+    #         message(
+    #           "Interpolating point ", index_coord, " of ", length(user_topo@coords[,1])
+    #         )
+    #         meteoland::interpolationpoints(
+    #           object = interpolator,
+    #           points = user_topo[index_coord, ],
+    #           verbose = FALSE
+    #         )@data[[1]][-c(1:buffer_days), ] # remove the buffer days
+    #       }
+    #     )
+    #
+    #   message("pointsmeteorology creation")
+    #   # finally, perform the interpolation
+    #   res <- meteoland::SpatialPointsMeteorology(
+    #     points = user_topo,
+    #     data = interpolation_points,
+    #     dates = interpolator@dates[-c(1:buffer_days)]
+    #   )
+    #
+    #   message("Naming")
+    #   # now we need to create the names of the list res@data. Each element is
+    #   # a point, so, we need to take the names, remove the offending coords
+    #   # and set the names.
+    #   points_names <- sf %>%
+    #     dplyr::filter(
+    #       !dplyr::row_number() %in% attr(user_topo, 'offending_coords')
+    #     ) %>%
+    #     dplyr::pull(!! rlang::sym(points_id))
+    #
+    #   names(res@data) <- points_names
+    #
+    #   return(res)
+    # },
+
     points_interpolation = function(sf, user_dates, points_id, .topo = NULL) {
 
       # argument checks are done in the ancillary functions, except for sf and
@@ -68,14 +148,14 @@ lfcMeteoland <- R6::R6Class(
       )
       check_length_for(user_dates, 2, 'user_dates')
 
-      message("Getting the topography")
+      # message("Getting the topography")
       # get user topo
       if (is.null(.topo)) {
-        message("By db")
+        # message("By db")
         user_topo <- private$get_points_topography(sf)
       } else {
 
-        message("By provided topo")
+        # message("By provided topo")
         # check .topo class
         check_for_topo <- is(.topo, 'SpatialPointsTopography')
 
@@ -89,9 +169,21 @@ lfcMeteoland <- R6::R6Class(
         attr(user_topo, 'offending_coords') <- numeric(0)
       }
 
-      message("Getting the interpolator")
+      # message("Getting the interpolator")
       # get the interpolator
       interpolator <- private$build_points_interpolator(user_dates)
+      # subset the interpolator to the bbox in the sf object, this way we
+      # avoid the burden of using more stations that we need, which results in
+      # less time. i.e. using only the SMC stations is 20 seconds 100 points
+      # 30 days, but using all stations is 170 seconds 100 points 30 days.
+      interpolator_trimmed <- meteoland::subsample(
+        interpolator,
+        # there is a problem with subsample in small bboxs, so we create
+        # a bbox with a 100km buffer already:
+        bbox = sp::bbox(sf::as_Spatial(sf %>% sf::st_transform(3043))) +
+          c(-100000, -100000, 100000, 100000),
+      )
+
 
       # default parameters
       default_params <- meteoland::defaultInterpolationParams()
@@ -99,118 +191,14 @@ lfcMeteoland <- R6::R6Class(
         default_params$St_Precipitation, default_params$St_TemperatureRange
       )
 
-      message("Points interpolation")
-      interpolation_points <-
-        1:length(user_topo@coords[,1]) %>%
-        purrr::map(
-          function(index_coord) {
-            message(
-              "Interpolating point ", index_coord, " of ", length(user_topo@coords[,1])
-            )
-            meteoland::interpolationpoints(
-              object = interpolator,
-              points = user_topo[index_coord, ],
-              verbose = FALSE
-            )@data[[1]][-c(1:buffer_days), ] # remove the buffer days
-          }
-        )
-
-      message("pointsmeteorology creation")
-      # finally, perform the interpolation
-      res <- meteoland::SpatialPointsMeteorology(
-        points = user_topo,
-        data = interpolation_points,
-        dates = interpolator@dates[-c(1:buffer_days)]
-      )
-
-      message("Naming")
-      # now we need to create the names of the list res@data. Each element is
-      # a point, so, we need to take the names, remove the offending coords
-      # and set the names.
-      points_names <- sf %>%
-        dplyr::filter(
-          !dplyr::row_number() %in% attr(user_topo, 'offending_coords')
-        ) %>%
-        dplyr::pull(!! rlang::sym(points_id))
-
-      names(res@data) <- points_names
-
-      return(res)
-    },
-
-    points_interpolation_new = function(sf, user_dates, points_id, .topo = NULL) {
-
-      # argument checks are done in the ancillary functions, except for sf and
-      # topo
-      check_args_for(
-        sf = list(sf = sf),
-        character = list(points_id = points_id)
-      )
-      check_length_for(user_dates, 2, 'user_dates')
-
-      message("Getting the topography")
-      # get user topo
-      if (is.null(.topo)) {
-        message("By db")
-        user_topo <- private$get_points_topography(sf)
-      } else {
-
-        message("By provided topo")
-        # check .topo class
-        check_for_topo <- is(.topo, 'SpatialPointsTopography')
-
-        if (!check_for_topo) {
-          stop(".topo is not a SpatialPointsTopography object")
-        }
-
-        user_topo <- .topo
-        # if the topo is provided, then we need to create the attribute of
-        # offending coords, empty
-        attr(user_topo, 'offending_coords') <- numeric(0)
-      }
-
-      message("Getting the interpolator")
-      # get the interpolator
-      interpolator <- private$build_points_interpolator(user_dates)
-
-      # default parameters
-      default_params <- meteoland::defaultInterpolationParams()
-      buffer_days <- max(
-        default_params$St_Precipitation, default_params$St_TemperatureRange
-      )
-
-      message("Points interpolation")
+      # message("Points interpolation")
       res <- meteoland::interpolationpoints(
-        object = interpolator,
+        object = interpolator_trimmed,
         points = user_topo,
         verbose = TRUE
       )
 
-
-      # interpolation_points <-
-      #   1:length(user_topo@coords[,1]) %>%
-      #   purrr::map(
-      #     function(index_coord) {
-      #       message(
-      #         "Interpolating point ", index_coord, " of ", length(user_topo@coords[,1])
-      #       )
-      #       meteoland::interpolationpoints(
-      #         object = interpolator,
-      #         points = user_topo[index_coord, ],
-      #         verbose = FALSE
-      #       )@data[[1]][-c(1:buffer_days), ] # remove the buffer days
-      #     }
-      #   )
-      #
-      # message("pointsmeteorology creation")
-      # # finally, perform the interpolation
-      # res <- meteoland::SpatialPointsMeteorology(
-      #   points = user_topo,
-      #   data = interpolation_points,
-      #   dates = interpolator@dates[-c(1:buffer_days)]
-      # )
-
-      message("Naming")
+      # message("Naming")
       # now we need to create the names of the list res@data. Each element is
       # a point, so, we need to take the names, remove the offending coords
       # and set the names.
