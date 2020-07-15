@@ -178,10 +178,8 @@ lfcMeteoland <- R6::R6Class(
       # 30 days, but using all stations is 170 seconds 100 points 30 days.
       interpolator_trimmed <- meteoland::subsample(
         interpolator,
-        # there is a problem with subsample in small bboxs, so we create
-        # a bbox with a 100km buffer already:
-        bbox = sp::bbox(sf::as_Spatial(sf %>% sf::st_transform(3043))) +
-          c(-100000, -100000, 100000, 100000),
+        bbox = sp::bbox(user_topo),
+        buffer = 100000
       )
 
 
