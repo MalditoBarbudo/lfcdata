@@ -67,3 +67,9 @@ addons:
       - gdal
       - osgeo-proj@5
     update: true
+
+# safelist
+branches:
+  only:
+  - master
+  - staging
