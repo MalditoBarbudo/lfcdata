@@ -247,7 +247,11 @@ lfcMeteoland <- R6::R6Class(
 
         stars_object %>%
           sf::st_crop(sf_transformed, as_points = FALSE) %>%
-          as('Raster')
+          # merge attributes (variables) as a dimension. THis allows the
+          # direct conversion from stars to rasterBrick
+          merge() %>%
+          as('Raster') %>%
+          magrittr::set_names(names(stars_object))
       }
 
 
