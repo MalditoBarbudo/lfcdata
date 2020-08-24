@@ -239,33 +239,51 @@ lfcMeteoland <- R6::R6Class(
         user_dates[[1]]:user_dates[[2]] %>%
         as.Date(format = '%j', origin = as.Date('1970-01-01'))
 
-      sf_spatial <- sf %>%
-        sf::st_transform(crs = 3043) %>%
-        sf::as_Spatial()
+      raster_interpolation_helper <- function(date, sf) {
+
+        stars_object <- self$get_lowres_raster(date, 'stars')
+        sf_transformed <- sf %>%
+          sf::st_transform(crs = sf::st_crs(stars_object))
+
+        stars_object %>%
+          sf::st_crop(sf_transformed, as_points = FALSE) %>%
+          as('Raster')
+      }
+
+
+      # sf_spatial <- sf %>%
+      #   sf::st_transform(crs = 3043) %>%
+      #   sf::as_Spatial()
 
       # safe versions of the fuctions needed
-      get_lowres_raster_safe <- purrr::possibly(
-        .f = self$get_lowres_raster,
-        otherwise = NA
+      raster_interpolation_helper_safe <- purrr::possibly(
+        .f = raster_interpolation_helper, otherwise = NA
       )
 
-      crop_safe <- purrr::possibly(
-        .f = raster::crop,
-        otherwise = NA
-      )
 
-      mask_safe <- purrr::possibly(
-        .f = raster::mask,
-        otherwise = NA
-      )
+      # get_lowres_raster_safe <- purrr::possibly(
+      #   .f = self$get_lowres_raster,
+      #   otherwise = NA
+      # )
+
+      # crop_safe <- purrr::possibly(
+      #   .f = raster::crop,
+      #   otherwise = NA
+      # )
+
+      # mask_safe <- purrr::possibly(
+      #   .f = raster::mask,
+      #   otherwise = NA
+      # )
 
       res_list <-
         datevec %>%
         as.character() %>%
         magrittr::set_names(., .) %>%
-        purrr::map(~ get_lowres_raster_safe(.x, 'raster')) %>%
-        purrr::map(~ crop_safe(.x, sf_spatial)) %>%
-        purrr::map(~ mask_safe(.x, sf_spatial)) %>%
+        # purrr::map(~ get_lowres_raster_safe(.x, 'raster')) %>%
+        # purrr::map(~ crop_safe(.x, sf_spatial)) %>%
+        # purrr::map(~ mask_safe(.x, sf_spatial)) %>%
+        purrr::map(~ raster_interpolation_helper_safe(.x, sf)) %>%
         purrr::keep(.p = ~ !rlang::is_na(.x))
 
 
