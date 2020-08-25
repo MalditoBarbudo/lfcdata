@@ -255,38 +255,15 @@ lfcMeteoland <- R6::R6Class(
       }
 
 
-      # sf_spatial <- sf %>%
-      #   sf::st_transform(crs = 3043) %>%
-      #   sf::as_Spatial()
-
-      # safe versions of the fuctions needed
+      # safe versions of the functions needed
       raster_interpolation_helper_safe <- purrr::possibly(
         .f = raster_interpolation_helper, otherwise = NA
       )
-
-
-      # get_lowres_raster_safe <- purrr::possibly(
-      #   .f = self$get_lowres_raster,
-      #   otherwise = NA
-      # )
-
-      # crop_safe <- purrr::possibly(
-      #   .f = raster::crop,
-      #   otherwise = NA
-      # )
-
-      # mask_safe <- purrr::possibly(
-      #   .f = raster::mask,
-      #   otherwise = NA
-      # )
 
       res_list <-
         datevec %>%
         as.character() %>%
         magrittr::set_names(., .) %>%
-        # purrr::map(~ get_lowres_raster_safe(.x, 'raster')) %>%
-        # purrr::map(~ crop_safe(.x, sf_spatial)) %>%
-        # purrr::map(~ mask_safe(.x, sf_spatial)) %>%
         purrr::map(~ raster_interpolation_helper_safe(.x, sf)) %>%
         purrr::keep(.p = ~ !rlang::is_na(.x))
 
@@ -311,8 +288,8 @@ lfcMeteoland <- R6::R6Class(
     },
 
     # get_lowres_raster method.
-    # Meteoland db is a postgis db so we need to access with rpostgis and retrieve the
-    # 1000x1000 raster table for the specified date
+    # Meteoland db is a postgis db so we need to access with rpostgis and
+    # retrieve the 1000x1000 raster table for the specified date.
     get_lowres_raster = function(date, spatial = 'stars') {
 
       # argument validation
@@ -324,9 +301,17 @@ lfcMeteoland <- R6::R6Class(
       check_length_for(date, 1)
 
       # table name (it also works as cache name)
+      # The table names change when in historic period, we need to check that
+      # and get the correct name
       raster_table_name <- glue::glue(
         "daily_raster_interpolated_{stringr::str_remove_all(date, '-')}"
       )
+
+      if (as.Date(date) < Sys.Date()-365) {
+        raster_table_name <- glue::glue(
+          "daily_historic_raster_interpolated_{stringr::str_remove_all(date, '-')}"
+        )
+      }
 
       res <- private$data_cache[[raster_table_name]] %||% {
         # pool checkout

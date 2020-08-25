@@ -31,6 +31,7 @@ test_that("get_lowres_raster method works", {
   skip_on_cran()
   skip_on_travis()
   expect_is(meteolanddb$get_lowres_raster(start_date, 'raster'), 'RasterBrick')
+  expect_is(meteolanddb$get_lowres_raster('1981-04-25', 'raster'), 'RasterBrick')
   expect_s3_class(meteolanddb$get_lowres_raster(start_date, 'stars'), 'stars')
   expect_error(meteolanddb$get_lowres_raster(25, 'stars'), "not character")
   expect_error(meteolanddb$get_lowres_raster(start_date, 25), "not character")
@@ -49,6 +50,16 @@ test_that("get_lowres_raster method works", {
   expect_true(
     all(
       names(meteolanddb$get_lowres_raster(start_date, 'stars')) %in%
+        c(
+          "MeanTemperature", "MinTemperature", "MaxTemperature",
+          "MeanRelativeHumidity", "MinRelativeHumidity", "MaxRelativeHumidity",
+          "Precipitation", "Radiation", "WindSpeed", "WindDirection"
+        )
+    )
+  )
+  expect_true(
+    all(
+      names(meteolanddb$get_lowres_raster('1981-04-25', 'stars')) %in%
         c(
           "MeanTemperature", "MinTemperature", "MaxTemperature",
           "MeanRelativeHumidity", "MinRelativeHumidity", "MaxRelativeHumidity",
@@ -249,6 +260,16 @@ test_that("raster_interpolation method works", {
 
   expect_length(ok_raster_interpolation, 3)
   expect_is(ok_raster_interpolation[[1]], 'RasterBrick')
+  expect_true(
+    all(
+      names(ok_raster_interpolation[[1]]) %in%
+        c(
+          "MeanTemperature", "MinTemperature", "MaxTemperature",
+          "MeanRelativeHumidity", "MinRelativeHumidity", "MaxRelativeHumidity",
+          "Precipitation", "Radiation", "WindSpeed", "WindDirection"
+        )
+    )
+  )
 
   expect_warning(
     meteolanddb$raster_interpolation(
