@@ -149,6 +149,10 @@ test_that("points_interpolation method works", {
     meteolanddb$points_interpolation(sf_points, c(start_date, end_date), 'plot_id'),
     'sf'
   )
+  expect_is(
+    meteolanddb$points_interpolation(sf_points, c(start_date, end_date), 'plot_id', .as_sf = FALSE),
+    'SpatialPointsMeteorology'
+  )
   # we need an ok interpolation for testing throughfully
   ok_interpolation <-
     meteolanddb$points_interpolation(sf_points, c(start_date, end_date), 'plot_id')

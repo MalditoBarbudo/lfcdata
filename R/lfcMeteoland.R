@@ -138,7 +138,9 @@ lfcMeteoland <- R6::R6Class(
     #   return(res)
     # },
 
-    points_interpolation = function(sf, user_dates, points_id, .topo = NULL) {
+    points_interpolation = function(
+      sf, user_dates, points_id, .topo = NULL, .as_sf = TRUE
+    ) {
 
       # argument checks are done in the ancillary functions, except for sf and
       # topo
@@ -207,6 +209,10 @@ lfcMeteoland <- R6::R6Class(
         dplyr::pull(!! rlang::sym(points_id))
 
       names(res_spm@data) <- points_names
+
+      if (isFALSE(.as_sf)) {
+        return(res_spm)
+      }
 
       res_sf_pre <- sf::st_as_sf(sp::SpatialPoints(res_spm)) %>%
         dplyr::mutate(!! points_id := names(res_spm@data))
