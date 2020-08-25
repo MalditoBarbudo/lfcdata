@@ -307,4 +307,9 @@ test_that("raster_interpolation method works", {
     "No data for the specified dates"
   )
 
+  expect_is(
+    meteolanddb$raster_interpolation(sf_polygons, c('1981-04-24', '1981-04-26'))[[1]],
+    'RasterBrick'
+  )
+
 })
