@@ -190,14 +190,14 @@ lfcMeteoland <- R6::R6Class(
       )
 
       # message("Points interpolation")
-      res <- meteoland::interpolationpoints(
+      res_spm <- meteoland::interpolationpoints(
         object = interpolator_trimmed,
         points = user_topo,
         verbose = TRUE
       )
 
       # message("Naming")
-      # now we need to create the names of the list res@data. Each element is
+      # now we need to create the names of the list res_spm@data. Each element is
       # a point, so, we need to take the names, remove the offending coords
       # and set the names.
       points_names <- sf %>%
@@ -206,9 +206,119 @@ lfcMeteoland <- R6::R6Class(
         ) %>%
         dplyr::pull(!! rlang::sym(points_id))
 
-      names(res@data) <- points_names
+      names(res_spm@data) <- points_names
+
+      res_sf_pre <- sf::st_as_sf(sp::SpatialPoints(res_spm)) %>%
+        dplyr::mutate(!! points_id := names(res_spm@data))
+
+      res_spm@data %>%
+        purrr::imap(~ dplyr::mutate(
+          .x, !! points_id := .y,
+          date = rownames(.x)
+        )) %>%
+        purrr::map_dfr(~ dplyr::slice(.x, -(1:buffer_days))) %>%
+        dplyr::select(
+          dplyr::all_of(c('date', points_id)), dplyr::everything(), -DOY
+        ) %>%
+        dplyr::left_join(res_sf_pre) %>%
+        sf::st_as_sf(crs = 3043)
+    },
+
+    # historic points interpolation
+    historical_points_interpolation = function(sf, user_dates, points_id) {
+      check_args_for(
+        sf = list(sf = sf),
+        character = list(points_id = points_id, user_dates = user_dates),
+        date = list(user_dates = user_dates),
+        points = list(sf = sf)
+      )
+      check_length_for(user_dates, 2, 'user_dates')
+      # datevec from user dates
+      user_dates <- as.Date(user_dates)
+
+      # previously to create the datevec, we must ensure end date is bigger than
+      # start date
+      if (! user_dates[[2]] >= user_dates[[1]]) {
+        stop('end date must be equal or more recent than the start date')
+      }
+
+      datevec <-
+        user_dates[[1]]:user_dates[[2]] %>%
+        as.Date(format = '%j', origin = as.Date('1970-01-01'))
+
+      historical_points_interpolation_helper <- function(date, sf, points_id) {
+
+        # check if date is historical
+        if (date > Sys.Date()-1) {
+          message(glue::glue("Date provided ({as.character(date)}) is not historical, but current"))
+          stop(glue::glue("Date provided ({as.character(date)}) is not historical, but current"))
+        }
+
+        as.character(date) %>%
+          self$get_lowres_raster('raster') %>%
+          raster::extract(sf::as_Spatial(sf), sp = TRUE) %>%
+          sf::st_as_sf() %>%
+          dplyr::mutate(date = as.character(date)) %>%
+          dplyr::select(dplyr::all_of(c('date', points_id)), dplyr::everything())
+      }
+
+      failsafe_sf <- sf %>%
+        dplyr::mutate(
+          date = NA_character_,
+          MeanTemperature = NA_real_, MinTemperature = NA_real_,
+          MaxTemperature = NA_real_,
+          MeanRelativeHumidity = NA_real_, MinRelativeHumidity = NA_real_,
+          MaxRelativeHumidity = NA_real_,
+          Precipitation = NA_real_, Radiation = NA_real_, WindSpeed = NA_real_,
+          WindDirection = NA_real_
+        ) %>%
+        dplyr::select(dplyr::all_of(c('date', points_id)), dplyr::everything())
+
+      hpih_safe <- purrr::possibly(
+        .f = historical_points_interpolation_helper, otherwise = failsafe_sf
+      )
+
+      res <- datevec %>%
+        purrr::map_dfr(
+          ~ hpih_safe(.x, sf, points_id)
+        )
+
+      # checks to deliver warning or errors for missing dates or data
+      if (any(is.na(res %>% dplyr::pull(date)))) {
+        res_dates <- res %>% dplyr::pull(date)
+        offending_dates <-
+          datevec[which(!as.character(datevec) %in% res_dates)] %>%
+          as.character() %>%
+          stringr::str_flatten(collapse = ', ')
+
+        warning(glue::glue(
+          "Some dates ({offending_dates}) are not available on the database, skipping them"
+        ))
+      }
+
+      if (all(is.na(res %>% dplyr::pull(date)))) {
+        stop("No meteo data found for any of the dates provided")
+      }
+
+      if (any(is.na(res %>% dplyr::pull(MeanTemperature)))) {
+
+        offending_points <- res %>%
+          dplyr::filter(is.na(MeanTemperature)) %>%
+          dplyr::pull(!! rlang::sym(points_id))
+
+        warning(glue::glue(
+          "Some points are not in Catalonia ",
+          "and they they will be filled with NAs ",
+          "(offending points: {stringr::str_flatten(as.character(offending_points), collapse = ', ')})",
+        ))
+      }
+
+      if (all(is.na(res %>% dplyr::pull(MeanTemperature)))) {
+        stop("All coordinates are not in Catalonia")
+      }
 
       return(res)
+
     },
 
     # current raster interpolation
