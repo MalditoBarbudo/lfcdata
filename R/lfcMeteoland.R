@@ -353,13 +353,19 @@ lfcMeteoland <- R6::R6Class(
 
       datevec <-
         user_dates[[1]]:user_dates[[2]] %>%
-        as.Date(format = '%j', origin = as.Date('1970-01-01'))
+        as.Date(format = '%j', origin = as.Date('1970-01-01')) %>%
+        as.character()
 
       raster_interpolation_helper <-
         function(date, sf, .progress_shiny, .progress_value) {
 
           if (!is.null(.progress_shiny)) {
-            .progress_shiny$set(value = .progress_value)
+            .progress_shiny$set(
+              value = .progress_value,
+              detail = glue::glue(
+                "{date} ({which(date == datevec)}/{length(datevec)})"
+              )
+            )
           }
 
 
@@ -386,7 +392,6 @@ lfcMeteoland <- R6::R6Class(
 
       res_list <-
         datevec %>%
-        as.character() %>%
         magrittr::set_names(., .) %>%
         purrr::map2(
           .y = progress_values,
@@ -402,7 +407,7 @@ lfcMeteoland <- R6::R6Class(
       if (length(res_list) < length(datevec)) {
 
         offending_dates <-
-          datevec[which(!as.character(datevec) %in% names(res_list))] %>%
+          datevec[which(!datevec %in% names(res_list))] %>%
           as.character() %>%
           stringr::str_flatten(collapse = ', ')
 
