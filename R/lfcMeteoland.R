@@ -328,7 +328,7 @@ lfcMeteoland <- R6::R6Class(
     },
 
     # current raster interpolation
-    raster_interpolation = function(sf, user_dates) {
+    raster_interpolation = function(sf, user_dates, .progress_shiny = NULL) {
       # argument checks
       check_length_for(user_dates, 2, 'user_dates')
       # argument checks
@@ -355,20 +355,26 @@ lfcMeteoland <- R6::R6Class(
         user_dates[[1]]:user_dates[[2]] %>%
         as.Date(format = '%j', origin = as.Date('1970-01-01'))
 
-      raster_interpolation_helper <- function(date, sf) {
+      raster_interpolation_helper <-
+        function(date, sf, .progress_shiny, .progress_value) {
 
-        stars_object <- self$get_lowres_raster(date, 'stars')
-        sf_transformed <- sf %>%
-          sf::st_transform(crs = sf::st_crs(stars_object))
+          if (!is.null(.progress_shiny)) {
+            .progress_shiny$set(value = .progress_value)
+          }
 
-        stars_object %>%
-          sf::st_crop(sf_transformed, as_points = FALSE) %>%
-          # merge attributes (variables) as a dimension. THis allows the
-          # direct conversion from stars to rasterBrick
-          merge() %>%
-          as('Raster') %>%
-          magrittr::set_names(names(stars_object))
-      }
+
+          stars_object <- self$get_lowres_raster(date, 'stars')
+          sf_transformed <- sf %>%
+            sf::st_transform(crs = sf::st_crs(stars_object))
+
+          stars_object %>%
+            sf::st_crop(sf_transformed, as_points = FALSE) %>%
+            # merge attributes (variables) as a dimension. This allows the
+            # direct conversion from stars to rasterBrick
+            merge() %>%
+            as('Raster') %>%
+            magrittr::set_names(names(stars_object))
+        }
 
 
       # safe versions of the functions needed
@@ -376,11 +382,16 @@ lfcMeteoland <- R6::R6Class(
         .f = raster_interpolation_helper, otherwise = NA
       )
 
+      progress_values <- ((80/length(datevec))*(1:length(datevec))) + 5
+
       res_list <-
         datevec %>%
         as.character() %>%
         magrittr::set_names(., .) %>%
-        purrr::map(~ raster_interpolation_helper_safe(.x, sf)) %>%
+        purrr::map2(
+          .y = progress_values,
+          .f = ~ raster_interpolation_helper_safe(.x, sf, .progress_shiny, .y)
+        ) %>%
         purrr::keep(.p = ~ !rlang::is_na(.x))
 
 
