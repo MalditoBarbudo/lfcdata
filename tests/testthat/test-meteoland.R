@@ -52,7 +52,7 @@ test_that("get_lowres_raster method works", {
         c(
           "MeanTemperature", "MinTemperature", "MaxTemperature",
           "MeanRelativeHumidity", "MinRelativeHumidity", "MaxRelativeHumidity",
-          "Precipitation", "Radiation", "WindSpeed", "WindDirection"
+          "Precipitation", "Radiation", "WindSpeed", "WindDirection", "PET"
         )
     )
   )
@@ -62,7 +62,7 @@ test_that("get_lowres_raster method works", {
         c(
           "MeanTemperature", "MinTemperature", "MaxTemperature",
           "MeanRelativeHumidity", "MinRelativeHumidity", "MaxRelativeHumidity",
-          "Precipitation", "Radiation", "WindSpeed", "WindDirection"
+          "Precipitation", "Radiation", "WindSpeed", "WindDirection", "PET"
         )
     )
   )
@@ -293,7 +293,7 @@ test_that("historical points_interpolation method works", {
       'date', 'plot_id', 'geometry',
       'MeanTemperature', 'MinTemperature', 'MaxTemperature',
       'MeanRelativeHumidity', 'MinRelativeHumidity', 'MaxRelativeHumidity',
-      'Precipitation', 'Radiation', 'WindSpeed', 'WindDirection'
+      'Precipitation', 'Radiation', 'WindSpeed', 'WindDirection', 'PET'
     )
   ))
 
@@ -315,7 +315,7 @@ test_that("historical points_interpolation method works", {
       'date', 'plot_id', 'geometry',
       'MeanTemperature', 'MinTemperature', 'MaxTemperature',
       'MeanRelativeHumidity', 'MinRelativeHumidity', 'MaxRelativeHumidity',
-      'Precipitation', 'Radiation', 'WindSpeed', 'WindDirection'
+      'Precipitation', 'Radiation', 'WindSpeed', 'WindDirection', 'PET'
     )
   ))
 
@@ -345,7 +345,7 @@ test_that("historical points_interpolation method works", {
       'date', 'plot_id', 'geometry',
       'MeanTemperature', 'MinTemperature', 'MaxTemperature',
       'MeanRelativeHumidity', 'MinRelativeHumidity', 'MaxRelativeHumidity',
-      'Precipitation', 'Radiation', 'WindSpeed', 'WindDirection'
+      'Precipitation', 'Radiation', 'WindSpeed', 'WindDirection', 'PET'
     )
   ))
 
@@ -411,7 +411,7 @@ test_that("raster_interpolation method works", {
         c(
           "MeanTemperature", "MinTemperature", "MaxTemperature",
           "MeanRelativeHumidity", "MinRelativeHumidity", "MaxRelativeHumidity",
-          "Precipitation", "Radiation", "WindSpeed", "WindDirection"
+          "Precipitation", "Radiation", "WindSpeed", "WindDirection", "PET"
         )
     )
   )
