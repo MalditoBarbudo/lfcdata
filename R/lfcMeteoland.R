@@ -714,7 +714,13 @@ lfcMeteoland <- R6::R6Class(
               dplyr::select(stationCode, stationOrigin, lat, long, elevation)
           }
         ) %>%
-        dplyr::distinct()
+        dplyr::distinct() %>%
+        # sometimes there is repeated station codes with different elevation,
+        # lets get only the first station with a code
+        dplyr::group_by(stationCode) %>%
+        dplyr::summarise_all(
+          dplyr::first
+        )
 
       interpolator_res <-
         unique_meteo_stations %>%
