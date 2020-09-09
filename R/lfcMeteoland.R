@@ -276,7 +276,7 @@ lfcMeteoland <- R6::R6Class(
           MeanRelativeHumidity = NA_real_, MinRelativeHumidity = NA_real_,
           MaxRelativeHumidity = NA_real_,
           Precipitation = NA_real_, Radiation = NA_real_, WindSpeed = NA_real_,
-          WindDirection = NA_real_
+          WindDirection = NA_real_, PET = NA_real_
         ) %>%
         dplyr::select(dplyr::all_of(c('date', points_id)), dplyr::everything())
 
