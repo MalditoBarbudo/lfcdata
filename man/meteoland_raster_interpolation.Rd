@@ -41,6 +41,7 @@ Dates must be provided as a two elements character vector, with
 \seealso{
 Other Meteoland functions: 
 \code{\link{meteoland_get_lowres_raster}()},
+\code{\link{meteoland_historical_points_interpolation}()},
 \code{\link{meteoland_points_interpolation}()}
 }
 \concept{Meteoland functions}

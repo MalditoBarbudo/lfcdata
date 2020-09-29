@@ -1,9 +1,11 @@
-#' @description \code{meteoland()} creates an object to access the Meteoland database.
+#' @description \code{meteoland()} creates an object to access the Meteoland
+#'   database.
 #'
 #' @title lfcMeteoland class
 #'
-#' @return An \code{lfcMeteoland} class object (inherits from \code{\link[R6]{R6Class}}),
-#'   with methods to access the data. See Methods section.
+#' @return An \code{lfcMeteoland} class object (inherits from
+#'   \code{\link[R6]{R6Class}}), with methods to access the data. See Methods
+#'   section.
 #'
 #' @section Methods:
 #'   \code{lfcMeteoland} objects has the following methods available:
@@ -58,86 +60,6 @@ lfcMeteoland <- R6::R6Class(
     },
 
     # current points interpolation
-    # points_interpolation = function(sf, user_dates, points_id, .topo = NULL) {
-    #
-    #   # argument checks are done in the ancillary functions, except for sf and
-    #   # topo
-    #   check_args_for(
-    #     sf = list(sf = sf),
-    #     character = list(points_id = points_id)
-    #   )
-    #   check_length_for(user_dates, 2, 'user_dates')
-    #
-    #   message("Getting the topography")
-    #   # get user topo
-    #   if (is.null(.topo)) {
-    #     message("By db")
-    #     user_topo <- private$get_points_topography(sf)
-    #   } else {
-    #
-    #     message("By provided topo")
-    #     # check .topo class
-    #     check_for_topo <- is(.topo, 'SpatialPointsTopography')
-    #
-    #     if (!check_for_topo) {
-    #       stop(".topo is not a SpatialPointsTopography object")
-    #     }
-    #
-    #     user_topo <- .topo
-    #     # if the topo is provided, then we need to create the attribute of
-    #     # offending coords, empty
-    #     attr(user_topo, 'offending_coords') <- numeric(0)
-    #   }
-    #
-    #   message("Getting the interpolator")
-    #   # get the interpolator
-    #   interpolator <- private$build_points_interpolator(user_dates)
-    #
-    #   # default parameters
-    #   default_params <- meteoland::defaultInterpolationParams()
-    #   buffer_days <- max(
-    #     default_params$St_Precipitation, default_params$St_TemperatureRange
-    #   )
-    #
-    #   message("Points interpolation")
-    #   interpolation_points <-
-    #     1:length(user_topo@coords[,1]) %>%
-    #     purrr::map(
-    #       function(index_coord) {
-    #         message(
-    #           "Interpolating point ", index_coord, " of ", length(user_topo@coords[,1])
-    #         )
-    #         meteoland::interpolationpoints(
-    #           object = interpolator,
-    #           points = user_topo[index_coord, ],
-    #           verbose = FALSE
-    #         )@data[[1]][-c(1:buffer_days), ] # remove the buffer days
-    #       }
-    #     )
-    #
-    #   message("pointsmeteorology creation")
-    #   # finally, perform the interpolation
-    #   res <- meteoland::SpatialPointsMeteorology(
-    #     points = user_topo,
-    #     data = interpolation_points,
-    #     dates = interpolator@dates[-c(1:buffer_days)]
-    #   )
-    #
-    #   message("Naming")
-    #   # now we need to create the names of the list res@data. Each element is
-    #   # a point, so, we need to take the names, remove the offending coords
-    #   # and set the names.
-    #   points_names <- sf %>%
-    #     dplyr::filter(
-    #       !dplyr::row_number() %in% attr(user_topo, 'offending_coords')
-    #     ) %>%
-    #     dplyr::pull(!! rlang::sym(points_id))
-    #
-    #   names(res@data) <- points_names
-    #
-    #   return(res)
-    # },
-
     points_interpolation = function(
       sf, user_dates, points_id, .topo = NULL, .as_sf = TRUE
     ) {
@@ -339,6 +261,8 @@ lfcMeteoland <- R6::R6Class(
         polygons = list(sf = sf)
       )
 
+      # browser()
+
       # This method iterate by dates to get the final rasters, as a list
       # with one element for each date supplied
 
@@ -373,13 +297,19 @@ lfcMeteoland <- R6::R6Class(
           sf_transformed <- sf %>%
             sf::st_transform(crs = sf::st_crs(stars_object))
 
-          stars_object %>%
+          res <- stars_object %>%
             sf::st_crop(sf_transformed, as_points = FALSE) %>%
             # merge attributes (variables) as a dimension. This allows the
             # direct conversion from stars to rasterBrick
             merge() %>%
             as('Raster') %>%
             magrittr::set_names(names(stars_object))
+
+          if (all(is.na(raster::values(res)))) {
+            stop('No data for these polygons')
+          }
+
+          return(res)
         }
 
 
@@ -834,9 +764,17 @@ meteoland_get_lowres_raster <- function(object, date, spatial = 'stars') {
 #' @param dates character vector of length 2 with the dates range (start-end) to
 #'   interpolate (i.e. \code{c("2020-04-25", "2020-04-30")}). See details for
 #'   more information.
+#' @param points_id character with the name of the variable holding the points
+#'   id on the sf object
+#' @param .topo optional custom SpatialPointsTopology object. If not provided
+#'   topology will be retrieved from database (only for Catalonia)
+#' @param .as_sf logical indicating if the returned object should be an sf
+#'   object (default) or an SpatialPointsMetereology object (FALSE)
 #'
-#' @return An SpatialPointsMetereology object (see
-#'   \code{\link[meteoland]{SpatialPointsMetereology}} for more information)
+#' @return An sf object if \code{.as_sf} is TRUE (default), an
+#'   SpatialPointsMetereology object (see
+#'   \code{\link[meteoland]{SpatialPointsMetereology}} for more information) if
+#'   \code{.as_sf} is FALSE.
 #'
 #' @family Meteoland functions
 #'
@@ -845,18 +783,80 @@ meteoland_get_lowres_raster <- function(object, date, spatial = 'stars') {
 #'  \code{\link[base]{as.Date}}.
 #'  The allowed range for dates is one natural year (365 days) ending on the
 #'  actual date minus one day.
-#'  Interpolation for points is made based on a 30x30 meters topology grid.
-#'
+#'  Interpolation for points is made based on a 30x30 meters topology grid.#'
 #'
 #' @examples
+#' if (interactive()) {
+#'   library(lfcdata)
+#'   meteolanddb <- meteoland()
+#'   sf_points <- nfi()$get_data('plots', spatial = TRUE) %>%
+#'   dplyr::slice(1:5) %>%
+#'   dplyr::select(plot_id)
+#'
+#'   meteoland_points_interpolation(
+#'     meteolanddb, sf_points, c(Sys.Date()-1, Sys.Date()-2, "plot_id")
+#'   )
+#' }
+#'
 #'
 #' @export
-meteoland_points_interpolation <- function(object, sf, dates) {
+meteoland_points_interpolation <- function(
+  object, sf, dates, points_id, .topo = NULL, .as_sf = TRUE
+) {
   # argument validation
   # NOTE: variables and spatial are validated in the method
   check_class_for(object, 'lfcMeteoland')
   # call to the class method
-  object$points_interpolation(sf, dates)
+  object$points_interpolation(sf, dates, points_id, .topo = NULL, .as_sf = TRUE)
+}
+
+#' Historical points (coordinates) interpolation
+#'
+#' @description \code{meteoland_points_interpolation} is a wrapper for the
+#'   \code{$points_interpolation} method of \code{lfcMeteoland} objects.
+#'   See also \code{\link{meteoland}}.
+#'
+#' @param object \code{lfcMeteoland} object, as created by
+#'   \code{\link{meteoland}}
+#' @param sf sf object with the the point features to interpolate.
+#' @param dates character vector of length 2 with the dates range (start-end) to
+#'   interpolate (i.e. \code{c("2020-04-25", "2020-04-30")}). See details for
+#'   more information.
+#'
+#' @return An sf object.
+#'
+#' @family Meteoland functions
+#'
+#' @details Dates must be provided as a two elements character vector, with
+#'  the start date and the end date in a format accepted by
+#'  \code{\link[base]{as.Date}}.
+#'  The allowed range for dates is one natural year (365 days) ending on the
+#'  actual date minus one day.
+#'  Interpolation for points is made based on a 30x30 meters topology grid.#'
+#'
+#' @examples
+#' if (interactive()) {
+#'   library(lfcdata)
+#'   meteolanddb <- meteoland()
+#'   sf_points <- nfi()$get_data('plots', spatial = TRUE) %>%
+#'   dplyr::slice(1:5) %>%
+#'   dplyr::select(plot_id)
+#'
+#'   meteoland_historical_points_interpolation(
+#'     meteolanddb, sf_points, c(Sys.Date()-1, Sys.Date()-2, "plot_id")
+#'   )
+#' }
+#'
+#'
+#' @export
+meteoland_historical_points_interpolation <- function(
+  object, sf, dates, points_id
+) {
+  # argument validation
+  # NOTE: variables and spatial are validated in the method
+  check_class_for(object, 'lfcMeteoland')
+  # call to the class method
+  object$historical_points_interpolation(sf, dates, points_id)
 }
 
 #' Current raster interpolation

@@ -52,6 +52,7 @@ if (interactive()) {
 }
 \seealso{
 Other Meteoland functions: 
+\code{\link{meteoland_historical_points_interpolation}()},
 \code{\link{meteoland_points_interpolation}()},
 \code{\link{meteoland_raster_interpolation}()}
 }

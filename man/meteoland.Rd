@@ -7,11 +7,13 @@
 meteoland()
 }
 \value{
-An \code{lfcMeteoland} class object (inherits from \code{\link[R6]{R6Class}}),
-  with methods to access the data. See Methods section.
+An \code{lfcMeteoland} class object (inherits from
+  \code{\link[R6]{R6Class}}), with methods to access the data. See Methods
+  section.
 }
 \description{
-\code{meteoland()} creates an object to access the Meteoland database.
+\code{meteoland()} creates an object to access the Meteoland
+  database.
 }
 \section{Methods}{
 

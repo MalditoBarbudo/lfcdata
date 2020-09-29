@@ -17,6 +17,50 @@ end_date <- as.character(Sys.Date()-8)
 historical_start_date <- '1981-04-25'
 historical_end_date <- '1981-04-27'
 
+# sf objects to test
+sf_polygons <-
+  lidar()$get_data('lidar_municipalities', 'DBH') %>%
+  dplyr::slice(1:5) %>%
+  dplyr::select(tururu = poly_id)
+
+sf_points <-
+  nfi()$get_data('plots', spatial = TRUE) %>%
+  dplyr::slice(1:5) %>%
+  dplyr::select(plot_id)
+
+sf_points_3043 <- sf::st_transform(sf_points, crs = 3043)
+
+sf_points_all_out <- sf_points %>%
+  dplyr::mutate(geometry = geometry + 10, plot_id = paste0('out', 1:5)) %>%
+  sf::st_set_crs(4326)
+
+sf_points_one_out <- rbind(sf_points, sf_points_all_out %>% dplyr::slice(1))
+
+sf_multipoints <-
+  dplyr::tibble(
+    point_id = 'wrong',
+    geometry = sf::st_multipoint(matrix(1:10, , 2)) %>% sf::st_sfc()
+  ) %>%
+  sf::st_as_sf(sf_column_name = 'geometry')
+
+sf_polygons_latlong <-
+  sf_polygons %>% sf::st_transform(crs = 4326)
+
+sf_empty_polygon <-
+  lidar()$get_data('lidar_xn2000', 'DBH') %>%
+  dplyr::slice(19) %>%
+  dplyr::select(poly_id)
+
+sf_polygons_all_out <- sf_polygons %>%
+  dplyr::mutate(
+    geometry = geometry + c(500000, 0),
+    tururu = paste0("out_", 1:5)
+  ) %>%
+  sf::st_set_crs(3043)
+
+sf_polygons_one_out <- rbind(sf_polygons, sf_polygons_all_out) %>%
+  dplyr::slice(1:6)
+
 ## get data method works ####
 test_that("get_data method works", {
   # get method is not implemented in meteoland db, so it must print a message
@@ -68,50 +112,6 @@ test_that("get_lowres_raster method works", {
   )
 })
 
-# sf objects to test
-sf_polygons <-
-  lidar()$get_data('lidar_municipalities', 'DBH') %>%
-  dplyr::slice(1:5) %>%
-  dplyr::select(tururu = poly_id)
-
-sf_points <-
-  nfi()$get_data('plots', spatial = TRUE) %>%
-  dplyr::slice(1:5) %>%
-  dplyr::select(plot_id)
-
-sf_points_3043 <- sf::st_transform(sf_points, crs = 3043)
-
-sf_points_all_out <- sf_points %>%
-  dplyr::mutate(geometry = geometry + 10, plot_id = paste0('out', 1:5)) %>%
-  sf::st_set_crs(4326)
-
-sf_points_one_out <- rbind(sf_points, sf_points_all_out %>% dplyr::slice(1))
-
-sf_multipoints <-
-  dplyr::tibble(
-    point_id = 'wrong',
-    geometry = sf::st_multipoint(matrix(1:10, , 2)) %>% sf::st_sfc()
-  ) %>%
-  sf::st_as_sf(sf_column_name = 'geometry')
-
-sf_polygons_latlong <-
-  sf_polygons %>% sf::st_transform(crs = 4326)
-
-sf_empty_polygon <-
-  lidar()$get_data('lidar_xn2000', 'DBH') %>%
-  dplyr::slice(19) %>%
-  dplyr::select(poly_id)
-
-sf_polygons_all_out <- sf_polygons %>%
-  dplyr::mutate(
-    geometry = geometry + c(500000, 0),
-    tururu = paste0("out_", 1:5)
-  ) %>%
-  sf::st_set_crs(3043)
-
-sf_polygons_one_out <- rbind(sf_polygons, sf_polygons_all_out) %>%
-  dplyr::slice(1:6)
-
 ## points interpolation works ####
 test_that("points_interpolation method works", {
   skip_on_cran()
@@ -160,12 +160,12 @@ test_that("points_interpolation method works", {
   expect_equal(nrow(ok_interpolation), 3*5)
   expect_equal(ncol(ok_interpolation), 14)
   expect_true(all(
-    names(ok_interpolation) %in% c(
+    c(
       'date', 'plot_id', 'geometry',
       'MeanTemperature', 'MinTemperature', 'MaxTemperature',
       'MeanRelativeHumidity', 'MinRelativeHumidity', 'MaxRelativeHumidity',
       'Precipitation', 'Radiation', 'WindSpeed', 'WindDirection', 'PET'
-    )
+    ) %in% names(ok_interpolation)
   ))
 
 
@@ -183,12 +183,12 @@ test_that("points_interpolation method works", {
   expect_equal(nrow(one_day_missing_interpolation), 2*5)
   expect_equal(ncol(one_day_missing_interpolation), 14)
   expect_true(all(
-    names(one_day_missing_interpolation) %in% c(
+    c(
       'date', 'plot_id', 'geometry',
       'MeanTemperature', 'MinTemperature', 'MaxTemperature',
       'MeanRelativeHumidity', 'MinRelativeHumidity', 'MaxRelativeHumidity',
       'Precipitation', 'Radiation', 'WindSpeed', 'WindDirection', 'PET'
-    )
+    ) %in% names(one_day_missing_interpolation)
   ))
 
   # when all dates are out of range, then error occurs
@@ -213,12 +213,12 @@ test_that("points_interpolation method works", {
   expect_equal(nrow(one_coord_missing_interpolation), 3*5)
   expect_equal(ncol(one_coord_missing_interpolation), 14)
   expect_true(all(
-    names(one_coord_missing_interpolation) %in% c(
+    c(
       'date', 'plot_id', 'geometry',
       'MeanTemperature', 'MinTemperature', 'MaxTemperature',
       'MeanRelativeHumidity', 'MinRelativeHumidity', 'MaxRelativeHumidity',
       'Precipitation', 'Radiation', 'WindSpeed', 'WindDirection', 'PET'
-    )
+    ) %in% names(one_coord_missing_interpolation)
   ))
 
   expect_error(
@@ -287,14 +287,14 @@ test_that("historical points_interpolation method works", {
     )
 
   expect_equal(nrow(ok_interpolation), 3*5)
-  expect_equal(ncol(ok_interpolation), 13)
+  expect_equal(ncol(ok_interpolation), 14)
   expect_true(all(
-    names(ok_interpolation) %in% c(
+    c(
       'date', 'plot_id', 'geometry',
       'MeanTemperature', 'MinTemperature', 'MaxTemperature',
       'MeanRelativeHumidity', 'MinRelativeHumidity', 'MaxRelativeHumidity',
       'Precipitation', 'Radiation', 'WindSpeed', 'WindDirection', 'PET'
-    )
+    ) %in% names(ok_interpolation)
   ))
 
 
@@ -309,14 +309,14 @@ test_that("historical points_interpolation method works", {
     )
 
   expect_equal(nrow(one_day_missing_interpolation), 5*3)
-  expect_equal(ncol(one_day_missing_interpolation), 13)
+  expect_equal(ncol(one_day_missing_interpolation), 14)
   expect_true(all(
-    names(one_day_missing_interpolation) %in% c(
+    c(
       'date', 'plot_id', 'geometry',
       'MeanTemperature', 'MinTemperature', 'MaxTemperature',
       'MeanRelativeHumidity', 'MinRelativeHumidity', 'MaxRelativeHumidity',
       'Precipitation', 'Radiation', 'WindSpeed', 'WindDirection', 'PET'
-    )
+    ) %in% names(one_day_missing_interpolation)
   ))
 
   # when all dates are out of range, then error occurs
@@ -339,14 +339,14 @@ test_that("historical points_interpolation method works", {
     )
 
   expect_equal(nrow(one_coord_missing_interpolation), 3*6)
-  expect_equal(ncol(one_coord_missing_interpolation), 13)
+  expect_equal(ncol(one_coord_missing_interpolation), 14)
   expect_true(all(
-    names(one_coord_missing_interpolation) %in% c(
+    c(
       'date', 'plot_id', 'geometry',
       'MeanTemperature', 'MinTemperature', 'MaxTemperature',
       'MeanRelativeHumidity', 'MinRelativeHumidity', 'MaxRelativeHumidity',
       'Precipitation', 'Radiation', 'WindSpeed', 'WindDirection', 'PET'
-    )
+    ) %in% names(one_coord_missing_interpolation)
   ))
 
   expect_error(
@@ -454,4 +454,81 @@ test_that("raster_interpolation method works", {
     'RasterBrick'
   )
 
+})
+
+## external methods work ####
+test_that("external get low raster works", {
+  skip_on_cran()
+  skip_on_travis()
+  expect_identical(
+    meteolanddb$get_lowres_raster(start_date, 'stars'),
+    meteoland_get_lowres_raster(meteolanddb, start_date, 'stars')
+  )
+  expect_identical(
+    meteolanddb$get_lowres_raster(start_date, 'raster'),
+    meteoland_get_lowres_raster(meteolanddb, start_date, 'raster')
+  )
+  expect_error(
+    meteoland_get_lowres_raster('meteolanddb', start_date, 'raster'),
+    "class lfcMeteoland"
+  )
+})
+
+test_that("external points interpolation works", {
+  skip_on_cran()
+  skip_on_travis()
+  expect_identical(
+    meteolanddb$points_interpolation(
+      sf_points, c(start_date, end_date), 'plot_id'
+    ),
+    meteoland_points_interpolation(
+      meteolanddb, sf_points, c(start_date, end_date), 'plot_id'
+    )
+  )
+  expect_error(
+    meteoland_points_interpolation(
+      'meteolanddb', sf_points, c(start_date, end_date), 'plot_id'
+    ),
+    "class lfcMeteoland"
+  )
+})
+
+test_that("external historical points interpolation works", {
+  skip_on_cran()
+  skip_on_travis()
+  expect_identical(
+    meteolanddb$historical_points_interpolation(
+      sf_points, c(historical_start_date, historical_end_date), 'plot_id'
+    ),
+    meteoland_historical_points_interpolation(
+      meteolanddb, sf_points, c(historical_start_date, historical_end_date),
+      'plot_id'
+    )
+  )
+  expect_error(
+    meteoland_historical_points_interpolation(
+      'meteolanddb', sf_points, c(historical_start_date, historical_end_date),
+      'plot_id'
+    ),
+    "class lfcMeteoland"
+  )
+})
+
+test_that("external raster interpolation works", {
+  skip_on_cran()
+  skip_on_travis()
+  expect_identical(
+    meteolanddb$raster_interpolation(
+      sf_polygons, c(start_date, end_date)
+    ),
+    meteoland_raster_interpolation(
+      meteolanddb, sf_polygons, c(start_date, end_date)
+    )
+  )
+  expect_error(
+    meteoland_raster_interpolation(
+      'meteolanddb', sf_polygons, c(start_date, end_date)
+    ),
+    "class lfcMeteoland"
+  )
 })
