@@ -83,7 +83,7 @@ test_that("describe_var method works", {
 sf_polygons <-
   lidardb$get_data('lidar_municipalities', 'DBH') %>%
   dplyr::slice(1:5) %>%
-  dplyr::select(tururu = poly_id)
+  dplyr::select(tururu = poly_id, geom = geometry)
 
 sf_points <-
   nfi()$get_data('plots', spatial = TRUE) %>%
@@ -131,7 +131,7 @@ test_that("clip_and_stats method works", {
       'AB_km2', 'AB_km2_perc',
       'DBH_pixels', 'DBH_average', 'DBH_sd', 'DBH_min', 'DBH_max',
       'DBH_km2', 'DBH_km2_perc',
-      'geometry'
+      'geom'
     )
   )
   expect_equal(nrow(lidardb$clip_and_stats(sf_polygons, 'tururu', c('AB', 'DBH'))), 5)

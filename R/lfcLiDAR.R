@@ -420,10 +420,7 @@ lfcLiDAR <- R6::R6Class(
       # checked on clip_and_stats_simple_case)
       check_args_for(sf = list(sf = sf), character = list(id_var_name = id_var_name))
       check_length_for(id_var_name, 1)
-      check_if_in_for(
-        id_var_name,
-        names(sf %>% dplyr::as_tibble() %>% dplyr::select(-geometry))
-      )
+      check_if_in_for(id_var_name, names(sf))
 
       # get the geom column name
       sf_column <- attr(sf, 'sf_column')
