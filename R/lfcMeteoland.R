@@ -146,9 +146,11 @@ lfcMeteoland <- R6::R6Class(
         )) %>%
         purrr::map_dfr(~ dplyr::slice(.x, -(1:buffer_days))) %>%
         dplyr::select(
-          dplyr::all_of(c('date', points_id)), dplyr::everything(), -DOY
+          dplyr::all_of(c('date', points_id)), dplyr::everything(), -DOY,
+          -WindDirection
         ) %>%
         dplyr::left_join(res_sf_pre) %>%
+        dplyr::mutate(ThermalAmplitude = MaxTemperature - MinTemperature) %>%
         sf::st_as_sf(crs = 3043)
     },
 
@@ -177,7 +179,7 @@ lfcMeteoland <- R6::R6Class(
       historical_points_interpolation_helper <- function(date, sf, points_id) {
 
         # check if date is historical
-        if (date > Sys.Date()-1) {
+        if (date > Sys.Date()-366) {
           message(glue::glue("Date provided ({as.character(date)}) is not historical, but current"))
           stop(glue::glue("Date provided ({as.character(date)}) is not historical, but current"))
         }
@@ -198,7 +200,7 @@ lfcMeteoland <- R6::R6Class(
           MeanRelativeHumidity = NA_real_, MinRelativeHumidity = NA_real_,
           MaxRelativeHumidity = NA_real_,
           Precipitation = NA_real_, Radiation = NA_real_, WindSpeed = NA_real_,
-          WindDirection = NA_real_, PET = NA_real_
+          PET = NA_real_, ThermalAmplitude = NA_real_
         ) %>%
         dplyr::select(dplyr::all_of(c('date', points_id)), dplyr::everything())
 

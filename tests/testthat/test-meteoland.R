@@ -96,7 +96,7 @@ test_that("get_lowres_raster method works", {
         c(
           "MeanTemperature", "MinTemperature", "MaxTemperature",
           "MeanRelativeHumidity", "MinRelativeHumidity", "MaxRelativeHumidity",
-          "Precipitation", "Radiation", "WindSpeed", "WindDirection", "PET"
+          "Precipitation", "Radiation", "WindSpeed", "PET", "ThermalAmplitude"
         )
     )
   )
@@ -106,7 +106,7 @@ test_that("get_lowres_raster method works", {
         c(
           "MeanTemperature", "MinTemperature", "MaxTemperature",
           "MeanRelativeHumidity", "MinRelativeHumidity", "MaxRelativeHumidity",
-          "Precipitation", "Radiation", "WindSpeed", "WindDirection", "PET"
+          "Precipitation", "Radiation", "WindSpeed", "PET", "ThermalAmplitude"
         )
     )
   )
@@ -164,7 +164,7 @@ test_that("points_interpolation method works", {
       'date', 'plot_id', 'geometry',
       'MeanTemperature', 'MinTemperature', 'MaxTemperature',
       'MeanRelativeHumidity', 'MinRelativeHumidity', 'MaxRelativeHumidity',
-      'Precipitation', 'Radiation', 'WindSpeed', 'WindDirection', 'PET'
+      'Precipitation', 'Radiation', 'WindSpeed', 'PET', 'ThermalAmplitude'
     ) %in% names(ok_interpolation)
   ))
 
@@ -187,7 +187,7 @@ test_that("points_interpolation method works", {
       'date', 'plot_id', 'geometry',
       'MeanTemperature', 'MinTemperature', 'MaxTemperature',
       'MeanRelativeHumidity', 'MinRelativeHumidity', 'MaxRelativeHumidity',
-      'Precipitation', 'Radiation', 'WindSpeed', 'WindDirection', 'PET'
+      'Precipitation', 'Radiation', 'WindSpeed', 'PET', 'ThermalAmplitude'
     ) %in% names(one_day_missing_interpolation)
   ))
 
@@ -217,7 +217,7 @@ test_that("points_interpolation method works", {
       'date', 'plot_id', 'geometry',
       'MeanTemperature', 'MinTemperature', 'MaxTemperature',
       'MeanRelativeHumidity', 'MinRelativeHumidity', 'MaxRelativeHumidity',
-      'Precipitation', 'Radiation', 'WindSpeed', 'WindDirection', 'PET'
+      'Precipitation', 'Radiation', 'WindSpeed', 'PET', 'ThermalAmplitude'
     ) %in% names(one_coord_missing_interpolation)
   ))
 
@@ -293,7 +293,7 @@ test_that("historical points_interpolation method works", {
       'date', 'plot_id', 'geometry',
       'MeanTemperature', 'MinTemperature', 'MaxTemperature',
       'MeanRelativeHumidity', 'MinRelativeHumidity', 'MaxRelativeHumidity',
-      'Precipitation', 'Radiation', 'WindSpeed', 'WindDirection', 'PET'
+      'Precipitation', 'Radiation', 'WindSpeed', 'PET', 'ThermalAmplitude'
     ) %in% names(ok_interpolation)
   ))
 
@@ -315,14 +315,14 @@ test_that("historical points_interpolation method works", {
       'date', 'plot_id', 'geometry',
       'MeanTemperature', 'MinTemperature', 'MaxTemperature',
       'MeanRelativeHumidity', 'MinRelativeHumidity', 'MaxRelativeHumidity',
-      'Precipitation', 'Radiation', 'WindSpeed', 'WindDirection', 'PET'
+      'Precipitation', 'Radiation', 'WindSpeed', 'PET', 'ThermalAmplitude'
     ) %in% names(one_day_missing_interpolation)
   ))
 
   # when all dates are out of range, then error occurs
   expect_error(
     meteolanddb$historical_points_interpolation(
-      sf_points, c(as.character(Sys.Date()-369), as.character(Sys.Date()-367)),
+      sf_points, c(start_date, end_date),
       'plot_id'
     ), "No meteo data found"
   )
@@ -345,7 +345,7 @@ test_that("historical points_interpolation method works", {
       'date', 'plot_id', 'geometry',
       'MeanTemperature', 'MinTemperature', 'MaxTemperature',
       'MeanRelativeHumidity', 'MinRelativeHumidity', 'MaxRelativeHumidity',
-      'Precipitation', 'Radiation', 'WindSpeed', 'WindDirection', 'PET'
+      'Precipitation', 'Radiation', 'WindSpeed', 'PET', 'ThermalAmplitude'
     ) %in% names(one_coord_missing_interpolation)
   ))
 
@@ -411,7 +411,7 @@ test_that("raster_interpolation method works", {
         c(
           "MeanTemperature", "MinTemperature", "MaxTemperature",
           "MeanRelativeHumidity", "MinRelativeHumidity", "MaxRelativeHumidity",
-          "Precipitation", "Radiation", "WindSpeed", "WindDirection", "PET"
+          "Precipitation", "Radiation", "WindSpeed", "PET", "ThermalAmplitude"
         )
     )
   )
@@ -431,7 +431,7 @@ test_that("raster_interpolation method works", {
   # when all dates are out of range, then error occurs
   expect_error(
     meteolanddb$raster_interpolation(
-      sf_polygons, c(as.character(Sys.Date()-369), as.character(Sys.Date()-367))
+      sf_polygons, c(as.character(Sys.Date()), as.character(Sys.Date()))
     ), "No data for the specified dates"
   )
 
