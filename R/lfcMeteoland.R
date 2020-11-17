@@ -109,15 +109,22 @@ lfcMeteoland <- R6::R6Class(
 
       # default parameters
       default_params <- meteoland::defaultInterpolationParams()
-      buffer_days <- max(
-        default_params$St_Precipitation, default_params$St_TemperatureRange
-      )
+      # buffer_days <- max(
+      #   default_params$St_Precipitation, default_params$St_TemperatureRange
+      # )
+
+      # dates vec for the interpolation
+      user_dates <- as.Date(user_dates)
+      datevec <-
+        user_dates[[1]]:user_dates[[2]] %>%
+        as.Date(format = '%j', origin = as.Date('1970-01-01'))
 
       # message("Points interpolation")
       res_spm <- meteoland::interpolationpoints(
         object = interpolator_trimmed,
         points = user_topo,
-        verbose = TRUE
+        verbose = TRUE,
+        dates = datevec
       )
 
       # message("Naming")
@@ -140,11 +147,11 @@ lfcMeteoland <- R6::R6Class(
         dplyr::mutate(!! points_id := names(res_spm@data))
 
       res_spm@data %>%
-        purrr::imap(~ dplyr::mutate(
+        purrr::imap_dfr(~ dplyr::mutate(
           .x, !! points_id := .y,
           date = rownames(.x)
         )) %>%
-        purrr::map_dfr(~ dplyr::slice(.x, -(1:buffer_days))) %>%
+        # purrr::map_dfr(~ dplyr::slice(.x, -(1:buffer_days))) %>%
         dplyr::select(
           dplyr::all_of(c('date', points_id)), dplyr::everything(), -DOY,
           -WindDirection
