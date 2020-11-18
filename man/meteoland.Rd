@@ -17,7 +17,7 @@ An \code{lfcMeteoland} class object (inherits from
 }
 \section{Methods}{
 
-  \code{lfcMeteoland} objects has the following methods available:
+  \code{lfcMeteoland} objects have the following methods available:
   \itemize{
     \item{\code{$get_data}: }
   }
