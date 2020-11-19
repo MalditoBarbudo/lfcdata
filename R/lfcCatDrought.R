@@ -146,6 +146,13 @@ lfcCatDrought <- R6::R6Class(
       check_length_for(resolution, 1)
       check_if_in_for(resolution, c('1km', '200m', 'smoothed'))
 
+      resolution <- switch(
+        resolution,
+        '1km' = 'low',
+        '200m' = 'high',
+        'smoothed' = 'smooth'
+      )
+
       # we will need the table name based on the desired resolution
       # now the table name
       table_name <- glue::glue(
@@ -171,7 +178,7 @@ lfcCatDrought <- R6::R6Class(
         data_query <- glue::glue(
           "
           with
-          feat as (select st_geomfromtext('{sf_text}', 4326) as geom),
+          feat as (select st_geomfromtext('{sf_text[2]}', 4326) as geom),
           b_stats as (select day, (stats).* from (select day, ST_SummaryStats(st_clip(rast, 1, geom, true)) as stats
             from {table_name}
             inner join feat
@@ -188,9 +195,9 @@ lfcCatDrought <- R6::R6Class(
         "
         )
 
+        tictoc::tic()
         res <- pool::dbGetQuery(private$pool_conn, data_query)
-
-
+        tictoc::toc()
 
 
       }
