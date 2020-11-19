@@ -47,15 +47,37 @@ lfcObject <- R6::R6Class(
 
     # initialize method function
     pool_conn_create = function() {
-      pool::dbPool(
-        drv = RPostgres::Postgres(),
-        dbname = private$dbname,
-        host = 'laboratoriforestal.creaf.uab.cat',
-        idleTimeout = 3600,
-        user = 'guest',
-        password = 'guest',
-        options = "-c client_min_messages=warning"
-      )
+      res <- try({
+        pool::dbPool(
+          drv = RPostgres::Postgres(),
+          dbname = private$dbname,
+          host = 'laboratoriforestal.creaf.uab.cat',
+          idleTimeout = 3600,
+          user = 'guest',
+          password = 'guest',
+          options = "-c client_min_messages=warning"
+        )
+      })
+
+      if (inherits(res, "try-error")) {
+        message(
+          "Connection to database at laboratoriforestal.creaf.uab.cat failed.",
+          "Trying again in 30 seconds"
+        )
+
+        Sys.sleep(30)
+        res <- pool::dbPool(
+          drv = RPostgres::Postgres(),
+          dbname = private$dbname,
+          host = 'laboratoriforestal.creaf.uab.cat',
+          idleTimeout = 3600,
+          user = 'guest',
+          password = 'guest',
+          options = "-c client_min_messages=warning"
+        )
+      }
+
+      return(res)
     },
 
     # cache object

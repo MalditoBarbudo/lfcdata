@@ -134,6 +134,69 @@ lfcCatDrought <- R6::R6Class(
 
       return(res)
 
+    },
+
+    get_current_time_series = function(sf, resolution) {
+
+      # argument check
+      check_args_for(
+        sf = list(sf = sf),
+        character = list(resolution = resolution)
+      )
+      check_length_for(resolution, 1)
+      check_if_in_for(resolution, c('1km', '200m', 'smoothed'))
+
+      # we will need the table name based on the desired resolution
+      # now the table name
+      table_name <- glue::glue(
+        "daily.catdrought_{resolution}"
+      )
+
+      browser()
+
+      # look which kind of sf is, points or polygons
+      # POLYGONS
+      if (all(sf::st_is(sf, type = c('POLYGON', 'MULTIPOLYGON')))) {
+
+        # we need the sf as text to create the SQL query
+        sf_text <- sf %>%
+          # first thing here is to transform to the correct coordinates system
+          sf::st_transform(crs = 4326) %>%
+          # convert to text
+          dplyr::pull(geometry) %>%
+          sf::st_as_text()
+
+        # Now we build the query and get the polygon/s values
+        # data query to get the dump of the data
+        data_query <- glue::glue(
+          "
+          with
+          feat as (select st_geomfromtext('{sf_text}', 4326) as geom),
+          b_stats as (select day, (stats).* from (select day, ST_SummaryStats(st_clip(rast, 1, geom, true)) as stats
+            from {table_name}
+            inner join feat
+            on st_intersects(feat.geom,rast)
+          ) as foo
+          )
+          select
+            day,
+            sum(mean*count)/sum(count) as avg_pval,
+            sqrt(sum(stddev*stddev*count)/sum(count)) as se_pval
+          from b_stats
+          where count > 0
+          group by day;
+        "
+        )
+
+        res <- pool::dbGetQuery(private$pool_conn, data_query)
+
+
+
+
+      }
+
+
+
     }
   ),
 
