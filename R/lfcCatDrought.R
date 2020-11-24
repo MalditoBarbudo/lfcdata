@@ -136,16 +136,24 @@ lfcCatDrought <- R6::R6Class(
 
     },
 
-    get_current_time_series = function(sf, resolution) {
+    get_current_time_series = function(sf, variable, resolution) {
 
       # argument check
       check_args_for(
         sf = list(sf = sf),
-        character = list(resolution = resolution)
+        character = list(resolution = resolution, variable = variable)
       )
       check_length_for(resolution, 1)
+      check_length_for(variable, 1)
       check_if_in_for(resolution, c('1km', '200m', 'smoothed'))
+      check_if_in_for(
+        variable, c(
+          'DDS', 'DeepDrainage', 'Eplant', 'Esoil', 'Infiltration',
+          'LAI', 'PET', 'Psi', 'REW', 'Runoff', 'Theta'
+        )
+      )
 
+      # switches
       resolution <- switch(
         resolution,
         '1km' = 'low',
@@ -153,34 +161,58 @@ lfcCatDrought <- R6::R6Class(
         'smoothed' = 'smooth'
       )
 
+      band <- switch(
+        variable,
+        'DDS' = 1,
+        'DeepDrainage' = 2,
+        'Eplant' = 3,
+        'Esoil' = 4,
+        'Infiltration' = 5,
+        'LAI' = 6,
+        'PET' = 7,
+        'Psi' = 8,
+        'REW' = 9,
+        'Runoff' = 10,
+        'Theta' = 11
+      )
+
       # we will need the table name based on the desired resolution
       # now the table name
       table_name <- glue::glue(
-        "daily.catdrought_{resolution}"
+        "catdrought_{resolution}"
       )
 
-      browser()
+      # transform the sf to the coord system in the db
+      sf_transf <- sf %>%
+        # first thing here is to transform to the correct coordinates system
+        sf::st_transform(crs = 4326)
+
+      # we need also the identifiers of the polygons
+      sf_id <- sf_transf %>%
+        dplyr::pull(1)
+
+      # get the correct geometry column
+      sf_column <- attr(sf_transf, 'sf_column')
+
+      # we need the sf as text to create the SQL query
+      sf_text <- sf_transf %>%
+        # convert to text
+        dplyr::pull({{sf_column}}) %>%
+        sf::st_as_text()
 
       # look which kind of sf is, points or polygons
       # POLYGONS
       if (all(sf::st_is(sf, type = c('POLYGON', 'MULTIPOLYGON')))) {
 
-        # we need the sf as text to create the SQL query
-        sf_text <- sf %>%
-          # first thing here is to transform to the correct coordinates system
-          sf::st_transform(crs = 4326) %>%
-          # convert to text
-          dplyr::pull(geometry) %>%
-          sf::st_as_text()
-
         # Now we build the query and get the polygon/s values
         # data query to get the dump of the data
-        data_query <- glue::glue(
+        pool_checkout <- pool::poolCheckout(private$pool_conn)
+        data_queries <- glue::glue_sql(
           "
           with
-          feat as (select st_geomfromtext('{sf_text[2]}', 4326) as geom),
-          b_stats as (select day, (stats).* from (select day, ST_SummaryStats(st_clip(rast, 1, geom, true)) as stats
-            from {table_name}
+          feat as (select st_geomfromtext({sf_text}, 4326) as geom),
+          b_stats as (select day, (stats).* from (select day, ST_SummaryStats(st_clip(rast, {band}, geom, true)) as stats
+            from daily.{`table_name`}
             inner join feat
             on st_intersects(feat.geom,rast)
           ) as foo
@@ -192,14 +224,58 @@ lfcCatDrought <- R6::R6Class(
           from b_stats
           where count > 0
           group by day;
-        "
-        )
+        ", .con = pool_checkout
+        ) %>%
+          magrittr::set_names(sf_id)
+        pool::poolReturn(pool_checkout)
 
         tictoc::tic()
-        res <- pool::dbGetQuery(private$pool_conn, data_query)
+        res <-
+          data_queries %>%
+          purrr::imap_dfr(
+            ~ pool::dbGetQuery(private$pool_conn, .x) %>%
+              dplyr::mutate(polygon_id = .y)
+          ) %>%
+          dplyr::arrange(day, polygon_id) %>%
+          dplyr::select(day, polygon_id, avg_pval, se_pval)
         tictoc::toc()
 
+        return(res)
+      }
 
+      if (all(sf::st_is(sf, type = c('POINT', 'MULTIPOINT')))) {
+        # Now we build the query and get the polygon/s values
+        # data query to get the dump of the data
+        pool_checkout <- pool::poolCheckout(private$pool_conn)
+        data_queries <- glue::glue_sql(
+          "
+          SELECT day, ST_Value(
+            rast,
+            {band},
+            st_geomfromtext({sf_text}, 4326)
+          ) As pixel_value
+          FROM daily.{`table_name`}
+          WHERE ST_Intersects(
+            rast,
+            st_geomfromtext({sf_text}, 4326)
+          )
+        ", .con = pool_checkout
+        ) %>%
+          magrittr::set_names(sf_id)
+        pool::poolReturn(pool_checkout)
+
+        tictoc::tic()
+        res <-
+          data_queries %>%
+          purrr::imap_dfr(
+            ~ pool::dbGetQuery(private$pool_conn, .x) %>%
+              dplyr::mutate(point_id = .y)
+          ) %>%
+          dplyr::arrange(day, point_id) %>%
+          dplyr::select(day, point_id, "{variable}" := pixel_value)
+        tictoc::toc()
+
+        return(res)
       }
 
 
