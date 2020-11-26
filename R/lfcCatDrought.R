@@ -105,6 +105,15 @@ lfcCatDrought <- R6::R6Class(
         })
         pool::poolReturn(pool_checkout)
 
+        # if there is an error, stop
+        if (
+          inherits(catdrought_raster, "try-error") & stringr::str_detect(
+            catdrought_raster, "raster column 'rast' not found"
+          )
+        ) {
+          stop(glue::glue("Selected date {date} is not available in the database"))
+        }
+
         ## Set the correct names on the layers. I don't know why but when
         ## building the database, when the temp table is copied to the
         ## partitioned table, layer names are lost
@@ -112,11 +121,6 @@ lfcCatDrought <- R6::R6Class(
           'DDS', 'DeepDrainage', 'Eplant', 'Esoil', 'Infiltration',
           'LAI', 'PET', 'Psi', 'REW', 'Runoff', 'Theta'
         )
-
-        # if there is an error, stop
-        if (inherits(catdrought_raster, "try-error")) {
-          stop("Can not connect to the database")
-        }
 
         message("Done")
 
@@ -240,6 +244,15 @@ lfcCatDrought <- R6::R6Class(
           dplyr::select(day, polygon_id, avg_pval, se_pval)
         tictoc::toc()
 
+        # res checks for warnings or errors
+        if (nrow(res) < 1) {
+          stop("All polygons are out of bounds of the raster")
+        }
+
+        if (length(sf_id) > length(unique(res[['polygon_id']]))) {
+          warning("One or more polygons are out of bounds of the raster and were removed")
+        }
+
         return(res)
       }
 
@@ -274,6 +287,15 @@ lfcCatDrought <- R6::R6Class(
           dplyr::arrange(day, point_id) %>%
           dplyr::select(day, point_id, "{variable}" := pixel_value)
         tictoc::toc()
+
+        # res checks for warnings or errors
+        if (nrow(res) < 1) {
+          stop("All points are out of bounds of the raster")
+        }
+
+        if (length(sf_id) > length(unique(res[['point_id']]))) {
+          warning("One or more points are out of bounds of the raster and were removed")
+        }
 
         return(res)
       }
@@ -333,7 +355,7 @@ lfcCatDrought <- R6::R6Class(
 #'
 #'   # we can use pipes
 #'   catdroughtdb %>%
-#'     catdrought_get_raster('2020-04-25', 'smoothed', raster')
+#'     catdrought_get_raster('2020-04-25', 'smoothed', 'raster')
 #'
 #'   # catdroughtdb is an R6 object, so the previous examples are the same as:
 #'   catdroughtdb$get_raster('2020-04-25', 'smoothed', 'raster')
@@ -366,16 +388,16 @@ catdrought_get_raster <- function(object, date, resolution, spatial = 'stars') {
 #'   time series will be created, can be one of \code{'200m'}, \code{'1km'} or
 #'   \code{'smoothed'}
 #'
-#' @return A data frame with the date, sf identification variable and the
-#'   mean and sd values for the desired variable.
+#' @return A data frame with the date, sf identification and the
+#' variable value for points or the mean and standard error values for polygons.
 #'
 #' @family catdrought functions
 #'
 #' @details Calculations can be long depending on the number of features and/or
 #'   size of polygons.
 #'
-#' @section sf
-#'   sf objects must have a column with uniques values for each feature as an
+#' @section sf:
+#'   sf objects must have a column with unique values for each feature as an
 #'   identifier. This must be the first column in the sf object.
 #'
 #' @examples
@@ -389,5 +411,5 @@ catdrought_get_current_time_series <- function(object, sf, variable, resolution)
   # NOTE: variables and spatial are validated in the method
   check_class_for(object, 'lfcCatDrought')
   # call to the class method
-  object$get_current_time_series(date, sf, variable, resolution)
+  object$get_current_time_series(sf, variable, resolution)
 }

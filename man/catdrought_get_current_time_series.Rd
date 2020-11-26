@@ -22,8 +22,8 @@ time series will be created, can be one of \code{'200m'}, \code{'1km'} or
 \code{'smoothed'}}
 }
 \value{
-A data frame with the date, sf identification variable and the
-  mean and sd values for the desired variable.
+A data frame with the date, sf identification and the
+variable value for points or the mean and standard error values for polygons.
 }
 \description{
 \code{catdrought_get_time_series} is a wrapper for the
@@ -34,6 +34,12 @@ A data frame with the date, sf identification variable and the
 Calculations can be long depending on the number of features and/or
   size of polygons.
 }
+\section{sf}{
+
+  sf objects must have a column with unique values for each feature as an
+  identifier. This must be the first column in the sf object.
+}
+
 \examples{
 if (interactive()) {
   # TODO examples

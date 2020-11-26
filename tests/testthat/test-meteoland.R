@@ -7,7 +7,7 @@ test_that("class object creation works", {
   expect_true(rlang::is_function(meteoland()$raster_interpolation))
 })
 
-# lidardb to avoid calling the db so often
+# meteolanddb to avoid calling the db so often
 meteolanddb <- meteoland()
 # dates for current are 365 natural days, so if we fix a date for tests it will
 # be wrong at some point. Is better to relay on Sys.Date for this tests.
