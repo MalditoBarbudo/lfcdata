@@ -291,3 +291,103 @@ lfcCatDrought <- R6::R6Class(
 
 
 )
+
+
+## External methods ####
+
+#' Access to the rasters in the Catdrought database
+#'
+#' @description \code{catdrought_get_raster} is a wrapper for the
+#'   \code{$get_raster} method of \code{lfcCatDrought} objects.
+#'   See also \code{\link{catdrought}}.
+#'
+#' @param object \code{lfcCatDrought} object, as created by
+#'   \code{\link{catdrought}}
+#' @param date character with the date of the raster to retrieve, i.e "2020-04-25"
+#' @param resolution character indicating the desired resolution, can be one of
+#'   \code{'200m'}, \code{'1km'} or \code{'smoothed'}
+#' @param spatial character vector of length 1 indicating the type of raster
+#'   object to return, "raster" or "stars", the default.
+#'
+#' @return A raster object: \code{RasterBrick} if spatial is \code{raster},
+#'   \code{stars} if spatial is \code{stars}. See
+#'   https://r-spatial.github.io/stars/index.html for details about stars
+#'   objects and \code{\link[raster]{raster}} for details about raster objects.
+#'
+#' @family catdrought functions
+#'
+#' @details Connection to database can be slow. Rasters retrieved from the db
+#'   are stored in a temporary cache inside the lfcCatDrought object created by
+#'   \code{\link{catdrought}}, making subsequent calls to the same table are
+#'   faster. But, be warned that in-memory rasters can use a lot of memory!
+#'
+#' @examples
+#' if (interactive()) {
+#'   catdroughtdb <- catdrought()
+#'   # raster
+#'   catdrougth_20200425_smoothed <-
+#'     catdrought_get_raster(catdroughtdb, '2020-04-25', 'smoothed', 'raster')
+#'   # stars
+#'   catdrougth_20200425_smoothed_stars <-
+#'     catdrought_get_raster(catdroughtdb, '2020-04-25', 'smoothed', 'stars')
+#'
+#'   # we can use pipes
+#'   catdroughtdb %>%
+#'     catdrought_get_raster('2020-04-25', 'smoothed', raster')
+#'
+#'   # catdroughtdb is an R6 object, so the previous examples are the same as:
+#'   catdroughtdb$get_raster('2020-04-25', 'smoothed', 'raster')
+#'   catdroughtdb$get_raster('2020-04-25', 'smoothed', 'stars')
+#' }
+#'
+#' @export
+catdrought_get_raster <- function(object, date, resolution, spatial = 'stars') {
+  # argument validation
+  # NOTE: variables and spatial are validated in the method
+  check_class_for(object, 'lfcCatDrought')
+  # call to the class method
+  object$get_raster(date, resolution, spatial)
+}
+
+#' Create time series for CatDrought variables for the current year
+#'
+#' @description \code{catdrought_get_time_series} is a wrapper for the
+#'   \code{$get_current_time_series} method of \code{lfcCatDrought} objects.
+#'   See also \code{\link{catdrought}}.
+#'
+#' @param object \code{lfcCatDrought} object, as created by
+#'   \code{\link{catdrought}}
+#' @param sf sf object with polygons or points where to calculate the time
+#'   series
+#' @param variable character indicating the desired variable to create the
+#'   time series. It should be one of 'DDS', 'DeepDrainage', 'Eplant', 'Esoil',
+#'   'Infiltration', 'LAI', 'PET', 'Psi', 'REW', 'Runoff' or 'Theta'
+#' @param resolution character indicating the desired resolution from which the
+#'   time series will be created, can be one of \code{'200m'}, \code{'1km'} or
+#'   \code{'smoothed'}
+#'
+#' @return A data frame with the date, sf identification variable and the
+#'   mean and sd values for the desired variable.
+#'
+#' @family catdrought functions
+#'
+#' @details Calculations can be long depending on the number of features and/or
+#'   size of polygons.
+#'
+#' @section sf
+#'   sf objects must have a column with uniques values for each feature as an
+#'   identifier. This must be the first column in the sf object.
+#'
+#' @examples
+#' if (interactive()) {
+#'   # TODO examples
+#' }
+#'
+#' @export
+catdrought_get_current_time_series <- function(object, sf, variable, resolution) {
+  # argument validation
+  # NOTE: variables and spatial are validated in the method
+  check_class_for(object, 'lfcCatDrought')
+  # call to the class method
+  object$get_current_time_series(date, sf, variable, resolution)
+}

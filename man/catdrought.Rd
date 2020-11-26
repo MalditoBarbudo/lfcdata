@@ -31,4 +31,9 @@ An \code{lfcCatDrought} class object (inherits from
 catdroughtdb <- catdrought()
 catdroughtdb
 }
+\seealso{
+Other catdrought functions: 
+\code{\link{catdrought_get_current_time_series}()},
+\code{\link{catdrought_get_raster}()}
+}
 \concept{catdrought functions}
