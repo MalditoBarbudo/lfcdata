@@ -35,6 +35,26 @@ Connection to database can be slow. Rasters retrieved from the db
   \code{\link{catdrought}}, making subsequent calls to the same table are
   faster. But, be warned that in-memory rasters can use a lot of memory!
 }
+\examples{
+if (interactive()) {
+  catdroughtdb <- catdrought()
+  # raster
+  catdrougth_20200425_smoothed <-
+    catdrought_get_raster(catdroughtdb, '2020-04-25', 'smoothed', 'raster')
+  # stars
+  catdrougth_20200425_smoothed_stars <-
+    catdrought_get_raster(catdroughtdb, '2020-04-25', 'smoothed', 'stars')
+
+  # we can use pipes
+  catdroughtdb \%>\%
+    catdrought_get_raster('2020-04-25', 'smoothed', 'raster')
+
+  # catdroughtdb is an R6 object, so the previous examples are the same as:
+  catdroughtdb$get_raster('2020-04-25', 'smoothed', 'raster')
+  catdroughtdb$get_raster('2020-04-25', 'smoothed', 'stars')
+}
+
+}
 \seealso{
 Other catdrought functions: 
 \code{\link{catdrought_get_current_time_series}()},
