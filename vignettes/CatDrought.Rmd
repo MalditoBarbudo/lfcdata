@@ -3,8 +3,10 @@ title: "CatDrought"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{CatDrought}
-  %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
+  %\VignetteEngine{knitr::rmarkdown}
+editor_options: 
+  chunk_output_type: console
 ---
 
 ```{r, include = FALSE}
@@ -18,3 +20,125 @@ knitr::opts_chunk$set(
 library(lfcdata)
 library(dplyr)
 ```
+
+## CatDrought database
+
+CatDrought database offers access to drought stress, soil water content and other
+modeled variables for Catalunya.
+
+```{r catdroughtdb}
+catdroughtdb <- catdrought()
+catdroughtdb
+```
+
+
+## Access to the data
+
+CatDrought offers precalculated data at different resolutions (200m, 1km and
+1km smoothed) as rasters. This spatial data can be accesed with the
+`catdrought_get_raster` function:
+
+### Raster formats
+
+This function allows to access the raster for a specified date (as character),
+and returns a spatial object, whose class depends on the spatial argument.
+Available classes are `raster` (a *RasterBrick* object) and `stars`
+(a *stars* object).
+
+```{r get_raster_stars}
+catdrought_get_raster(
+  catdroughtdb,
+  date = as.character(Sys.Date() - 1),
+  resolution = 'smoothed',
+  spatial = 'stars'
+)
+```
+
+```{r get_raster_raster}
+catdrought_get_raster(
+  catdroughtdb,
+  date = as.character(Sys.Date() - 1),
+  resolution = 'smoothed',
+  spatial = 'raster'
+)
+```
+
+  - `date`: a character indicating the date to extract.
+  - `resolution`: a character indicating the desired resolution (`200m`, `1km`
+    or `smoothed`)
+  - `spatial`: a character indicating the output class (`raster` or `stars`)
+
+
+### Dates available
+
+Only a natural year (365 days from the day before current date) are available
+
+```{r get_raster_dates}
+catdrought_get_raster(
+  catdroughtdb,
+  date = as.character(Sys.Date() - 365),
+  resolution = 'smoothed',
+  spatial = 'stars'
+)
+```
+
+## Time series data for spatial points or polygons
+
+Instead of rasters, we can obtain a table with the time series for a specified
+variable. This time series covers all the available dates. For this, we can
+use the `catdrought_get_current_time_series` function.
+
+### Points
+
+This will extract the values for the desired variable on all the dates available,
+for the set of points provided:
+
+```{r time_series_points}
+# points spatial object, obtained from fes database
+points_sf <- lfcdata::fes()$get_data('plot_nfi_4_results', spatial = TRUE) %>%
+  slice(1:5)
+
+catdrought_get_current_time_series(
+  catdroughtdb,
+  sf = points_sf,
+  variable = 'Eplant',
+  resolution = 'smoothed'
+)
+```
+
+
+  > NOTE: This can take some time depending on the resolution and the
+  number of features.
+
+  - `sf` object with the POINT features
+  - `variable` the desired variable
+  - `resolution` the desired resolution
+
+### Polygons
+
+The process is exactly the same as for points:
+
+```{r time_series_polygons}
+# points spatial object, obtained from fes database
+polygons_sf <- lfcdata::lidar()$get_data('lidar_municipalities', 'AB') %>%
+  slice(1:5)
+
+catdrought_get_current_time_series(
+  catdroughtdb,
+  sf = polygons_sf,
+  variable = 'Eplant',
+  resolution = 'smoothed'
+)
+```
+
+
+Here an average with standard error values are returned for all polygons and
+dates.
+
+> NOTE: This can take some time depending on the resolution and the
+  number of features.
+
+  - `sf` object with the POLYGON or MULTIPOLYGON features
+  - `variable` the desired variable
+  - `resolution` the desired resolution
+
