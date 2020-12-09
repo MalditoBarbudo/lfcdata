@@ -1,0 +1,140 @@
+---
+title: "Meteoland"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Meteoland}
+  %\VignetteEncoding{UTF-8}
+  %\VignetteEngine{knitr::rmarkdown}
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(lfcdata)
+library(dplyr)
+```
+
+## Meteoland database
+
+Meteoland database offers access to the daily metereological interpolation data,
+powered by the [meteoland package](https://CRAN.R-project.org/package=meteoland).
+
+```{r meteoland_data}
+meteolanddb <- meteoland()
+meteolanddb
+```
+
+## Access to precalculated data
+
+The Meteoland database has spatial precalculated data as rasters with a 1km
+resolution, that can be accessed with the `meteoland_get_lowres_raster`
+function:
+
+### Raster formats
+
+This functions allows to access the raster for a specified date (as character),
+and returns a spatial object, whose class depends on the spatial argument.
+Available classes are `raster` (a *RasterBrick* object) and `stars`
+(a *stars* object).
+
+```{r get_lowres_raster_stars, warning=FALSE}
+meteoland_get_lowres_raster(
+  meteolanddb,
+  date = as.character(Sys.Date() - 1),
+  spatial = 'stars'
+)
+```
+
+```{r get_lowres_raster_raster, warning=FALSE}
+meteoland_get_lowres_raster(
+  meteolanddb,
+  date = as.character(Sys.Date() - 1),
+  spatial = 'raster'
+)
+```
+
+### Dates available
+
+Dates available covers from 1976-01-01 to the day before current day.
+
+```{r get_lowres_raster_historic, warning=FALSE}
+meteoland_get_lowres_raster(
+  meteolanddb,
+  date = '1977-04-25',
+  spatial = 'stars'
+)
+```
+
+## On the fly points interpolation (resolution 20m)
+
+It is possible to perform *on-the-fly* interpolation of meteorological variables
+for a set of points, only for the current natural year (365 days). This is done
+with the `meteoland_points_interpolation`:
+
+```{r onthefly_interpolation, warning=FALSE}
+# points spatial object, obtained from fes database
+points_sf <- lfcdata::fes()$get_data('plot_nfi_4_results', spatial = TRUE) %>%
+  slice(1:5)
+
+
+meteoland_points_interpolation(
+  meteolanddb,
+  sf = points_sf,
+  dates = c(as.character(Sys.Date() - 5), as.character(Sys.Date() - 1)),
+  points_id = 'plot_id'
+)
+```
+
+  > NOTE: This process may take a while depending on the number of points to
+  interpolate
+
+  - `sf` must be an sf object containing POINT features
+  - `dates` must be a vector of lenght 2, with the starting and the ending date
+  - `points_id` is the name of the variable in sf identifying the points.
+
+## Precalculated historical points interpolation (resolution 1km)
+
+For historic dates interpolation, only a lower resolution (1km) is available,
+using the `meteoland_historical_points_interpolation` function:
+
+```{r historical_interpolation, warning=FALSE}
+meteoland_historical_points_interpolation(
+  meteolanddb,
+  sf = points_sf,
+  dates = c('1976-01-01', '1976-01-05'),
+  points_id = 'plot_id'
+)
+```
+
+Arguments are the same as previously explained.
+
+## Precalculated raster interpolation (resolution 1km)
+
+Interpolation for current and historical dates for polygons (not points) can
+be done with the `meteoland_raster_interpolation`. The returned value is a raster
+with the interpolated data for the polygons provided.
+
+```{r raster_interpolation, warning=FALSE}
+sf_polygons <- lfcdata::lidar()$get_data('lidar_municipalities', 'AB') %>%
+  slice(1:5)
+
+meteoland_raster_interpolation(
+  meteolanddb,
+  sf = sf_polygons,
+  dates = c(as.character(Sys.Date() - 5), as.character(Sys.Date() - 1))
+)
+```
+
+  > NOTE: This process may take a while depending on the number of points to
+    interpolate
+
+  - `sf` must be an sf object containing POLYGON or MULTIPOLYGON features
+  - `dates` must be a vector of length 2, with the starting and the ending date
+  - `points_id` is the name of the variable in sf identifying the points.
