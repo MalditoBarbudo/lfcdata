@@ -1,0 +1,23 @@
+---
+title: "FES"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{FES}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(lfcdata)
+```
+
+
+## Forest Ecosystem Services (FES) for Catolonia database
+
