@@ -5,8 +5,10 @@ output:
     toc: true
 vignette: >
   %\VignetteIndexEntry{Tables and variables}
-  %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
+  %\VignetteEngine{knitr::rmarkdown}
+editor_options: 
+  chunk_output_type: console
 ---
 
 ```{r, include = FALSE}
@@ -99,7 +101,7 @@ nfi_get_data(nfidb, 'variables_thesaurus') %>%
   }
 ```
 
-## Allometries
+## Allometries database
 
 ### Tables available
 
@@ -126,7 +128,7 @@ allometries_describe_var(allomdb, c('DR', 'DBH'))
 ```
 
 
-## LiDAR
+## LiDAR database
 
 ### Tables available
 
@@ -169,5 +171,37 @@ lidar_describe_var(lidardb, 'AB')
 
 ```{r lidar_complete, echo = FALSE}
 lidar_describe_var(lidardb, c('AB', 'BAT', 'BF', 'CAT', 'DBH', 'HM', 'REC', 'VAE'))
+```
+
+## Forest Ecosystem Services (FES) for Catalunya database
+
+### Tables available
+
+FES database offers precalculated data for NFI plots as well as for static
+ecosystem service data. Available tables can be listed using `fes_avail_tables`:
+
+```{r fes_avail}
+fesdb <- fes()
+fes_avail_tables(fesdb)
+```
+
+And data can be retrieved with `fes_get_data`, in both, table or spatial (sf)
+formats:
+
+```{r fes_get_data}
+fes_get_data(fesdb, 'plot_nfi_4_results')
+fes_get_data(fesdb, 'plot_nfi_4_results', spatial = TRUE)
+```
+
+To know more about a table, we have `fes_describe_table`:
+
+```{r fes_describe_table}
+fes_describe_table(fesdb, 'plot_nfi_4_results')
+```
+
+If we want to know more about a variable, we will use `fes_describe_var`:
+
+```{r fes_describe_var}
+fes_describe_var(fesdb, 'mushrooms_production')
 ```
 
