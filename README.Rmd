@@ -15,7 +15,6 @@ knitr::opts_chunk$set(
 # lfcdata
 
 <!-- badges: start -->
-[![Travis build status](https://travis-ci.org/MalditoBarbudo/lfcdata.svg?branch=master)](https://travis-ci.org/MalditoBarbudo/lfcdata)
 [![R build status](https://github.com/MalditoBarbudo/lfcdata/workflows/R-CMD-check/badge.svg)](https://github.com/MalditoBarbudo/lfcdata/actions)
 <!-- badges: end -->
 
