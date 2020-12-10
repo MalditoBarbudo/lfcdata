@@ -11,8 +11,7 @@
 #'   \code{lfcCatDrought} objects have the following methods available:
 #'   \itemize{
 #'     \item{\code{$get_data}: Returns none, maintaned for consistency}
-#'     \item{\code{$get_raster}: Returns the raster for the selected date
-#'     and selected resolution}
+#'     \item{\code{$get_raster}: Returns the raster for the selected date}
 #'     \item{\code{$get_current_time_series}: Returns a dataframe with the
 #'     time series for a provided spatial object (points or polygons)}
 #'   }
@@ -43,7 +42,7 @@ lfcCatDrought <- R6::R6Class(
         "Access to the CatDrought database.\n",
         crayon::blue$underline("laboratoriforestal.creaf.uab.cat\n\n"),
         "Use " %+% crayon::yellow$bold("catdrought_get_raster") %+%
-          " to obtain a raster for the desired date and resolution.\n",
+          " to obtain a raster for the desired date.\n",
         "Use " %+% crayon::yellow$bold("catdrought_current_time_series") %+%
           " to obtain a dataframe with the current natural year time series.\n",
         "See " %+%
@@ -63,29 +62,20 @@ lfcCatDrought <- R6::R6Class(
     },
 
     get_raster = function(
-      date, resolution, spatial = 'stars'
+      date, spatial = 'stars'
     ) {
       # argument validation
       check_args_for(
-        character = list(date = date, spatial = spatial, resolution = resolution)
+        character = list(date = date, spatial = spatial)
       )
       check_length_for(spatial, 1)
-      check_length_for(resolution, 1)
       check_length_for(date, 1)
       check_if_in_for(spatial, c('stars', 'raster'))
-      check_if_in_for(resolution, c('1km', '200m', 'smoothed'))
 
       date_parsed <- stringr::str_remove_all(date, pattern = '-')
 
-      resolution_parsed <- switch(
-        resolution,
-        'smoothed' = 'smooth',
-        '1km' = 'low',
-        '200m' = 'high'
-      )
-
       raster_table_name <- glue::glue(
-        "catdrought_{resolution_parsed}_{date_parsed}"
+        "catdrought_low_{date_parsed}"
       )
 
       res <- private$data_cache[[raster_table_name]] %||% {
@@ -140,16 +130,14 @@ lfcCatDrought <- R6::R6Class(
 
     },
 
-    get_current_time_series = function(sf, variable, resolution) {
+    get_current_time_series = function(sf, variable) {
 
       # argument check
       check_args_for(
         sf = list(sf = sf),
-        character = list(resolution = resolution, variable = variable)
+        character = list(variable = variable)
       )
-      check_length_for(resolution, 1)
       check_length_for(variable, 1)
-      check_if_in_for(resolution, c('1km', '200m', 'smoothed'))
       check_if_in_for(
         variable, c(
           'DDS', 'DeepDrainage', 'Eplant', 'Esoil', 'Infiltration',
@@ -158,13 +146,6 @@ lfcCatDrought <- R6::R6Class(
       )
 
       # switches
-      resolution <- switch(
-        resolution,
-        '1km' = 'low',
-        '200m' = 'high',
-        'smoothed' = 'smooth'
-      )
-
       band <- switch(
         variable,
         'DDS' = 1,
@@ -180,11 +161,8 @@ lfcCatDrought <- R6::R6Class(
         'Theta' = 11
       )
 
-      # we will need the table name based on the desired resolution
       # now the table name
-      table_name <- glue::glue(
-        "catdrought_{resolution}"
-      )
+      table_name <- "catdrought_low"
 
       # transform the sf to the coord system in the db
       sf_transf <- sf %>%
@@ -223,25 +201,52 @@ lfcCatDrought <- R6::R6Class(
           )
           select
             day,
-            sum(mean*count)/sum(count) as avg_pval,
-            sqrt(sum(stddev*stddev*count)/sum(count)) as se_pval
+            sum(mean*count)/sum(count) as mean
           from b_stats
           where count > 0
           group by day;
         ", .con = pool_checkout
         ) %>%
           magrittr::set_names(sf_id)
+        # now the quantiles
+        quantile_queries <- glue::glue_sql(
+          "
+          SELECT day, (ST_Quantile(rast,{band},ARRAY[0.9,0.1])).* As pvc
+          FROM daily.{`table_name`}
+          WHERE ST_Intersects(rast,
+            ST_GeomFromText({sf_text}, 4326)
+          )
+          ORDER BY day,quantile,value
+          ;
+          ", .con = pool_checkout
+        ) %>%
+          magrittr::set_names(sf_id)
         pool::poolReturn(pool_checkout)
 
         tictoc::tic()
-        res <-
+        res_stats <-
           data_queries %>%
           purrr::imap_dfr(
             ~ pool::dbGetQuery(private$pool_conn, .x) %>%
               dplyr::mutate(polygon_id = .y)
           ) %>%
           dplyr::arrange(day, polygon_id) %>%
-          dplyr::select(day, polygon_id, avg_pval, se_pval)
+          dplyr::select(day, polygon_id, mean)
+        res_quantiles <-
+          quantile_queries %>%
+          purrr::imap_dfr(
+            ~ pool::dbGetQuery(private$pool_conn, .x) %>%
+              dplyr::mutate(polygon_id = .y)
+          ) %>%
+          tidyr::pivot_wider(
+            names_from = quantile,
+            names_glue = 'q_{quantile*100}',
+            values_from = value
+          )
+
+        res <- res_stats %>%
+          dplyr::left_join(res_quantiles) %>%
+          dplyr::as_tibble()
         tictoc::toc()
 
         # res checks for warnings or errors
@@ -326,8 +331,6 @@ lfcCatDrought <- R6::R6Class(
 #' @param object \code{lfcCatDrought} object, as created by
 #'   \code{\link{catdrought}}
 #' @param date character with the date of the raster to retrieve, i.e "2020-04-25"
-#' @param resolution character indicating the desired resolution, can be one of
-#'   \code{'200m'}, \code{'1km'} or \code{'smoothed'}
 #' @param spatial character vector of length 1 indicating the type of raster
 #'   object to return, "raster" or "stars", the default.
 #'
@@ -363,12 +366,12 @@ lfcCatDrought <- R6::R6Class(
 #' }
 #'
 #' @export
-catdrought_get_raster <- function(object, date, resolution, spatial = 'stars') {
+catdrought_get_raster <- function(object, date, spatial = 'stars') {
   # argument validation
   # NOTE: variables and spatial are validated in the method
   check_class_for(object, 'lfcCatDrought')
   # call to the class method
-  object$get_raster(date, resolution, spatial)
+  object$get_raster(date, spatial)
 }
 
 #' Create time series for CatDrought variables for the current year
@@ -384,9 +387,6 @@ catdrought_get_raster <- function(object, date, resolution, spatial = 'stars') {
 #' @param variable character indicating the desired variable to create the
 #'   time series. It should be one of 'DDS', 'DeepDrainage', 'Eplant', 'Esoil',
 #'   'Infiltration', 'LAI', 'PET', 'Psi', 'REW', 'Runoff' or 'Theta'
-#' @param resolution character indicating the desired resolution from which the
-#'   time series will be created, can be one of \code{'200m'}, \code{'1km'} or
-#'   \code{'smoothed'}
 #'
 #' @return A data frame with the date, sf identification and the
 #' variable value for points or the mean and standard error values for polygons.
@@ -406,10 +406,10 @@ catdrought_get_raster <- function(object, date, resolution, spatial = 'stars') {
 #' }
 #'
 #' @export
-catdrought_get_current_time_series <- function(object, sf, variable, resolution) {
+catdrought_get_current_time_series <- function(object, sf, variable) {
   # argument validation
   # NOTE: variables and spatial are validated in the method
   check_class_for(object, 'lfcCatDrought')
   # call to the class method
-  object$get_current_time_series(sf, variable, resolution)
+  object$get_current_time_series(sf, variable)
 }

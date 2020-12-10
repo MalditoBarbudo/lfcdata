@@ -20,8 +20,7 @@ An \code{lfcCatDrought} class object (inherits from
   \code{lfcCatDrought} objects have the following methods available:
   \itemize{
     \item{\code{$get_data}: Returns none, maintaned for consistency}
-    \item{\code{$get_raster}: Returns the raster for the selected date
-    and selected resolution}
+    \item{\code{$get_raster}: Returns the raster for the selected date}
     \item{\code{$get_current_time_series}: Returns a dataframe with the
     time series for a provided spatial object (points or polygons)}
   }

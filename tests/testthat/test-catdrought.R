@@ -63,32 +63,15 @@ test_that("get_raster method works", {
   skip_on_cran()
   skip_on_travis()
   expect_is(
-    catdroughtdb$get_raster(date_to_check, 'smoothed', 'raster'), 'RasterBrick'
+    catdroughtdb$get_raster(date_to_check, 'raster'), 'RasterBrick'
   )
   expect_s3_class(
-    catdroughtdb$get_raster(date_to_check, 'smoothed', 'stars'), 'stars'
+    catdroughtdb$get_raster(date_to_check, 'stars'), 'stars'
   )
-  expect_is(
-    catdroughtdb$get_raster(date_to_check, '1km', 'raster'), 'RasterBrick'
-  )
-  expect_s3_class(
-    catdroughtdb$get_raster(date_to_check, '1km', 'stars'), 'stars'
-  )
-  expect_is(
-    catdroughtdb$get_raster(date_to_check, '200m', 'raster'), 'RasterBrick'
-  )
-  expect_s3_class(
-    catdroughtdb$get_raster(date_to_check, '200m', 'stars'), 'stars'
-  )
-  expect_error(catdroughtdb$get_raster(25, 'smoothed', 'stars'), "not character")
-  expect_error(catdroughtdb$get_raster(date_to_check, 25, 'stars'), "not character")
-  expect_error(catdroughtdb$get_raster(date_to_check, 'smoothed', 25), "not character")
+  expect_error(catdroughtdb$get_raster(25, 'stars'), "not character")
+  expect_error(catdroughtdb$get_raster(date_to_check, 25), "not character")
   expect_error(
-    catdroughtdb$get_raster(date_to_check, c('smoothed', '1km'), 'stars'),
-    'must be of length'
-  )
-  expect_error(
-    catdroughtdb$get_raster(date_to_check, 'smoothed', c('stars', 'raster')),
+    catdroughtdb$get_raster(date_to_check, c('stars', 'raster')),
     'must be of length'
   )
   expect_error(
@@ -96,20 +79,16 @@ test_that("get_raster method works", {
     'must be of length'
   )
   expect_error(
-    catdroughtdb$get_raster(date_to_check, 'tururu', 'stars'),
+    catdroughtdb$get_raster(date_to_check, 'tururu'),
     "Must be one of"
   )
   expect_error(
-    catdroughtdb$get_raster(date_to_check, 'smoothed', 'tururu'),
-    "Must be one of"
-  )
-  expect_error(
-    catdroughtdb$get_raster(as.character(Sys.Date()), 'smoothed', 'stars'),
+    catdroughtdb$get_raster(as.character(Sys.Date()), 'stars'),
     "Selected date"
   )
   expect_true(
     all(
-      names(catdroughtdb$get_raster(date_to_check, 'smoothed', 'stars')) %in%
+      names(catdroughtdb$get_raster(date_to_check, 'stars')) %in%
         c(
           'DDS', 'DeepDrainage', 'Eplant', 'Esoil', 'Infiltration',
           'LAI', 'PET', 'Psi', 'REW', 'Runoff', 'Theta'
@@ -123,65 +102,53 @@ test_that("get_current_time_series method works", {
 
   ## general errors
   expect_error(
-    catdroughtdb$get_current_time_series('sf', 'Esoil', 'smoothed'),
+    catdroughtdb$get_current_time_series('sf', 'Esoil'),
     'not a simple feature'
   )
   expect_error(
-    catdroughtdb$get_current_time_series(sf_points, c('Esoil', 'Theta'), 'smoothed'),
+    catdroughtdb$get_current_time_series(sf_points, c('Esoil', 'Theta')),
     'must be of length'
   )
   expect_error(
-    catdroughtdb$get_current_time_series(sf_points, 'Esoil', c('smoothed', '1km')),
-    'must be of length'
-  )
-  expect_error(
-    catdroughtdb$get_current_time_series('sf', 25, 'smoothed'),
+    catdroughtdb$get_current_time_series('sf', 25),
     'not character'
   )
   expect_error(
-    catdroughtdb$get_current_time_series('sf', 'Esoil', 25),
-    'not character'
-  )
-  expect_error(
-    catdroughtdb$get_current_time_series(sf_polygons, 'tururu', 'smoothed'),
-    "Must be one of"
-  )
-  expect_error(
-    catdroughtdb$get_current_time_series(sf_polygons, 'Esoil', 'tururu'),
+    catdroughtdb$get_current_time_series(sf_polygons, 'tururu'),
     "Must be one of"
   )
 
   # ok
   expect_is(
-    catdroughtdb$get_current_time_series(sf_points, 'Esoil', 'smoothed'),
+    catdroughtdb$get_current_time_series(sf_points, 'Esoil'),
     'data.frame'
   )
   expect_is(
-    catdroughtdb$get_current_time_series(sf_points_3043, 'Esoil', 'smoothed'),
+    catdroughtdb$get_current_time_series(sf_points_3043, 'Esoil'),
     'data.frame'
   )
   expect_is(
-    catdroughtdb$get_current_time_series(sf_polygons, 'Esoil', 'smoothed'),
+    catdroughtdb$get_current_time_series(sf_polygons, 'Esoil'),
     'data.frame'
   )
 
   # one out
   expect_warning(
-    catdroughtdb$get_current_time_series(sf_points_one_out, 'Esoil', 'smoothed'),
+    catdroughtdb$get_current_time_series(sf_points_one_out, 'Esoil'),
     'One or more'
   )
   expect_warning(
-    catdroughtdb$get_current_time_series(sf_polygons_one_out, 'Esoil', 'smoothed'),
+    catdroughtdb$get_current_time_series(sf_polygons_one_out, 'Esoil'),
     'One or more'
   )
 
   # all out
   expect_error(
-    catdroughtdb$get_current_time_series(sf_points_all_out, 'Esoil', 'smoothed'),
+    catdroughtdb$get_current_time_series(sf_points_all_out, 'Esoil'),
     'All points'
   )
   expect_error(
-    catdroughtdb$get_current_time_series(sf_polygons_all_out, 'Esoil', 'smoothed'),
+    catdroughtdb$get_current_time_series(sf_polygons_all_out, 'Esoil'),
     'All polygons'
   )
 

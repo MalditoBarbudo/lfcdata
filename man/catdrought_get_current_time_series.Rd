@@ -4,7 +4,7 @@
 \alias{catdrought_get_current_time_series}
 \title{Create time series for CatDrought variables for the current year}
 \usage{
-catdrought_get_current_time_series(object, sf, variable, resolution)
+catdrought_get_current_time_series(object, sf, variable)
 }
 \arguments{
 \item{object}{\code{lfcCatDrought} object, as created by
@@ -16,10 +16,6 @@ series}
 \item{variable}{character indicating the desired variable to create the
 time series. It should be one of 'DDS', 'DeepDrainage', 'Eplant', 'Esoil',
 'Infiltration', 'LAI', 'PET', 'Psi', 'REW', 'Runoff' or 'Theta'}
-
-\item{resolution}{character indicating the desired resolution from which the
-time series will be created, can be one of \code{'200m'}, \code{'1km'} or
-\code{'smoothed'}}
 }
 \value{
 A data frame with the date, sf identification and the

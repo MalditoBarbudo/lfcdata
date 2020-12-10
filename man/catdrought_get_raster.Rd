@@ -4,16 +4,13 @@
 \alias{catdrought_get_raster}
 \title{Access to the rasters in the Catdrought database}
 \usage{
-catdrought_get_raster(object, date, resolution, spatial = "stars")
+catdrought_get_raster(object, date, spatial = "stars")
 }
 \arguments{
 \item{object}{\code{lfcCatDrought} object, as created by
 \code{\link{catdrought}}}
 
 \item{date}{character with the date of the raster to retrieve, i.e "2020-04-25"}
-
-\item{resolution}{character indicating the desired resolution, can be one of
-\code{'200m'}, \code{'1km'} or \code{'smoothed'}}
 
 \item{spatial}{character vector of length 1 indicating the type of raster
 object to return, "raster" or "stars", the default.}

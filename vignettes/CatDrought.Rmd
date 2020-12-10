@@ -34,9 +34,8 @@ catdroughtdb
 
 ## Access to the data
 
-CatDrought offers precalculated data at different resolutions (200m, 1km and
-1km smoothed) as rasters. This spatial data can be accesed with the
-`catdrought_get_raster` function:
+CatDrought offers precalculated data at 1km resolution as rasters. This spatial
+data can be accesed with the `catdrought_get_raster` function:
 
 ### Raster formats
 
@@ -49,7 +48,6 @@ Available classes are `raster` (a *RasterBrick* object) and `stars`
 catdrought_get_raster(
   catdroughtdb,
   date = as.character(Sys.Date() - 1),
-  resolution = 'smoothed',
   spatial = 'stars'
 )
 ```
@@ -58,14 +56,11 @@ catdrought_get_raster(
 catdrought_get_raster(
   catdroughtdb,
   date = as.character(Sys.Date() - 1),
-  resolution = 'smoothed',
   spatial = 'raster'
 )
 ```
 
-  - `date`: a character indicating the date to extract.
-  - `resolution`: a character indicating the desired resolution (`200m`, `1km`
-    or `smoothed`)
+  - `date`: a character indicating the date to extract
   - `spatial`: a character indicating the output class (`raster` or `stars`)
 
 
@@ -77,7 +72,6 @@ Only a natural year (365 days from the day before current date) are available
 catdrought_get_raster(
   catdroughtdb,
   date = as.character(Sys.Date() - 365),
-  resolution = 'smoothed',
   spatial = 'stars'
 )
 ```
@@ -101,8 +95,7 @@ points_sf <- lfcdata::fes()$get_data('plot_nfi_4_results', spatial = TRUE) %>%
 catdrought_get_current_time_series(
   catdroughtdb,
   sf = points_sf,
-  variable = 'Eplant',
-  resolution = 'smoothed'
+  variable = 'Eplant'
 )
 ```
 
@@ -112,7 +105,6 @@ catdrought_get_current_time_series(
 
   - `sf` object with the POINT features
   - `variable` the desired variable
-  - `resolution` the desired resolution
 
 ### Polygons
 
@@ -126,8 +118,7 @@ polygons_sf <- lfcdata::lidar()$get_data('lidar_municipalities', 'AB') %>%
 catdrought_get_current_time_series(
   catdroughtdb,
   sf = polygons_sf,
-  variable = 'Eplant',
-  resolution = 'smoothed'
+  variable = 'Eplant'
 )
 ```
 
@@ -140,5 +131,4 @@ dates.
 
   - `sf` object with the POLYGON or MULTIPOLYGON features
   - `variable` the desired variable
-  - `resolution` the desired resolution
 
