@@ -186,8 +186,6 @@ lfcCatDrought <- R6::R6Class(
       # POLYGONS
       if (all(sf::st_is(sf, type = c('POLYGON', 'MULTIPOLYGON')))) {
 
-        browser()
-
         # Now we build the query and get the polygon/s values
         # data query to get the dump of the data
         pool_checkout <- pool::poolCheckout(private$pool_conn)
