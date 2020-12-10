@@ -186,32 +186,28 @@ lfcCatDrought <- R6::R6Class(
       # POLYGONS
       if (all(sf::st_is(sf, type = c('POLYGON', 'MULTIPOLYGON')))) {
 
+        browser()
+
         # Now we build the query and get the polygon/s values
         # data query to get the dump of the data
         pool_checkout <- pool::poolCheckout(private$pool_conn)
         data_queries <- glue::glue_sql(
-          "
-          with
-          feat as (select st_geomfromtext({sf_text}, 4326) as geom),
-          b_stats as (select day, (stats).* from (select day, ST_SummaryStats(st_clip(rast, {band}, geom, true)) as stats
-            from daily.{`table_name`}
-            inner join feat
-            on st_intersects(feat.geom,rast)
-          ) as foo
-          )
-          select
-            day,
-            sum(mean*count)/sum(count) as mean
-          from b_stats
-          where count > 0
-          group by day;
-        ", .con = pool_checkout
+          "SELECT
+           day,
+           (ST_SummaryStatsAgg(ST_Clip(rast,geom, -9999, true),{band},true)).*
+         FROM
+           daily.{`table_name`},
+           (select st_geomfromtext({sf_text}, 4326) as geom) AS feat
+         WHERE
+           ST_Intersects(rast, geom)
+         GROUP BY day;", .con = pool_checkout
         ) %>%
           magrittr::set_names(sf_id)
+
         # now the quantiles
         quantile_queries <- glue::glue_sql(
           "
-          SELECT day, (ST_Quantile(rast,{band},ARRAY[0.9,0.1])).* As pvc
+          SELECT day, (ST_Quantile(ST_Clip(rast,ST_GeomFromText({sf_text}, 4326), -9999, true),{band},ARRAY[0.9,0.1])).* As pvc
           FROM daily.{`table_name`}
           WHERE ST_Intersects(rast,
             ST_GeomFromText({sf_text}, 4326)
@@ -231,7 +227,8 @@ lfcCatDrought <- R6::R6Class(
               dplyr::mutate(polygon_id = .y)
           ) %>%
           dplyr::arrange(day, polygon_id) %>%
-          dplyr::select(day, polygon_id, mean)
+          dplyr::select(day, polygon_id, dplyr::everything())
+        tictoc::toc()
         res_quantiles <-
           quantile_queries %>%
           purrr::imap_dfr(
