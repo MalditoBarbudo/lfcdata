@@ -100,8 +100,7 @@ catdrought_get_current_time_series(
 ```
 
 
-  > NOTE: This can take some time depending on the resolution and the
-  number of features.
+  > NOTE: This can take some time depending on the number of features.
 
   - `sf` object with the POINT features
   - `variable` the desired variable
@@ -123,11 +122,10 @@ catdrought_get_current_time_series(
 ```
 
 
-Here an average with standard error values are returned for all polygons and
-dates.
+Here, the mean value for the variable and the 0.1 and 0.9 quantiles are
+returned for all polygons and dates.
 
-> NOTE: This can take some time depending on the resolution and the
-  number of features.
+> NOTE: This can take some time depending on the number of features.
 
   - `sf` object with the POLYGON or MULTIPOLYGON features
   - `variable` the desired variable

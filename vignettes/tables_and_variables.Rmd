@@ -240,14 +240,12 @@ catdroughtdb <- catdrought()
 catdroughtdb
 ```
 
-We need to provide a date (character vector in `YYYY-MM-DD` format) and the
-desired resolution (`200m`, `1km` or `smoothed`)
+We need to provide a date (character vector in `YYYY-MM-DD` format):
 
 ```{r catdrought_get_raster}
 catdrought_get_raster(
   catdroughtdb,
-  date = as.character(Sys.Date() - 1),
-  resolution = 'smoothed'
+  date = as.character(Sys.Date() - 1)
 )
 ```
 
