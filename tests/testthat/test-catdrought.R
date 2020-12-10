@@ -50,6 +50,9 @@ sf_polygons_all_out <- sf_polygons %>%
 sf_polygons_one_out <- rbind(sf_polygons, sf_polygons_all_out) %>%
   dplyr::slice(1:6)
 
+sf_polygons_naves <- lidar()$get_data('lidar_municipalities', 'DBH') %>%
+  dplyr::filter(poly_id == 'Navès')
+
 ## get data method works ####
 test_that("get_data method works", {
   # get method is not implemented in catdrought db, so it must print a message
@@ -129,6 +132,11 @@ test_that("get_current_time_series method works", {
   )
   expect_is(
     catdroughtdb$get_current_time_series(sf_polygons, 'Esoil'),
+    'data.frame'
+  )
+  # work with multipolygon (two rows for each quantile)
+  expect_is(
+    catdroughtdb$get_current_time_series(sf_polygons_naves, 'Esoil'),
     'data.frame'
   )
 

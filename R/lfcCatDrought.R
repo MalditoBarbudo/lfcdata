@@ -241,7 +241,8 @@ lfcCatDrought <- R6::R6Class(
           tidyr::pivot_wider(
             names_from = quantile,
             names_glue = 'q_{quantile*100}',
-            values_from = value
+            values_from = value,
+            values_fn = mean
           )
 
         res <- res_stats %>%
