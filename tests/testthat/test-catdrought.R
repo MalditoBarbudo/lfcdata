@@ -134,6 +134,10 @@ test_that("get_current_time_series method works", {
     catdroughtdb$get_current_time_series(sf_polygons, 'Esoil'),
     'data.frame'
   )
+  expect_true(
+    all(names(catdroughtdb$get_current_time_series(sf_polygons, 'Esoil')) %in%
+      c('day', 'polygon_id', 'count', 'mean', 'stddev', 'min', 'max', 'stderror'))
+  )
   # work with multipolygon (two rows for each quantile)
   expect_is(
     catdroughtdb$get_current_time_series(sf_polygons_naves, 'Esoil'),
