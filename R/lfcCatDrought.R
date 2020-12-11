@@ -61,6 +61,24 @@ lfcCatDrought <- R6::R6Class(
       invisible(self)
     },
 
+    describe_var = function(variables) {
+      # argument checks
+      check_args_for(character = list(variables = variables))
+      check_if_in_for(
+        variables,
+        c('DDS', 'DeepDrainage', 'Eplant', 'Esoil', 'Infiltration',
+          'LAI', 'PET', 'Psi', 'REW', 'Runoff', 'Theta')
+      )
+
+      # cats
+      catdrought_describe_var_cat(
+        variables, dplyr::tbl(private$pool_conn, 'variables_thesaurus')
+      )
+
+      # as the print method, to allow $ piping
+      return(invisible(self))
+    },
+
     get_raster = function(
       date, spatial = 'stars'
     ) {
@@ -385,4 +403,35 @@ catdrought_get_current_time_series <- function(object, sf, variable) {
   check_class_for(object, 'lfcCatDrought')
   # call to the class method
   object$get_current_time_series(sf, variable)
+}
+
+#' Print info about the variables present in the CatDrought db
+#'
+#' @description \code{catdrought_describe_var} is a wrapper for the \code{$describe_var} method
+#'   of \code{lfcCatDrought} objects. See \code{\link{catdrought}}.
+#'
+#' @param object \code{lfcCatDrought} object, as created by \code{\link{catdrought}}
+#' @param variables character vector with the names of the variables to describe
+#'
+#' @return A character vector with the variable names to describe
+#'
+#' @family catdrought functions
+#'
+#' @examples
+#' if (interactive()) {
+#' catdroughtdb <- catdrought()
+#' catdrought_describe_var(catdroughtdb, "DDS")
+#' catdrought_describe_var(catdroughtdb, c("Esoil", "REW"))
+#'
+#' # catdroughtdb is an R6 object, so the previous example is the same as:
+#' catdroughtdb$describe_var("DDS")
+#' catdroughtdb$describe_var(c("Esoil", "REW"))
+#' }
+#'
+#' @export
+catdrought_describe_var <- function(object, variables) {
+  # argument validation
+  check_class_for(object, 'lfcCatDrought')
+  # call to the class method
+  object$describe_var(variables)
 }
