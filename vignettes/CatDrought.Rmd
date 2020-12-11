@@ -105,6 +105,12 @@ catdrought_get_current_time_series(
   - `sf` object with the POINT features
   - `variable` the desired variable
 
+The output is a tibble with the following variables:
+
+  - day
+  - point_id
+  - selected variable value
+
 ### Polygons
 
 The process is exactly the same as for points:
@@ -130,3 +136,14 @@ returned for all polygons and dates.
   - `sf` object with the POLYGON or MULTIPOLYGON features
   - `variable` the desired variable
 
+The output is a tibble with the following variables:
+
+  - day
+  - polygon_id
+  - selected variable count (pixels from the raster covered by the polygon)
+  - selected variable sum
+  - selected variable mean value
+  - selected variable standard deviation
+  - selected variable min value
+  - selected variable max value
+  - selected variable standard error
