@@ -24,7 +24,8 @@ library(dplyr)
 ## CatDrought database
 
 CatDrought database offers access to drought stress, soil water content and other
-modeled variables for Catalunya.
+modeled variables for Catalunya, powered by the
+[medfate R package](https://CRAN.R-project.org/package=medfate).
 
 ```{r catdroughtdb}
 catdroughtdb <- catdrought()

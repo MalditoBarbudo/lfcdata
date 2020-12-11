@@ -3,8 +3,10 @@ title: "FES"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{FES}
-  %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
+  %\VignetteEngine{knitr::rmarkdown}
+editor_options: 
+  chunk_output_type: console
 ---
 
 ```{r, include = FALSE}
@@ -16,8 +18,60 @@ knitr::opts_chunk$set(
 
 ```{r setup}
 library(lfcdata)
+library(sf)
 ```
 
 
-## Forest Ecosystem Services (FES) for Catolonia database
+## Forest Ecosystem Services (FES) for Catalonia database
+
+The FES database allows access to the data of forest ecosystem services in
+Catalonia. This data was obtained in a collaborative effort of the CTFC and
+CREAF research centers.
+
+To access the database, we use the `fes()` function:
+
+```{r fesdb}
+fesdb <- fes()
+fesdb
+```
+
+## Data access
+
+Data can be retrieved with the `fes_get_data` function. We need to supply the
+name of the desired table and a logical argument indicating if we want a
+normal tibble or a spatial object (sf):
+
+```{r get_data}
+fes_get_data(fesdb, 'static', spatial = FALSE)
+```
+
+As stated before, we can get a spatial object, and use it to plot the variables:
+
+```{r get_data_spatial}
+fes_get_data(fesdb, 'static', spatial = TRUE) %>%
+  plot()
+```
+
+### Available tables
+
+The available tables can be listed with the `fes_avail_tables` function:
+
+```{r avail_tables}
+fes_avail_tables(fesdb)
+```
+
+And we can get a detailed information about the table of interest:
+
+```{r describe_table}
+fes_describe_table(fesdb, 'static')
+```
+
+### Variables info
+
+To have a glance on any variable, we can use `fes_describe_var`:
+
+```{r describe_var}
+fes_describe_var(fesdb, c('animals_presence', 'mushrooms_production'))
+```
+
 
