@@ -203,18 +203,18 @@ lfcCatDrought <- R6::R6Class(
           magrittr::set_names(sf_id)
 
         # now the quantiles
-        quantile_queries <- glue::glue_sql(
-          "
-          SELECT day, (ST_Quantile(ST_Clip(rast,ST_GeomFromText({sf_text}, 4326), -9999, true),{band},ARRAY[0.9,0.1])).* As pvc
-          FROM daily.{`table_name`}
-          WHERE ST_Intersects(rast,
-            ST_GeomFromText({sf_text}, 4326)
-          )
-          ORDER BY day,quantile,value
-          ;
-          ", .con = pool_checkout
-        ) %>%
-          magrittr::set_names(sf_id)
+        # quantile_queries <- glue::glue_sql(
+        #   "
+        #   SELECT day, (ST_Quantile(ST_Clip(rast,ST_GeomFromText({sf_text}, 4326), -9999, true),{band},ARRAY[0.9,0.1])).* As pvc
+        #   FROM daily.{`table_name`}
+        #   WHERE ST_Intersects(rast,
+        #     ST_GeomFromText({sf_text}, 4326)
+        #   )
+        #   ORDER BY day,quantile,value
+        #   ;
+        #   ", .con = pool_checkout
+        # ) %>%
+        #   magrittr::set_names(sf_id)
         pool::poolReturn(pool_checkout)
 
         tictoc::tic()
@@ -226,22 +226,21 @@ lfcCatDrought <- R6::R6Class(
           ) %>%
           dplyr::arrange(day, polygon_id) %>%
           dplyr::select(day, polygon_id, dplyr::everything())
-        tictoc::toc()
-        res_quantiles <-
-          quantile_queries %>%
-          purrr::imap_dfr(
-            ~ pool::dbGetQuery(private$pool_conn, .x) %>%
-              dplyr::mutate(polygon_id = .y)
-          ) %>%
-          tidyr::pivot_wider(
-            names_from = quantile,
-            names_glue = 'q_{quantile*100}',
-            values_from = value,
-            values_fn = mean
-          )
+        # res_quantiles <-
+        #   quantile_queries %>%
+        #   purrr::imap_dfr(
+        #     ~ pool::dbGetQuery(private$pool_conn, .x) %>%
+        #       dplyr::mutate(polygon_id = .y)
+        #   ) %>%
+        #   tidyr::pivot_wider(
+        #     names_from = quantile,
+        #     names_glue = 'q_{quantile*100}',
+        #     values_from = value,
+        #     values_fn = mean
+        #   )
 
         res <- res_stats %>%
-          dplyr::left_join(res_quantiles) %>%
+          # dplyr::left_join(res_quantiles) %>%
           dplyr::as_tibble()
         tictoc::toc()
 
