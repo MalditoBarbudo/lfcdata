@@ -44,6 +44,7 @@ if (interactive()) {
 }
 \seealso{
 Other catdrought functions: 
+\code{\link{catdrought_describe_var}()},
 \code{\link{catdrought_get_raster}()},
 \code{\link{catdrought}()}
 }

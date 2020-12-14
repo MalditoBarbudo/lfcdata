@@ -54,6 +54,7 @@ if (interactive()) {
 }
 \seealso{
 Other catdrought functions: 
+\code{\link{catdrought_describe_var}()},
 \code{\link{catdrought_get_current_time_series}()},
 \code{\link{catdrought}()}
 }

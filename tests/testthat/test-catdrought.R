@@ -94,7 +94,8 @@ test_that("get_raster method works", {
       names(catdroughtdb$get_raster(date_to_check, 'stars')) %in%
         c(
           'DDS', 'DeepDrainage', 'Eplant', 'Esoil', 'Infiltration',
-          'LAI', 'PET', 'Psi', 'REW', 'Runoff', 'Theta'
+          'Interception', 'LAI', 'LMFC', 'PET', 'Precipitation', 'Psi', 'REW',
+          'Runoff', 'Theta'
         )
     )
   )

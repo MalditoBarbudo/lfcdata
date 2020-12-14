@@ -127,7 +127,8 @@ lfcCatDrought <- R6::R6Class(
         ## partitioned table, layer names are lost
         names(catdrought_raster) <- c(
           'DDS', 'DeepDrainage', 'Eplant', 'Esoil', 'Infiltration',
-          'LAI', 'PET', 'Psi', 'REW', 'Runoff', 'Theta'
+          'Interception', 'LAI', 'LMFC', 'PET', 'Precipitation', 'Psi', 'REW',
+          'Runoff', 'Theta'
         )
 
         message("Done")
@@ -159,7 +160,8 @@ lfcCatDrought <- R6::R6Class(
       check_if_in_for(
         variable, c(
           'DDS', 'DeepDrainage', 'Eplant', 'Esoil', 'Infiltration',
-          'LAI', 'PET', 'Psi', 'REW', 'Runoff', 'Theta'
+          'Interception', 'LAI', 'LMFC', 'PET', 'Precipitation', 'Psi', 'REW',
+          'Runoff', 'Theta'
         )
       )
 
@@ -171,12 +173,15 @@ lfcCatDrought <- R6::R6Class(
         'Eplant' = 3,
         'Esoil' = 4,
         'Infiltration' = 5,
-        'LAI' = 6,
-        'PET' = 7,
-        'Psi' = 8,
-        'REW' = 9,
-        'Runoff' = 10,
-        'Theta' = 11
+        'Interception' = 6,
+        'LAI' = 7,
+        'LMFC' = 8,
+        'PET' = 9,
+        'Precipitation' = 10,
+        'Psi' = 11,
+        'REW' = 12,
+        'Runoff' = 13,
+        'Theta' = 14
       )
 
       # now the table name
