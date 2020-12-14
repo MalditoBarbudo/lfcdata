@@ -61,6 +61,18 @@ test_that("get_data method works", {
   expect_equal(catdroughtdb$get_data(), catdroughtdb)
 })
 
+## describe_var method works ####
+test_that("describe_var method works", {
+  skip_on_cran()
+  skip_on_travis()
+  expect_is(catdroughtdb$describe_var('REW'), c('lfcCatDrought'))
+  expect_output(catdroughtdb$describe_var('REW'))
+  expect_output(catdroughtdb$describe_var(c('REW', 'DDS')))
+  expect_error(catdroughtdb$describe_var(c('REW', 'DDS', 'tururu')), 'Must be one of')
+  expect_error(catdroughtdb$describe_var('tururu'), 'Must be one of')
+  expect_error(catdroughtdb$describe_var(25), 'not character')
+})
+
 ## get_raster method works ####
 test_that("get_raster method works", {
   skip_on_cran()
@@ -137,7 +149,7 @@ test_that("get_current_time_series method works", {
   )
   expect_true(
     all(names(catdroughtdb$get_current_time_series(sf_polygons, 'Esoil')) %in%
-      c('day', 'polygon_id', 'count', 'mean', 'stddev', 'min', 'max', 'stderror'))
+      c('day', 'polygon_id', 'count', 'sum', 'mean', 'stddev', 'min', 'max', 'stderror'))
   )
   # work with multipolygon (two rows for each quantile)
   expect_is(

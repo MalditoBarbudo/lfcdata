@@ -148,3 +148,14 @@ The output is a tibble with the following variables:
   - selected variable min value
   - selected variable max value
   - selected variable standard error
+
+### Variables description
+
+Information about Variables available can be accessed with
+`catdroght_describe_var()` function:
+
+```{r describe_var}
+catdrought_describe_var(catdroughtdb, c('REW', 'DDS'))
+```
+
+

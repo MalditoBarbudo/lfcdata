@@ -66,14 +66,15 @@ lfcCatDrought <- R6::R6Class(
       check_args_for(character = list(variables = variables))
       check_if_in_for(
         variables,
-        c('DDS', 'DeepDrainage', 'Eplant', 'Esoil', 'Infiltration',
-          'LAI', 'PET', 'Psi', 'REW', 'Runoff', 'Theta')
+        c(
+          'DDS', 'DeepDrainage', 'Eplant', 'Esoil', 'Infiltration',
+          'Interception', 'LAI', 'LMFC', 'PET', 'Precipitation', 'Psi', 'REW',
+          'Runoff', 'Theta'
+        )
       )
 
       # cats
-      catdrought_describe_var_cat(
-        variables, dplyr::tbl(private$pool_conn, 'variables_thesaurus')
-      )
+      catdrought_describe_var_cat(variables)
 
       # as the print method, to allow $ piping
       return(invisible(self))
