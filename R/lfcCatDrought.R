@@ -228,8 +228,14 @@ lfcCatDrought <- R6::R6Class(
 
         pool::poolReturn(pool_checkout)
 
+        dates_available <- seq(
+          lubridate::ymd(Sys.Date() - 366), lubridate::ymd(Sys.Date() - 1),
+          # lubridate::ymd(Sys.Date() - 366), lubridate::ymd('2020-12-12'),
+          by = 'days'
+        )
+
         tictoc::tic()
-        res_stats <-
+        res <-
           data_queries %>%
           purrr::imap_dfr(
             ~ pool::dbGetQuery(private$pool_conn, .x) %>%
@@ -239,11 +245,9 @@ lfcCatDrought <- R6::R6Class(
           dplyr::select(day, polygon_id, dplyr::everything()) %>%
           dplyr::mutate(
             stderror = stddev/sqrt(count)
-          )
-
-        res <- res_stats %>%
-          # dplyr::left_join(res_quantiles) %>%
-          dplyr::as_tibble()
+          ) %>%
+          dplyr::as_tibble() %>%
+          dplyr::filter(day %in% dates_available)
         tictoc::toc()
 
         # res checks for warnings or errors
