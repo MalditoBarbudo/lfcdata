@@ -283,6 +283,12 @@ lfcCatDrought <- R6::R6Class(
           magrittr::set_names(sf_id)
         pool::poolReturn(pool_checkout)
 
+        dates_available <- seq(
+          lubridate::ymd(Sys.Date() - 366), lubridate::ymd(Sys.Date() - 1),
+          # lubridate::ymd(Sys.Date() - 366), lubridate::ymd('2020-12-12'),
+          by = 'days'
+        )
+
         tictoc::tic()
         res <-
           data_queries %>%
@@ -291,7 +297,8 @@ lfcCatDrought <- R6::R6Class(
               dplyr::mutate(point_id = .y)
           ) %>%
           dplyr::arrange(day, point_id) %>%
-          dplyr::select(day, point_id, "{variable}" := pixel_value)
+          dplyr::select(day, point_id, "{variable}" := pixel_value) %>%
+          dplyr::filter(day %in% dates_available)
         tictoc::toc()
 
         # res checks for warnings or errors
