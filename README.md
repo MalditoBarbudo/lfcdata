@@ -10,7 +10,7 @@ status](https://github.com/MalditoBarbudo/lfcdata/workflows/R-CMD-check/badge.sv
 <!-- badges: end -->
 
 The goal of `lfcdata` R package is to provide access to the [Laboratori
-Forestal Català](http://laboratoriforestal.creaf.uab.cat/) public
+Forestal Català](http://laboratoriforestal.creaf.cat/) public
 databases.
 
 ## Installation
@@ -53,7 +53,7 @@ library(dplyr)
 nfidb <- nfi()
 nfidb
 #>  Access to the Spanish National Forest Inventory data for Catalonia.
-#>  laboratoriforestal.creaf.uab.cat
+#>  laboratoriforestal.creaf.cat
 #> 
 #>  Use nfi_get_data to access the tables.
 #>  Use nfi_avail_tables to know which tables are available.
@@ -77,7 +77,7 @@ nfidb %>%
 allometriesdb <- allometries()
 allometriesdb
 #>  Access to the LFC allometries database.
-#>  laboratoriforestal.creaf.uab.cat
+#>  laboratoriforestal.creaf.cat
 #> 
 #>  Use allometries_get_data to access the tables.
 #>  Use allometries_calculate to calculate new values based on the allometries.
@@ -114,7 +114,7 @@ allometriesdb %>%
 lidardb <- lidar()
 lidardb
 #>  Access to the LiDAR database.
-#>  laboratoriforestal.creaf.uab.cat
+#>  laboratoriforestal.creaf.cat
 #> 
 #>  Use lidar_get_data to access the administrative divisions aggregated data.
 #>  Use lidar_get_lowres_raster to access access the low resolution rasters (400x400m).

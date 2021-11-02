@@ -6,7 +6,7 @@ Description: Access the Spanish National Forest Inventory data for Catalonia, ca
   tree and shrubs allometries or obtain rasters for eco-physiological variables based on
   LiDAR data. "lfcdata" allows retrieving data from all the available databases from
   the Catalonian Forest Laboratory (LFC) initiative
-  (<http://laboratoriforestal.creaf.uab.cat>). 
+  (<http://laboratoriforestal.creaf.cat>). 
 Depends: R (>= 3.6.0)
 License: MIT + file LICENSE
 Encoding: UTF-8
@@ -28,7 +28,7 @@ Imports:
     meteoland,
     dbplyr,
     tictoc
-RoxygenNote: 7.1.1
+RoxygenNote: 7.1.2
 Suggests: 
     testthat (>= 2.1.0),
     knitr,

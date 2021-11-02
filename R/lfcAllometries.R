@@ -42,7 +42,7 @@ lfcAllometries <- R6::R6Class(
     print = function(...) {
       cat(
         " Access to the LFC allometries database.\n",
-        crayon::blue$underline("laboratoriforestal.creaf.uab.cat\n\n"),
+        crayon::blue$underline("laboratoriforestal.creaf.cat\n\n"),
         "Use " %+% crayon::yellow$bold("allometries_get_data") %+%
           " to access the tables.\n",
         "Use " %+% crayon::yellow$bold("allometries_calculate") %+%

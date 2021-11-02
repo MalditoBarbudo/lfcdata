@@ -51,7 +51,7 @@ lfcObject <- R6::R6Class(
         pool::dbPool(
           drv = RPostgres::Postgres(),
           dbname = private$dbname,
-          host = 'laboratoriforestal.creaf.uab.cat',
+          host = 'laboratoriforestal.creaf.cat',
           idleTimeout = 3600,
           user = 'guest',
           password = 'guest',
@@ -61,7 +61,7 @@ lfcObject <- R6::R6Class(
 
       if (inherits(res, "try-error")) {
         message(
-          "Connection to database at laboratoriforestal.creaf.uab.cat failed.",
+          "Connection to database at laboratoriforestal.creaf.cat failed.",
           "Trying again in 30 seconds"
         )
 
@@ -69,7 +69,7 @@ lfcObject <- R6::R6Class(
         res <- pool::dbPool(
           drv = RPostgres::Postgres(),
           dbname = private$dbname,
-          host = 'laboratoriforestal.creaf.uab.cat',
+          host = 'laboratoriforestal.creaf.cat',
           idleTimeout = 3600,
           user = 'guest',
           password = 'guest',

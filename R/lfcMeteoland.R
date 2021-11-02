@@ -36,7 +36,7 @@ lfcMeteoland <- R6::R6Class(
     print = function(...) {
       cat(
         " Access to the Meteoland database.\n",
-        crayon::blue$underline("laboratoriforestal.creaf.uab.cat\n\n"),
+        crayon::blue$underline("laboratoriforestal.creaf.cat\n\n"),
         "Use " %+% crayon::yellow$bold("meteoland_point_interpolation") %+%
           " to interpolate points in the last 365 days (current mode).\n",
         "Use " %+% crayon::yellow$bold("meteoland_raster_interpolation") %+%

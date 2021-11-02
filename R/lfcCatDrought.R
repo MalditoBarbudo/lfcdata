@@ -40,7 +40,7 @@ lfcCatDrought <- R6::R6Class(
     print = function(...) {
       cat(
         "Access to the CatDrought database.\n",
-        crayon::blue$underline("laboratoriforestal.creaf.uab.cat\n\n"),
+        crayon::blue$underline("laboratoriforestal.creaf.cat\n\n"),
         "Use " %+% crayon::yellow$bold("catdrought_get_raster") %+%
           " to obtain a raster for the desired date.\n",
         "Use " %+% crayon::yellow$bold("catdrought_current_time_series") %+%

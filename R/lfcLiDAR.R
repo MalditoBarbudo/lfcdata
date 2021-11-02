@@ -46,7 +46,7 @@ lfcLiDAR <- R6::R6Class(
     print = function(...) {
       cat(
         " Access to the LiDAR database.\n",
-        crayon::blue$underline("laboratoriforestal.creaf.uab.cat\n\n"),
+        crayon::blue$underline("laboratoriforestal.creaf.cat\n\n"),
         "Use " %+% crayon::yellow$bold("lidar_get_data") %+%
           " to access the administrative divisions aggregated data.\n",
         "Use " %+% crayon::yellow$bold("lidar_get_lowres_raster") %+%
