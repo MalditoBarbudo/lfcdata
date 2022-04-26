@@ -291,13 +291,13 @@ lfcLiDAR <- R6::R6Class(
       sf_transformed <-
         sf %>%
         sf::st_geometry() %>%
-        sf::st_transform(crs = 3043)
+        sf::st_transform(crs = 25831)
 
       wkt_poly <-
         sf_transformed %>%
         sf::st_as_text(EWKT = TRUE, digits = 15)
 
-      # poly area, in 3043 projection
+      # poly area, in 25831 projection
       poly_area <- as.numeric(sf::st_area(sf_transformed)) / 1000000
 
       # pool checkout
@@ -465,12 +465,12 @@ lfcLiDAR <- R6::R6Class(
       point_query <- glue::glue_sql(
         "SELECT {point_id} As point_id, ST_Value(
            rast,
-           ST_Transform(ST_GeomFromEWKT({wkt_point}),3043)
+           ST_Transform(ST_GeomFromEWKT({wkt_point}),25831)
          ) As point_val
          FROM {`var_name`}
          WHERE ST_Intersects(
            rast,
-           ST_Transform(ST_GeomFromEWKT({wkt_point}),3043)
+           ST_Transform(ST_GeomFromEWKT({wkt_point}),25831)
          );",
         .con = pool_checkout
       )
