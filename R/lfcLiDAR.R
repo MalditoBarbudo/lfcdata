@@ -77,7 +77,7 @@ lfcLiDAR <- R6::R6Class(
       )
       check_length_for(table_name, 1)
       check_if_in_for(
-        variables, c('AB', 'BAT', 'BF', 'CAT', 'DBH', 'HM', 'REC', 'VAE', 'all')
+        variables, c('AB', 'BAT', 'BF', 'CAT', 'DBH', 'DEN', 'HM', 'LAI', 'REC', 'VAE', 'all')
       )
       check_if_in_for(
         table_name, self$avail_tables()
@@ -85,7 +85,7 @@ lfcLiDAR <- R6::R6Class(
 
       # variables
       if (any(variables == 'all')) {
-        variables <- c('AB', 'BAT', 'BF', 'CAT', 'DBH', 'HM', 'REC', 'VAE')
+        variables <- c('AB', 'BAT', 'BF', 'CAT', 'DBH', 'DEN', 'HM', 'LAI', 'REC', 'VAE')
       }
       regex_detection <- glue::glue("^", glue::glue_collapse(variables, sep = '|^'), "|^poly_km2$")
 
@@ -116,7 +116,7 @@ lfcLiDAR <- R6::R6Class(
       check_length_for(spatial, 1)
       check_if_in_for(spatial, c('stars', 'raster'))
       check_if_in_for(
-        variables, c('AB', 'BAT', 'BF', 'CAT', 'DBH', 'HM', 'REC', 'VAE')
+        variables, c('AB', 'BAT', 'BF', 'CAT', 'DBH', 'DEN', 'HM', 'LAI', 'REC', 'VAE')
       )
 
       # chache name, as to avoid caching the same if the same tables, but in
@@ -133,8 +133,9 @@ lfcLiDAR <- R6::R6Class(
           purrr::map_int(
             ~ switch(
               .x,
-              'AB' = 1L, 'BAT' = 6L, 'BF' = 4L, 'CAT' = 7L,
-              'DBH' = 2L, 'HM' = 3L, 'REC' = 5L, 'VAE' = 8L
+              'AB' = 1L, 'BAT' = 8L, 'BF' = 6L, 'CAT' = 9L,
+              'DBH' = 2L, 'HM' = 4L, 'REC' = 7L, 'VAE' = 10L,
+              'DEN' = 3L, 'LAI' = 5L
             )
           )
 
@@ -196,7 +197,7 @@ lfcLiDAR <- R6::R6Class(
 
       # argument checks
       check_args_for(character = list(variables = variables))
-      check_if_in_for(variables, c('AB', 'BAT', 'BF', 'CAT', 'DBH', 'HM', 'REC', 'VAE'))
+      check_if_in_for(variables, c('AB', 'BAT', 'BF', 'CAT', 'DBH', 'DEN', 'HM', 'LAI', 'REC', 'VAE'))
 
       # cats
       lidar_describe_var_cat(
@@ -213,7 +214,7 @@ lfcLiDAR <- R6::R6Class(
 
       # variables
       if (any(variables == 'all')) {
-        variables <- c('AB', 'BAT', 'BF', 'CAT', 'DBH', 'HM', 'REC', 'VAE')
+        variables <- c('AB', 'BAT', 'BF', 'CAT', 'DBH', 'DEN', 'HM', 'LAI', 'REC', 'VAE')
       }
 
       # res
@@ -236,7 +237,7 @@ lfcLiDAR <- R6::R6Class(
 
       # variables
       if (any(variables == 'all')) {
-        variables <- c('AB', 'BAT', 'BF', 'CAT', 'DBH', 'HM', 'REC', 'VAE')
+        variables <- c('AB', 'BAT', 'BF', 'CAT', 'DBH', 'DEN', 'HM', 'LAI', 'REC', 'VAE')
       }
 
       # res
@@ -272,7 +273,7 @@ lfcLiDAR <- R6::R6Class(
         character = list(poly_id = poly_id, var_name = var_name),
         polygons = list(sf = sf)
       )
-      check_if_in_for(var_name, c('AB', 'BAT', 'BF', 'CAT', 'DBH', 'HM', 'REC', 'VAE'))
+      check_if_in_for(var_name, c('AB', 'BAT', 'BF', 'CAT', 'DBH', 'DEN', 'HM', 'LAI', 'REC', 'VAE'))
       check_length_for(var_name, 1)
       check_length_for(poly_id, 1)
 
@@ -447,7 +448,7 @@ lfcLiDAR <- R6::R6Class(
       )
       check_length_for(point_id, 1, 'point_id')
       check_length_for(variable, 1, 'variable')
-      check_if_in_for(variable, c('AB', 'BAT', 'BF', 'CAT', 'DBH', 'HM', 'REC', 'VAE'))
+      check_if_in_for(variable, c('AB', 'BAT', 'BF', 'CAT', 'DBH', 'DEN', 'HM', 'LAI', 'REC', 'VAE'))
 
       # we need the point in wkt to create the query on the fly
       wkt_point <-
@@ -556,7 +557,7 @@ lfcLiDAR <- R6::R6Class(
 #'
 #' @export
 lidar_get_data <- function(
-  object, table_name, variables = c('AB', 'BAT', 'BF', 'CAT', 'DBH', 'HM', 'REC', 'VAE')
+  object, table_name, variables = c('AB', 'BAT', 'BF', 'CAT', 'DBH', 'DEN', 'HM', 'LAI', 'REC', 'VAE')
 ) {
   # argument validation
   check_class_for(object, 'lfcLiDAR')

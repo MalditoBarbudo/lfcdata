@@ -34,13 +34,13 @@ test_that("get_data method works", {
   expect_true(all(
     c(
       'DBH_pixels', 'AB_pixels', 'REC_pixels', 'VAE_pixels', 'BAT_pixels',
-      'BF_pixels', 'CAT_pixels', 'HM_pixels'
+      'BF_pixels', 'CAT_pixels', 'HM_pixels', 'DEN_pixels', 'LAI_pixels'
     ) %in% names(lidardb$get_data('lidar_provinces', 'all'))
   ))
   expect_true(all(
     c(
       'DBH_pixels', 'AB_pixels', 'REC_pixels', 'VAE_pixels', 'BAT_pixels',
-      'BF_pixels', 'CAT_pixels', 'HM_pixels'
+      'BF_pixels', 'CAT_pixels', 'HM_pixels', 'DEN_pixels', 'LAI_pixels'
     ) %in% names(lidardb$get_data('lidar_provinces', c('all', 'DBH')))
   ))
 })
@@ -199,7 +199,7 @@ test_that("cache works", {
   expect_identical(
     lidardb$get_lowres_raster(c('DBH', 'AB', 'BAT'), 'raster'),
     rpostgis::pgGetRast(
-      temp_postgresql_conn, c('public', 'lidar_stack_utm'), bands = c(1,6,2)
+      temp_postgresql_conn, c('public', 'lidar_stack_utm'), bands = c(1,8,2)
     )
   )
   pool::poolReturn(temp_postgresql_conn)
