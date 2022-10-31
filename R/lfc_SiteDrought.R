@@ -175,7 +175,7 @@ lfcsiteDrought <- R6::R6Class(
   ),
 
   private = list(
-    dbname ="creaf_v4"
+    dbname ="sitedrought_db"
   )
 )
 

@@ -7,7 +7,7 @@
 lidar_get_data(
   object,
   table_name,
-  variables = c("AB", "BAT", "BF", "CAT", "DBH", "HM", "REC", "VAE")
+  variables = c("AB", "BAT", "BF", "CAT", "DBH", "DEN", "HM", "LAI", "REC", "VAE")
 )
 }
 \arguments{

@@ -35,9 +35,6 @@ Dates must be provided as a two elements character vector, with
  Interpolation for polygons is made based on a 1000x1000 meters topology
  raster.
 }
-\examples{
-
-}
 \seealso{
 Other Meteoland functions: 
 \code{\link{meteoland_get_lowres_raster}()},
