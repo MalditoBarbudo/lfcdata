@@ -214,7 +214,7 @@ test_that("external get data wrapper works", {
   skip_on_travis()
   expect_identical(
     lidardb$get_data(
-      'lidar_provinces', c('AB', 'BAT', 'BF', 'CAT', 'DBH', 'HM', 'REC', 'VAE')
+      'lidar_provinces', c('AB', 'BAT', 'BF', 'CAT', 'DBH', 'DEN', 'HM', 'LAI', 'REC', 'VAE')
     ),
     lidar_get_data(lidardb, 'lidar_provinces')
   )

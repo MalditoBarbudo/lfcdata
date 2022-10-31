@@ -170,15 +170,11 @@ test_that("points_interpolation method works", {
 
 
   expect_warning(
-    meteolanddb$points_interpolation(
+    (one_day_missing_interpolation <- meteolanddb$points_interpolation(
       sf_points, c(as.character(Sys.Date()-2), as.character(Sys.Date()+1)),
       'plot_id'
-    ), "Some dates"
+    )), "Some dates"
   )
-  one_day_missing_interpolation <-
-    meteolanddb$points_interpolation(
-      sf_points, c(as.character(Sys.Date()-2), as.character(Sys.Date()+1)), 'plot_id'
-    )
 
   expect_equal(nrow(one_day_missing_interpolation), 2*5)
   expect_equal(ncol(one_day_missing_interpolation), 14)
@@ -200,15 +196,11 @@ test_that("points_interpolation method works", {
   )
 
   expect_warning(
-    meteolanddb$points_interpolation(
+    (one_coord_missing_interpolation <- meteolanddb$points_interpolation(
       sf_points_one_out, c(start_date, end_date), 'plot_id'
-    ),
+    )),
     "Some points"
   )
-  one_coord_missing_interpolation <-
-    meteolanddb$points_interpolation(
-      sf_points_one_out, c(start_date, end_date), 'plot_id'
-    )
 
   expect_equal(nrow(one_coord_missing_interpolation), 3*5)
   expect_equal(ncol(one_coord_missing_interpolation), 14)
@@ -299,14 +291,10 @@ test_that("historical points_interpolation method works", {
 
 
   expect_warning(
-    meteolanddb$historical_points_interpolation(
+    (one_day_missing_interpolation <- meteolanddb$historical_points_interpolation(
       sf_points, c('1975-12-30', '1976-01-01'), 'plot_id'
-    ), "Some dates"
+    )), "Some dates"
   )
-  one_day_missing_interpolation <-
-    meteolanddb$historical_points_interpolation(
-      sf_points, c('1975-12-30', '1976-01-01'), 'plot_id'
-    )
 
   expect_equal(nrow(one_day_missing_interpolation), 5*3)
   expect_equal(ncol(one_day_missing_interpolation), 14)
@@ -328,15 +316,11 @@ test_that("historical points_interpolation method works", {
   )
 
   expect_warning(
-    meteolanddb$historical_points_interpolation(
+    (one_coord_missing_interpolation <- meteolanddb$historical_points_interpolation(
       sf_points_one_out, c(historical_start_date, historical_end_date), 'plot_id'
-    ),
+    )),
     "Some points"
   )
-  one_coord_missing_interpolation <-
-    meteolanddb$historical_points_interpolation(
-      sf_points_one_out, c(historical_start_date, historical_end_date), 'plot_id'
-    )
 
   expect_equal(nrow(one_coord_missing_interpolation), 3*6)
   expect_equal(ncol(one_coord_missing_interpolation), 14)
@@ -417,14 +401,10 @@ test_that("raster_interpolation method works", {
   )
 
   expect_warning(
-    meteolanddb$raster_interpolation(
+    (one_day_missing_interpolation <- meteolanddb$raster_interpolation(
       sf_polygons, c(as.character(Sys.Date()-2), as.character(Sys.Date()+1))
-    ), "Some dates"
+    )), "Some dates"
   )
-  one_day_missing_interpolation <-
-    meteolanddb$raster_interpolation(
-      sf_polygons, c(as.character(Sys.Date()-2), as.character(Sys.Date()))
-    )
   expect_length(one_day_missing_interpolation, 2)
   expect_is(one_day_missing_interpolation[[1]], 'RasterBrick')
 

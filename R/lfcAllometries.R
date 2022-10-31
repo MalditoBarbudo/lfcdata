@@ -65,14 +65,14 @@ lfcAllometries <- R6::R6Class(
         res <- super$get_data('allometries') %>%
           dplyr::filter(!!! dots_expressions) %>%
           split(.$allometry_id) %>%
-          purrr::map(~ rlang::as_list(.x))
+          purrr::map(~ as.list(.x))
       } else {
         # argument validation (here, because is when first id is used)
         check_args_for(character = list(id = id))
         res <- super$get_data('allometries') %>%
           dplyr::filter(allometry_id %in% id) %>%
           split(.$allometry_id) %>%
-          purrr::map(~ rlang::as_list(.x))
+          purrr::map(~ as.list(.x))
       }
 
       if (length(res) < 1) {

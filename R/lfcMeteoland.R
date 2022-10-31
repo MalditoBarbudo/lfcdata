@@ -124,7 +124,7 @@ lfcMeteoland <- R6::R6Class(
         object = interpolator_trimmed,
         points = user_topo,
         verbose = TRUE,
-        dates = datevec
+        dates = datevec[datevec %in% interpolator_trimmed@dates]
       )
 
       # message("Naming")
@@ -178,6 +178,9 @@ lfcMeteoland <- R6::R6Class(
       if (! user_dates[[2]] >= user_dates[[1]]) {
         stop('end date must be equal or more recent than the start date')
       }
+
+      # transform sf to the raster projection
+      sf <- sf::st_transform(sf, 3043)
 
       datevec <-
         user_dates[[1]]:user_dates[[2]] %>%
