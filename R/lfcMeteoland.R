@@ -586,7 +586,7 @@ lfcMeteoland <- R6::R6Class(
         as.Date(format = '%j', origin = as.Date('1970-01-01'))
       table_names <-
         glue::glue("daily_meteo_{stringr::str_remove_all(datevec, '-')}") #%>%
-        # magrittr::extract(. %in% dplyr::db_list_tables(private$pool_conn))
+        # magrittr::extract(. %in% pool::dbListTables(private$pool_conn))
 
       # meteo data
       # TODO what happens when no table is found?????? We need to check this

@@ -97,7 +97,7 @@ lfcNFI <- R6::R6Class(
 
     # available tables method
     avail_tables = function() {
-      dplyr::db_list_tables(private$pool_conn) %>%
+      pool::dbListTables(private$pool_conn) %>%
         tolower() %>%
         unique() %>%
         sort()
