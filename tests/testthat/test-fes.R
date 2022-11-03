@@ -25,6 +25,10 @@ test_that("get method works", {
     "of length"
   )
   expect_error(
+    fesdb$get_data(c('static', 'plot_ifn_4_results'), TRUE),
+    "of length"
+  )
+  expect_error(
     fesdb$get_data('static', 'FALSE'),
     "not logical"
   )
@@ -34,6 +38,11 @@ test_that("get method works", {
   )
   expect_error(
     fesdb$get_data('non_existent_table', FALSE),
+    "Can not connect to the database:"
+  )
+
+  expect_error(
+    fesdb$get_data('non_existent_table', TRUE),
     "Can not connect to the database:"
   )
 })

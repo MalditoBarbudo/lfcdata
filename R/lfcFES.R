@@ -47,6 +47,7 @@ lfcFES <- R6::R6Class(
     get_data = function(table_name, spatial = FALSE) {
 
       # arguments validation (table name is always validated in the super)
+      check_length_for(table_name, 1)
       check_args_for(
         logical = list(spatial = spatial),
         na = list(spatial = spatial)

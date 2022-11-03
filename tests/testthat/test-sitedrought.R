@@ -37,7 +37,8 @@ test_that("get_data method works", {
   skip_on_travis()
 
   # expect
-  expect_s3_class(sitedrdb$get_data('data_day'),'data.frame')
+  expect_s3_class(sitedrdb$get_data('data_day_fire'),'data.frame')
+  expect_identical(sitedrdb$get_data('data_day_fire'), sitedrdb$get_data())
 
   # errors
   expect_error(sitedrdb$get_data(c('data_day','thesaurus_variables_sitedr')),
@@ -47,7 +48,7 @@ test_that("get_data method works", {
   expect_error(sitedrdb$get_data(21),
                "Argument table_name is not character")
   expect_error(sitedrdb$get_data('random_table'),
-               "no existe la relación «random_table»")
+               "Can not connect to the database:")
 
 }
 )
@@ -64,7 +65,7 @@ test_that("avail_table method works", {
 
   expect_is(sitedrdb$avail_tables(), c('character'))
   expect_type(sitedrdb$avail_tables(),'character')
-  expect_true("data_day" %in% sitedrdb$avail_tables())
+  expect_true("data_day_fire" == sitedrdb$avail_tables())
 
   # errors
   expect_error(sitedrdb$avail_tables(FALSE),
@@ -86,11 +87,11 @@ test_that("describe_table method works", {
   skip_on_cran()
   skip_on_travis()
 
-  expect_is(sitedrdb$describe_table("data_day"), c('lfcsiteDrought'))
-  expect_output(sitedrdb$describe_table("data_day"))
+  expect_is(sitedrdb$describe_table("data_day_fire"), c('lfcsiteDrought'))
+  expect_output(sitedrdb$describe_table("data_day_fire"))
 
   # errors
-  expect_error(sitedrdb$describe_table(c('data_day','random_table')),
+  expect_error(sitedrdb$describe_table(c('data_day_fire','random_table')),
                "not found")
   expect_error(sitedrdb$describe_table('random_table'),
                'random_table not found')
@@ -132,7 +133,7 @@ test_that("describe_var method works", {
                Message = 'argument "variables" is missing')
 })
 
-rm(sitedrdb)
+# rm(sitedrdb)
 
 
 # %%%%%%%%%%%%%%%%%   AKI MHE KEDAAAAT  %%%%%%%%%%%%%%%%%%

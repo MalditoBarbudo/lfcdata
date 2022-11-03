@@ -66,13 +66,14 @@ lfcsiteDrought <- R6::R6Class(
     #                       .) Pesará poco para R y después en la App ya la filtraremos (fecha,variable,...)
 
     #      .) Tablas por DEFECTO
-    #                       .) Usamos (table_name = "data_day") para indicar que el defecto es "data_day"
-    #                       .) Así => get_data() lo hace en f(x) de la tabla "data_day"
+    #                       .) Usamos (table_name = "data_day_fire") para indicar que el defecto es "data_day_fire"
+    #                       .) Así => get_data() lo hace en f(x) de la tabla "data_day_fire"
     #                       .) Y si queremos otra tabla usamos => get_data("otra_tabla")
 
 
-    get_data = function(table_name = "data_day") {
+    get_data = function(table_name = "data_day_fire") {
 
+      check_length_for(table_name, 1)
       check_args_for(character = list(table_name = table_name))
 
 
@@ -96,7 +97,7 @@ lfcsiteDrought <- R6::R6Class(
 
 
     avail_tables = function() {
-      c('data_day')
+      c('data_day_fire')
     },
 
     # ................ DESCRIBE TABLE ..................
@@ -231,7 +232,7 @@ lfcsiteDrought <- R6::R6Class(
 #'
 #'}
 #' @export
-siteDrought_get_data <- function(object, table_name = "data_day") {
+siteDrought_get_data <- function(object, table_name = "data_day_fire") {
   check_class_for(object, 'lfcsiteDrought')
   object$get_data(table_name)
 }

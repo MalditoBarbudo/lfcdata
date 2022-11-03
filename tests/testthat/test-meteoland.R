@@ -309,10 +309,10 @@ test_that("historical points_interpolation method works", {
 
   # when all dates are out of range, then error occurs
   expect_error(
-    meteolanddb$historical_points_interpolation(
+    suppressWarnings(meteolanddb$historical_points_interpolation(
       sf_points, c(start_date, end_date),
       'plot_id'
-    ), "No meteo data found"
+    )), "No meteo data found"
   )
 
   expect_warning(
@@ -334,9 +334,9 @@ test_that("historical points_interpolation method works", {
   ))
 
   expect_error(
-    meteolanddb$historical_points_interpolation(
+    suppressWarnings(meteolanddb$historical_points_interpolation(
       sf_points_all_out, c(historical_start_date, historical_end_date), 'plot_id'
-    ),
+    )),
     "All coordinates are not in Catalonia"
   )
 
