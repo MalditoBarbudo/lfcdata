@@ -73,7 +73,7 @@ lfcsiteDrought <- R6::R6Class(
 
     get_data = function(table_name = "data_day_fire") {
 
-      check_length_for(table_name, 1)
+      check_length_for(table_name, 1, "table_name")
       check_args_for(character = list(table_name = table_name))
 
 
@@ -109,18 +109,18 @@ lfcsiteDrought <- R6::R6Class(
     #      .) Usaremos una tabla Thesaurus especial para el siteDrought
 
 
-    describe_table = function(tables){
+    describe_table = function(tables = "data_day_fire"){
 
       check_args_for(character = list(tables = tables))
       check_if_in_for(tables, self$avail_tables())
 
       tables_dict <- siteDrought_table_dictionary()
-      variables_thes <- suppressMessages(super$get_data('variables_thesaurus_sitedr'))
+      variables_thes <- sitedrought_var_thes
 
       tables %>%
         purrr::map(
           siteDrought_describe_table_cat,
-          tables_dict = tables_dict, variables_thes = variables_thes
+          tables_dict = tables_dict
         )
 
       return(invisible(self))
@@ -132,18 +132,18 @@ lfcsiteDrought <- R6::R6Class(
     #      .) Obtenemos VARIABLES de la tabla de la BBDD
     #      .) Usamos = SUPER$GET_DATA(VARIABLES THESAURUS SITEDR)
 
-    #      .) Aplicamos función = SITEDROUGHT_describe_var_eng
+    #      .) Aplicamos función = siteDrought_describe_var_cat
     #      .) Está en el archivo UTILS_SieteDR.R
 
     describe_var = function(variables) {
       check_args_for(character = list(variables = variables))
 
-      variables_thes <- suppressMessages(super$get_data('variables_thesaurus_sitedr'))
+      # variables_thes <- suppressMessages(super$get_data('variables_thesaurus_sitedr'))
 
       variables %>%
         purrr::map(
-          siteDrought_describe_var_eng,
-          variables_thes = variables_thes
+          siteDrought_describe_var_cat#,
+          # variables_thes = variables_thes
         )
 
       invisible(self)

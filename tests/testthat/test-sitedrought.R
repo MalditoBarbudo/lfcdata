@@ -42,7 +42,7 @@ test_that("get_data method works", {
 
   # errors
   expect_error(sitedrdb$get_data(c('data_day','thesaurus_variables_sitedr')),
-               "Expecting a single string value")
+               "must be of length")
   expect_error(sitedrdb$get_data(FALSE),
                "Argument table_name is not character")
   expect_error(sitedrdb$get_data(21),
@@ -99,8 +99,10 @@ test_that("describe_table method works", {
                'Argument tables is not character')
   expect_error(sitedrdb$describe_table(25),
                'Argument tables is not character')
-  expect_error(sitedrdb$describe_table(),
-               "el argumento \"tables\" está ausente, sin valor por omisión")
+  expect_identical(
+    sitedrdb$describe_table(),
+    sitedrdb$describe_table("data_day_fire")
+  )
 
 }
 )

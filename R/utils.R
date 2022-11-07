@@ -609,9 +609,9 @@ siteDrought_table_dictionary <- function() {
 #                     .) Ordenamos la VARIABLE_NAME
 
 
-siteDrought_describe_table_cat = function(table, tables_dict, variables_thes){
+siteDrought_describe_table_cat = function(table, tables_dict){
 
-  variable_names <- variables_thes %>%
+  variable_names <- sitedrought_var_thes %>%
     dplyr::filter(.data$var_table == table) %>%
     dplyr::pull(.data$var_id) %>%
     unique()
@@ -655,9 +655,9 @@ siteDrought_describe_table_cat = function(table, tables_dict, variables_thes){
 #              .) GRIS = Table
 
 
-siteDrought_describe_var_eng <- function(variable, variables_thes) {
+siteDrought_describe_var_cat <- function(variable) {
 
-  variables_thes %>%
+    sitedrought_var_thes %>%
     dplyr::filter(.data$var_id == variable) %>% {
       check_filter_for(., glue::glue("{variable} variable not found"))
       .
