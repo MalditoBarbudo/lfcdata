@@ -116,7 +116,7 @@ lfcCatDrought <- R6::R6Class(
 
         # if there is an error, stop
         if (
-          inherits(catdrought_raster, "try-error") & stringr::str_detect(
+          inherits(catdrought_raster, "try-error") && stringr::str_detect(
             catdrought_raster, "raster column 'rast' not found"
           )
         ) {
