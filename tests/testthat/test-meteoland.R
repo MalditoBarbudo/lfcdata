@@ -11,8 +11,8 @@ test_that("class object creation works", {
 meteolanddb <- meteoland()
 # dates for current are 365 natural days, so if we fix a date for tests it will
 # be wrong at some point. Is better to relay on Sys.Date for this tests.
-start_date <- as.character(Sys.Date()-10)
-end_date <- as.character(Sys.Date()-8)
+start_date <- as.character(Sys.Date() - 10)
+end_date <- as.character(Sys.Date() - 8)
 # dates for historical methods
 historical_start_date <- '1981-04-25'
 historical_end_date <- '1981-04-27'
