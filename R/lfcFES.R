@@ -65,10 +65,14 @@ lfcFES <- R6::R6Class(
           } else {
             message('Querying table from LFC database, this can take a while...')
             # if it is, use the sf read to get the spatial one
-            query_data_spatial <- sf::st_read(
-              private$pool_conn, table_name
+            query_data_spatial <- try(
+              sf::st_read(private$pool_conn, table_name)
             )
             message('Done')
+            # check if any error
+            if (inherits(query_data_spatial, "try-error")) {
+              stop("Can not connect to the database:\n", query_data_spatial[1])
+            }
             # update cache
             private$data_cache[[
               glue::glue("{table_name}_{as.character(spatial)}")
