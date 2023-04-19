@@ -116,7 +116,7 @@ lfcMeteoland <- R6::R6Class(
       # dates vec for the interpolation
       user_dates <- as.Date(user_dates)
       datevec <-
-        user_dates[[1]]:user_dates[[2]] %>%
+        user_dates[[1]]:user_dates[[2]] |>
         as.Date(format = '%j', origin = as.Date('1970-01-01'))
 
       # message("Points interpolation")
@@ -131,10 +131,10 @@ lfcMeteoland <- R6::R6Class(
       # now we need to create the names of the list res_spm@data. Each element is
       # a point, so, we need to take the names, remove the offending coords
       # and set the names.
-      points_names <- sf %>%
+      points_names <- sf |>
         dplyr::filter(
           !dplyr::row_number() %in% attr(user_topo, 'offending_coords')
-        ) %>%
+        ) |>
         dplyr::pull(!! rlang::sym(points_id))
 
       names(res_spm@data) <- points_names
@@ -143,21 +143,21 @@ lfcMeteoland <- R6::R6Class(
         return(res_spm)
       }
 
-      res_sf_pre <- sf::st_as_sf(sp::SpatialPoints(res_spm)) %>%
+      res_sf_pre <- sf::st_as_sf(sp::SpatialPoints(res_spm)) |>
         dplyr::mutate(!! points_id := names(res_spm@data))
 
-      res_spm@data %>%
+      res_spm@data |>
         purrr::imap_dfr(~ dplyr::mutate(
           .x, !! points_id := .y,
           date = rownames(.x)
-        )) %>%
-        # purrr::map_dfr(~ dplyr::slice(.x, -(1:buffer_days))) %>%
+        )) |>
+        # purrr::map_dfr(~ dplyr::slice(.x, -(1:buffer_days))) |>
         dplyr::select(
           dplyr::all_of(c('date', points_id)), dplyr::everything(), -DOY,
           -WindDirection
-        ) %>%
-        dplyr::left_join(res_sf_pre) %>%
-        dplyr::mutate(ThermalAmplitude = MaxTemperature - MinTemperature) %>%
+        ) |>
+        dplyr::left_join(res_sf_pre) |>
+        dplyr::mutate(ThermalAmplitude = MaxTemperature - MinTemperature) |>
         sf::st_as_sf(crs = 3043)
     },
 
@@ -183,7 +183,7 @@ lfcMeteoland <- R6::R6Class(
       sf <- sf::st_transform(sf, 3043)
 
       datevec <-
-        user_dates[[1]]:user_dates[[2]] %>%
+        user_dates[[1]]:user_dates[[2]] |>
         as.Date(format = '%j', origin = as.Date('1970-01-01'))
 
       historical_points_interpolation_helper <- function(date, sf, points_id) {
@@ -194,15 +194,15 @@ lfcMeteoland <- R6::R6Class(
           stop(glue::glue("Date provided ({as.character(date)}) is not historical, but current"))
         }
 
-        as.character(date) %>%
-          self$get_lowres_raster('raster') %>%
-          raster::extract(sf::as_Spatial(sf), sp = TRUE) %>%
-          sf::st_as_sf() %>%
-          dplyr::mutate(date = as.character(date)) %>%
+        as.character(date) |>
+          self$get_lowres_raster('raster') |>
+          raster::extract(sf::as_Spatial(sf), sp = TRUE) |>
+          sf::st_as_sf() |>
+          dplyr::mutate(date = as.character(date)) |>
           dplyr::select(dplyr::all_of(c('date', points_id)), dplyr::everything())
       }
 
-      failsafe_sf <- sf %>%
+      failsafe_sf <- sf |>
         dplyr::mutate(
           date = NA_character_,
           MeanTemperature = NA_real_, MinTemperature = NA_real_,
@@ -211,24 +211,24 @@ lfcMeteoland <- R6::R6Class(
           MaxRelativeHumidity = NA_real_,
           Precipitation = NA_real_, Radiation = NA_real_, WindSpeed = NA_real_,
           PET = NA_real_, ThermalAmplitude = NA_real_
-        ) %>%
+        ) |>
         dplyr::select(dplyr::all_of(c('date', points_id)), dplyr::everything())
 
       hpih_safe <- purrr::possibly(
         .f = historical_points_interpolation_helper, otherwise = failsafe_sf
       )
 
-      res <- datevec %>%
+      res <- datevec |>
         purrr::map_dfr(
           ~ hpih_safe(.x, sf, points_id)
         )
 
       # checks to deliver warning or errors for missing dates or data
-      if (any(is.na(res %>% dplyr::pull(date)))) {
-        res_dates <- res %>% dplyr::pull(date)
+      if (any(is.na(res |> dplyr::pull(date)))) {
+        res_dates <- res |> dplyr::pull(date)
         offending_dates <-
-          datevec[which(!as.character(datevec) %in% res_dates)] %>%
-          as.character() %>%
+          datevec[which(!as.character(datevec) %in% res_dates)] |>
+          as.character() |>
           stringr::str_flatten(collapse = ', ')
 
         warning(glue::glue(
@@ -236,14 +236,14 @@ lfcMeteoland <- R6::R6Class(
         ))
       }
 
-      if (all(is.na(res %>% dplyr::pull(date)))) {
+      if (all(is.na(res |> dplyr::pull(date)))) {
         stop("No meteo data found for any of the dates provided")
       }
 
-      if (any(is.na(res %>% dplyr::pull(MeanTemperature)))) {
+      if (any(is.na(res |> dplyr::pull(MeanTemperature)))) {
 
-        offending_points <- res %>%
-          dplyr::filter(is.na(MeanTemperature)) %>%
+        offending_points <- res |>
+          dplyr::filter(is.na(MeanTemperature)) |>
           dplyr::pull(!! rlang::sym(points_id))
 
         warning(glue::glue(
@@ -253,7 +253,7 @@ lfcMeteoland <- R6::R6Class(
         ))
       }
 
-      if (all(is.na(res %>% dplyr::pull(MeanTemperature)))) {
+      if (all(is.na(res |> dplyr::pull(MeanTemperature)))) {
         stop("All coordinates are not in Catalonia")
       }
 
@@ -288,24 +288,24 @@ lfcMeteoland <- R6::R6Class(
       }
 
       datevec <-
-        user_dates[[1]]:user_dates[[2]] %>%
-        as.Date(format = '%j', origin = as.Date('1970-01-01')) %>%
+        user_dates[[1]]:user_dates[[2]] |>
+        as.Date(format = '%j', origin = as.Date('1970-01-01')) |>
         as.character()
 
       raster_interpolation_helper <-
         function(date, sf) {
 
           stars_object <- self$get_lowres_raster(date, 'stars')
-          sf_transformed <- sf %>%
+          sf_transformed <- sf |>
             sf::st_transform(crs = sf::st_crs(stars_object))
 
-          res <- stars_object %>%
-            sf::st_crop(sf_transformed, as_points = FALSE) %>%
+          res <- stars_object |>
+            sf::st_crop(sf_transformed, as_points = FALSE) |>
             # merge attributes (variables) as a dimension. This allows the
             # direct conversion from stars to rasterBrick
-            merge() %>%
-            as('Raster') %>%
-            magrittr::set_names(names(stars_object))
+            merge() |>
+            as('Raster') |>
+            purrr::set_names(names(stars_object))
 
           if (all(is.na(raster::values(res)))) {
             stop('No data for these polygons')
@@ -321,11 +321,11 @@ lfcMeteoland <- R6::R6Class(
       )
 
       res_list <-
-        datevec %>%
-        magrittr::set_names(., .) %>%
+        datevec |>
+        purrr::set_names() |>
         purrr::map(
           .f = ~ raster_interpolation_helper_safe(.x, sf)
-        ) %>%
+        ) |>
         purrr::keep(.p = ~ !rlang::is_na(.x))
 
 
@@ -336,8 +336,8 @@ lfcMeteoland <- R6::R6Class(
       if (length(res_list) < length(datevec)) {
 
         offending_dates <-
-          datevec[which(!datevec %in% names(res_list))] %>%
-          as.character() %>%
+          datevec[which(!datevec %in% names(res_list))] |>
+          as.character() |>
           stringr::str_flatten(collapse = ', ')
 
         warning(glue::glue(
@@ -407,8 +407,8 @@ lfcMeteoland <- R6::R6Class(
 
       # now we can return a raster (just as is) or a stars object
       if (spatial == 'stars') {
-        res <- res %>%
-          stars::st_as_stars() %>%
+        res <- res |>
+          stars::st_as_stars() |>
           split("band")
       }
 
@@ -440,21 +440,21 @@ lfcMeteoland <- R6::R6Class(
       # Transform the coordinates, We need sp for meteoland, wkt for getting
       # the values from the db.
       user_coords <-
-        sf %>%
-        sf::st_geometry() %>%
+        sf |>
+        sf::st_geometry() |>
         sf::st_transform(
           crs = 3043
         )
 
       user_coords_sp <-
-        user_coords %>%
+        user_coords |>
         # sf::st_transform(
         #   crs = "+proj=utm +zone=31 +ellps=WGS84 +datum=WGS84 +units=m +towgs84=0,0,0"
-        # ) %>%
+        # ) |>
         sf::as_Spatial()
 
       user_coords_wkt <-
-        user_coords %>%
+        user_coords |>
         sf::st_as_text(EWKT = TRUE)
 
       # Get db raster values
@@ -464,7 +464,7 @@ lfcMeteoland <- R6::R6Class(
       # browser()
       # SQL queries
       point_queries <-
-        user_coords_wkt %>%
+        user_coords_wkt |>
         purrr::map(
           ~ glue::glue_sql(
             "SELECT ST_Value(
@@ -493,7 +493,7 @@ lfcMeteoland <- R6::R6Class(
         query_res <- pool::dbGetQuery(private$pool_conn, statement = query)
         if (nrow(query_res) > 1) {
           query_res <-
-            query_res %>%
+            query_res |>
             dplyr::filter(!is.na(elevation), !is.na(aspect), !is.na(slope))
         }
 
@@ -516,7 +516,7 @@ lfcMeteoland <- R6::R6Class(
 
       # execute the query
       raster_topography_values <-
-        point_queries %>%
+        point_queries |>
         purrr::map_dfr(query_helper)
 
       # here we need to check for NAs, as we need to warn the user about coords
@@ -540,7 +540,7 @@ lfcMeteoland <- R6::R6Class(
         user_coords_sp <-
           user_coords_sp[which(!is.na(raster_topography_values$coords_text))]
         raster_topography_values <-
-          raster_topography_values %>%
+          raster_topography_values |>
           dplyr::filter(!is.na(coords_text))
       }
 
@@ -585,20 +585,20 @@ lfcMeteoland <- R6::R6Class(
       # build the dates vector to read the metereology tables
       user_dates <- as.Date(user_dates)
       datevec <-
-        (user_dates[[1]] - buffer_days):user_dates[[2]] %>%
+        (user_dates[[1]] - buffer_days):user_dates[[2]] |>
         as.Date(format = '%j', origin = as.Date('1970-01-01'))
       table_names <-
-        glue::glue("daily_meteo_{stringr::str_remove_all(datevec, '-')}") #%>%
+        glue::glue("daily_meteo_{stringr::str_remove_all(datevec, '-')}") #|>
         # magrittr::extract(. %in% pool::dbListTables(private$pool_conn))
 
       # meteo data
       # TODO what happens when no table is found?????? We need to check this
       # and avoid the error, just maybe purrr::possibly or similar
       helper_station_data_getter <- function(.x) {
-        dplyr::tbl(private$pool_conn, .x) %>%
-          dplyr::collect() %>%
+        dplyr::tbl(private$pool_conn, .x) |>
+          dplyr::collect() |>
           # essential to cross results with meteo stations:
-          as.data.frame() %>%
+          as.data.frame() |>
           magrittr::set_rownames(.$stationCode)
       }
 
@@ -608,9 +608,9 @@ lfcMeteoland <- R6::R6Class(
       )
 
       meteo_data <-
-        table_names %>%
-        magrittr::set_names(datevec) %>%
-        purrr::map(helper_station_data_getter) %>%
+        table_names |>
+        purrr::set_names(datevec) |>
+        purrr::map(helper_station_data_getter) |>
         purrr::keep(.p = ~ !rlang::is_na(.x))
 
       if (length(meteo_data) < 1) {
@@ -625,8 +625,8 @@ lfcMeteoland <- R6::R6Class(
 
       if (length(datevec_trimmed) != length(datevec)) {
         offending_dates <-
-          datevec[which(!as.character(datevec) %in% names(meteo_data))] %>%
-          as.character() %>%
+          datevec[which(!as.character(datevec) %in% names(meteo_data))] |>
+          as.character() |>
           stringr::str_flatten(collapse = ', ')
 
         warning(glue::glue(
@@ -636,31 +636,31 @@ lfcMeteoland <- R6::R6Class(
 
       # meteo stations info
       unique_meteo_stations <-
-        meteo_data %>%
+        meteo_data |>
         purrr::map_dfr(
           function(df) {
-            df %>%
+            df |>
               dplyr::select(stationCode, stationOrigin, lat, long, elevation)
           }
-        ) %>%
-        dplyr::distinct() %>%
+        ) |>
+        dplyr::distinct() |>
         # sometimes there is repeated station codes with different elevation,
         # lets get only the first station with a code
-        dplyr::group_by(stationCode) %>%
+        dplyr::group_by(stationCode) |>
         dplyr::summarise_all(
           dplyr::first
         )
 
       interpolator_res <-
-        unique_meteo_stations %>%
-        dplyr::select(long, lat) %>%
-        as.data.frame() %>%
-        magrittr::set_rownames(unique_meteo_stations$stationCode) %>%
-        sp::SpatialPoints(sp::CRS("+proj=longlat +datum=WGS84")) %>%
+        unique_meteo_stations |>
+        dplyr::select(long, lat) |>
+        as.data.frame() |>
+        magrittr::set_rownames(unique_meteo_stations$stationCode) |>
+        sp::SpatialPoints(sp::CRS("+proj=longlat +datum=WGS84")) |>
         sp::spTransform(sp::CRS(
           "+proj=utm +zone=31 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs"
-        )) %>%
-        meteoland::SpatialPointsMeteorology(meteo_data, datevec_trimmed, TRUE) %>%
+        )) |>
+        meteoland::SpatialPointsMeteorology(meteo_data, datevec_trimmed, TRUE) |>
         meteoland::MeteorologyInterpolationData(
           elevation = unique_meteo_stations$elevation,
           params = default_params
@@ -669,8 +669,8 @@ lfcMeteoland <- R6::R6Class(
       # Before returning the interpolator, we need to change some params based
       # on the latest calibrations
       latest_calibration <-
-        dplyr::tbl(private$pool_conn, 'interpolation_parameters') %>%
-        dplyr::filter(year == max(year, na.rm = TRUE)) %>%
+        dplyr::tbl(private$pool_conn, 'interpolation_parameters') |>
+        dplyr::filter(year == max(year, na.rm = TRUE)) |>
         dplyr::collect()
 
       interpolator_res@params$N_MinTemperature <-
@@ -734,7 +734,7 @@ lfcMeteoland <- R6::R6Class(
 #'   ab_stars <- meteoland_get_lowres_raster(meteolanddb, '2020-04-25', 'stars')
 #'
 #'   # we can use pipes
-#'   meteolanddb %>%
+#'   meteolanddb |>
 #'     meteoland_get_lowres_raster('2020-04-25', 'raster')
 #'
 #'   # meteolanddb is an R6 object, so the previous examples are the same as:
@@ -788,8 +788,8 @@ meteoland_get_lowres_raster <- function(object, date, spatial = 'stars') {
 #' if (interactive()) {
 #'   library(lfcdata)
 #'   meteolanddb <- meteoland()
-#'   sf_points <- nfi()$get_data('plots', spatial = TRUE) %>%
-#'   dplyr::slice(1:5) %>%
+#'   sf_points <- nfi()$get_data('plots', spatial = TRUE) |>
+#'   dplyr::slice(1:5) |>
 #'   dplyr::select(plot_id)
 #'
 #'   meteoland_points_interpolation(
@@ -837,8 +837,8 @@ meteoland_points_interpolation <- function(
 #' if (interactive()) {
 #'   library(lfcdata)
 #'   meteolanddb <- meteoland()
-#'   sf_points <- nfi()$get_data('plots', spatial = TRUE) %>%
-#'   dplyr::slice(1:5) %>%
+#'   sf_points <- nfi()$get_data('plots', spatial = TRUE) |>
+#'   dplyr::slice(1:5) |>
 #'   dplyr::select(plot_id)
 #'
 #'   meteoland_historical_points_interpolation(

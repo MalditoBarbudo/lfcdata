@@ -35,7 +35,7 @@ test_that("description method works", {
   expect_type(allomdb$description(id = 'BH_287'), 'list')
   expect_type(allomdb$description(!is.na(independent_var_2)), 'list')
   expect_identical(names(allomdb$description(id = 'BH_287')), 'BH_287')
-  expect_length(allomdb$description(id = 'BH_287')[[1]], 22)
+  expect_length(allomdb$description(id = 'BH_287')[[1]], 21)
   expect_true(length(allomdb$description(!is.na(independent_var_2))) > 1300)
   expect_true('VOB_7674' %in% names(allomdb$description(!is.na(independent_var_2))))
   expect_error(allomdb$description(id = 1), 'not character')
@@ -135,7 +135,7 @@ test_that("cache works", {
   expect_s3_class(bar, 'tbl_df')
   expect_identical(
     bar,
-    dplyr::tbl(allomdb$.__enclos_env__$private$pool_conn, 'allometries') %>%
+    dplyr::tbl(allomdb$.__enclos_env__$private$pool_conn, 'allometries') |>
       dplyr::collect()
   )
   expect_length(allomdb$.__enclos_env__$private$data_cache, 2)

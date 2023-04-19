@@ -82,11 +82,12 @@ lfcFES <- R6::R6Class(
 
     # available tables method
     avail_tables = function() {
-      pool::dbListTables(private$pool_conn) %>%
-        tolower() %>%
-        unique() %>%
-        sort() %>%
-        magrittr::extract(stringr::str_detect(., 'plot|static|thesaurus'))
+      all_tables <- pool::dbListTables(private$pool_conn) |>
+        tolower() |>
+        unique() |>
+        sort()
+      all_tables |>
+        magrittr::extract(stringr::str_detect(all_tables, 'plot|static|thesaurus'))
     },
 
     # describe table method
@@ -100,7 +101,7 @@ lfcFES <- R6::R6Class(
       variables_thes <- suppressMessages(self$get_data('variables_thesaurus'))
 
       # map to apply to all tables
-      tables %>%
+      tables |>
         purrr::map(
           fes_describe_table_cat,
           tables_dict = tables_dict, variables_thes = variables_thes
@@ -120,7 +121,7 @@ lfcFES <- R6::R6Class(
       variables_thes <- suppressMessages(self$get_data('variables_thesaurus'))
 
       # map to apply to all variables
-      variables %>%
+      variables |>
         purrr::map(
           fes_describe_var_cat,
           variables_thes = variables_thes
@@ -189,7 +190,7 @@ lfcFES <- R6::R6Class(
 #'   fes_get_data(fesdb, 'static', TRUE)
 #'
 #'   # we can use pipes
-#'   fesdb %>%
+#'   fesdb |>
 #'     fes_get_data('static', TRUE)
 #'
 #'   # fesdb is an R6 object, so the previous examples are the same as:

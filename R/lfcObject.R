@@ -23,7 +23,7 @@ lfcObject <- R6::R6Class(
         # try to catch a db connection error
         message('Querying table from LFC database, this can take a while...')
         query_data <- try(
-          dplyr::tbl(private$pool_conn, table_name) %>% dplyr::collect(),
+          dplyr::tbl(private$pool_conn, table_name) |> dplyr::collect(),
           silent = TRUE
         )
         message('Done')

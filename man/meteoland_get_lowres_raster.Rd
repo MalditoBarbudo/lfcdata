@@ -41,7 +41,7 @@ if (interactive()) {
   ab_stars <- meteoland_get_lowres_raster(meteolanddb, '2020-04-25', 'stars')
 
   # we can use pipes
-  meteolanddb \%>\%
+  meteolanddb |>
     meteoland_get_lowres_raster('2020-04-25', 'raster')
 
   # meteolanddb is an R6 object, so the previous examples are the same as:

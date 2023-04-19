@@ -81,28 +81,28 @@ test_that("describe_var method works", {
 
 # sf objects to test
 sf_polygons <-
-  lidardb$get_data('lidar_municipalities', 'DBH') %>%
-  dplyr::slice(1:5) %>%
+  lidardb$get_data('lidar_municipalities', 'DBH') |>
+  dplyr::slice(1:5) |>
   dplyr::select(tururu = poly_id, geom = geometry)
 
 sf_points <-
-  nfi()$get_data('plots', spatial = TRUE) %>%
-  dplyr::slice(1:5) %>%
+  nfi()$get_data('plots', spatial = TRUE) |>
+  dplyr::slice(1:5) |>
   dplyr::select(plot_id)
 
 sf_multipoints <-
   dplyr::tibble(
     point_id = 'wrong',
-    geometry = sf::st_multipoint(matrix(1:10, , 2)) %>% sf::st_sfc()
-  ) %>%
+    geometry = sf::st_multipoint(matrix(1:10, , 2)) |> sf::st_sfc()
+  ) |>
   sf::st_as_sf(sf_column_name = 'geometry')
 
 sf_polygons_latlong <-
-  sf_polygons %>% sf::st_transform(crs = 4326)
+  sf_polygons |> sf::st_transform(crs = 4326)
 
 sf_empty_polygon <-
-  lidardb$get_data('lidar_xn2000', 'DBH') %>%
-  dplyr::slice(19) %>%
+  lidardb$get_data('lidar_xn2000', 'DBH') |>
+  dplyr::slice(19) |>
   dplyr::select(poly_id)
 
 ## clip_and_stats method works ####

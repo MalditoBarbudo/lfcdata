@@ -62,10 +62,10 @@ ab_raster
 Raster data can be retrieved in two formats, `stars` (default) and `RasterLayer`:
 
 ```{r rasters}
-lidar_get_lowres_raster(lidardb, 'AB', 'stars') %>%
+lidar_get_lowres_raster(lidardb, 'AB', 'stars') |>
   class()
 
-lidar_get_lowres_raster(lidardb, 'AB', 'raster') %>%
+lidar_get_lowres_raster(lidardb, 'AB', 'raster') |>
   class()
 ```
 
@@ -91,11 +91,11 @@ the desired variables:
 ```{r point_value}
 # get a set of points, we can use the national forest inventory data
 point_set <-
-  nfi()$get_data('plots', spatial = TRUE) %>%
-  dplyr::slice(1:25) %>%
+  nfi()$get_data('plots', spatial = TRUE) |>
+  dplyr::slice(1:25) |>
   dplyr::select(plot_id)
 # and extract the values
-lidardb %>%
+lidardb |>
   lidar_point_value(point_set, 'plot_id', c('AB', 'DBH', 'REC'))
 ```
 
@@ -108,12 +108,12 @@ for each polygon:
 ```{r clip}
 # we get the provinces polygons
 polygon_set <-
-  lidardb %>%
-  lidar_get_data('lidar_municipalities', 'AB') %>%
-  dplyr::select(poly_id, geometry) %>%
+  lidardb |>
+  lidar_get_data('lidar_municipalities', 'AB') |>
+  dplyr::select(poly_id, geometry) |>
   dplyr::slice(1:2)
 # we calculate the stats
-lidardb %>%
+lidardb |>
   lidar_clip_and_stats(polygon_set, 'poly_id', c('AB', 'DBH', 'REC'))
 ```
 

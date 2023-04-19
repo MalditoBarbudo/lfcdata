@@ -66,7 +66,7 @@ allom_table
   - **cubication shape**: At which cubication shape the allometry was calculated for
   
 ```{r cubication_shape}
-allometries_get_data(allomdb, 'thesaurus_cubication') %>%
+allometries_get_data(allomdb, 'thesaurus_cubication') |>
   dplyr::select(cubication_shape_id, description = translation_eng)
 ```
   
@@ -141,7 +141,7 @@ dummy_data <- data.frame(
   branch_diameter = c(5.5, 4.6, 3.7)
 )
 
-dummy_data %>%
+dummy_data |>
   mutate(
     leaves_biomass = allometries_calculate(
       allomdb, DR = branch_diameter, allometry_id = 'BH_287'

@@ -98,7 +98,7 @@ lfcLiDAR <- R6::R6Class(
         }
 
       res <-
-        cached_data %>%
+        cached_data |>
         dplyr::select(poly_id, dplyr::matches(regex_detection))
 
       return(res)
@@ -122,14 +122,14 @@ lfcLiDAR <- R6::R6Class(
       # chache name, as to avoid caching the same if the same tables, but in
       # different order, are provided
       cache_name <- glue::glue(
-        glue::glue_collapse(variables %>% sort(), sep = '_'), '_raster'
+        glue::glue_collapse(variables |> sort(), sep = '_'), '_raster'
       )
 
       # check cache, retrieve it or make the query
       res <- private$data_cache[[cache_name]] %||% {
         variables_as_numbers <-
-          variables %>%
-          sort() %>%
+          variables |>
+          sort() |>
           purrr::map_int(
             ~ switch(
               .x,
@@ -170,12 +170,12 @@ lfcLiDAR <- R6::R6Class(
 
       # now we can return a raster (just as is) or a stars object
       if (spatial == 'stars') {
-        res <- res %>%
+        res <- res |>
           stars::st_as_stars()
         # we need to split to convert layers to attributes in case more
         # than one band is retrieved
         if (length(variables) > 1) {
-          res <- res %>% split("band")
+          res <- res |> split("band")
         }
       }
 
@@ -219,15 +219,15 @@ lfcLiDAR <- R6::R6Class(
 
       # res
       res <-
-        variables %>%
+        variables |>
         purrr::map(
           ~ private$clip_and_stats_vectorized_for_polys(sf, polygon_id_variable, .x)
-        ) %>%
+        ) |>
         purrr::reduce(
           .f = dplyr::full_join,
           by = c(polygon_id_variable, 'poly_km2')
-        ) %>%
-        dplyr::left_join(sf, by = polygon_id_variable) %>%
+        ) |>
+        dplyr::left_join(sf, by = polygon_id_variable) |>
         sf::st_as_sf()
       return(res)
     },
@@ -242,15 +242,15 @@ lfcLiDAR <- R6::R6Class(
 
       # res
       res <-
-        variables %>%
+        variables |>
         purrr::map(
           ~ private$point_value_vectorized(sf, point_id_variable, .x)
-        ) %>%
+        ) |>
         purrr::reduce(
           .f = dplyr::full_join,
           by = c(point_id_variable)
-        ) %>%
-        dplyr::left_join(sf, by = point_id_variable) %>%
+        ) |>
+        dplyr::left_join(sf, by = point_id_variable) |>
         sf::st_as_sf()
       return(res)
     }
@@ -290,12 +290,12 @@ lfcLiDAR <- R6::R6Class(
 
       # poly as wkt, to avoid table creation
       sf_transformed <-
-        sf %>%
-        sf::st_geometry() %>%
+        sf |>
+        sf::st_geometry() |>
         sf::st_transform(crs = 25831)
 
       wkt_poly <-
-        sf_transformed %>%
+        sf_transformed |>
         sf::st_as_text(EWKT = TRUE, digits = 15)
 
       # poly area, in 25831 projection
@@ -331,15 +331,15 @@ lfcLiDAR <- R6::R6Class(
       # execute the query and retrieve the data
       # polygon_stats_pre_check <-
       polygon_stats <-
-        pool::dbGetQuery(private$pool_conn, b_stats_query) %>%
+        pool::dbGetQuery(private$pool_conn, b_stats_query) |>
         # sf::st_read(
         #   private$pool_conn, query = b_stats_query, as_tibble = TRUE
-        # ) %>%
-        # sf::st_transform(crs = original_crs) %>%
-        dplyr::as_tibble() %>%
-        dplyr::mutate(count = as.integer(count)) %>%
-        # dplyr::filter(count > 0) %>%
-        # dplyr::group_by(poly_id) %>%
+        # ) |>
+        # sf::st_transform(crs = original_crs) |>
+        dplyr::as_tibble() |>
+        dplyr::mutate(count = as.integer(count)) |>
+        # dplyr::filter(count > 0) |>
+        # dplyr::group_by(poly_id) |>
         dplyr::rename(
           # stats
           !! glue::glue("{toupper(var_name)}_pixels") := count,
@@ -347,7 +347,7 @@ lfcLiDAR <- R6::R6Class(
           !! glue::glue("{toupper(var_name)}_min") := min,
           !! glue::glue("{toupper(var_name)}_max") := max,
           !! glue::glue("{toupper(var_name)}_sd") := stddev,
-        ) %>%
+        ) |>
         dplyr::mutate(
           # area of the polygon
           poly_km2 = poly_area,
@@ -358,7 +358,7 @@ lfcLiDAR <- R6::R6Class(
           !! glue::glue("{toupper(var_name)}_km2_perc") :=
             100 * !! rlang::sym(glue::glue("{toupper(var_name)}_km2")) / poly_km2
 
-        ) %>%
+        ) |>
         dplyr::select(
           poly_id, poly_km2, everything(), -sum
         )
@@ -384,7 +384,7 @@ lfcLiDAR <- R6::R6Class(
       #   )
       # } else {
       #   polygon_stats <-
-      #     polygon_stats_pre_check %>%
+      #     polygon_stats_pre_check |>
       #     dplyr::summarise(
       #       # area of the polygon
       #       poly_km2 = poly_area,
@@ -427,13 +427,13 @@ lfcLiDAR <- R6::R6Class(
       sf_column <- attr(sf, 'sf_column')
       # rowbinding the summarises
       summ_polys_data <-
-        seq_along(sf[[sf_column]]) %>%
+        seq_along(sf[[sf_column]]) |>
         purrr::map_dfr(
           ~ private$clip_and_stats_simple_case(
             sf = sf[[sf_column]][.x], poly_id = sf[[id_var_name]][.x],
             var_name = var_name
           )
-        ) %>%
+        ) |>
         dplyr::rename(!! id_var_name := poly_id)
 
       return(summ_polys_data)
@@ -452,8 +452,8 @@ lfcLiDAR <- R6::R6Class(
 
       # we need the point in wkt to create the query on the fly
       wkt_point <-
-        sf %>%
-        sf::st_geometry() %>%
+        sf |>
+        sf::st_geometry() |>
         sf::st_as_text(EWKT = TRUE)
 
       # var name
@@ -480,8 +480,8 @@ lfcLiDAR <- R6::R6Class(
 
       # execute the query and return the result
       res <-
-        pool::dbGetQuery(private$pool_conn, statement = point_query) %>%
-        dplyr::as_tibble() %>%
+        pool::dbGetQuery(private$pool_conn, statement = point_query) |>
+        dplyr::as_tibble() |>
         dplyr::rename(!! variable := point_val)
       return(res)
     },
@@ -497,20 +497,20 @@ lfcLiDAR <- R6::R6Class(
       check_length_for(id_point_variable, 1, 'id_point_variable')
       check_if_in_for(
         id_point_variable,
-        names(sf %>% dplyr::as_tibble() %>% dplyr::select(-geometry))
+        names(sf |> dplyr::as_tibble() |> dplyr::select(-geometry))
       )
 
       # get the geom column name
       sf_column <- attr(sf, 'sf_column')
       # rowbinding the values
       points_data <-
-        seq_along(sf[[sf_column]]) %>%
+        seq_along(sf[[sf_column]]) |>
         purrr::map_dfr(
           ~ private$point_value_simple_case(
             sf = sf[[sf_column]][.x], point_id = sf[[id_point_variable]][.x],
             variable = variable
           )
-        ) %>%
+        ) |>
         dplyr::rename(!! id_point_variable := point_id)
 
       return(points_data)
@@ -599,11 +599,11 @@ lidar_get_data <- function(
 #'   ab_stars <- lidar_get_lowres_raster(lidardb, 'AB', 'stars')
 #'
 #'   # we can use pipes
-#'   lidardb %>%
+#'   lidardb |>
 #'     lidar_get_lowres_raster('AB', 'raster')
 #'
 #'   # or retrieve several tables at one time
-#'   lidardb %>%
+#'   lidardb |>
 #'     lidar_get_lowres_raster(c('AB', 'DBH'), 'stars')
 #'
 #'   # lidardb is an R6 object, so the previous examples are the same as:
@@ -719,7 +719,7 @@ lidar_describe_var <- function(object, variables) {
 #' library(dplyr)
 #' lidardb <- lidar()
 #'
-#' polygons_data <- lidar_get_data('lidar_provincias', 'DBH') %>%
+#' polygons_data <- lidar_get_data('lidar_provincias', 'DBH') |>
 #'   select(poly_id, DBH_check = DBH_mean, geometry)
 #'
 #' dbh_provinces <- lidar_clip_and_stats(lidardb, polygons_data, 'poly_id', 'DBH')
@@ -759,8 +759,8 @@ lidar_clip_and_stats <- function(object, sf, polygon_id_variable, variables) {
 #' lidardb <- lidar()
 #'
 #' points_data <-
-#'   nfi()$get_data('plots', spatial = TRUE) %>%
-#'   dplyr::slice(1:5) %>%
+#'   nfi()$get_data('plots', spatial = TRUE) |>
+#'   dplyr::slice(1:5) |>
 #'   dplyr::select(plot_id)
 #'
 #' dbh_plots <- lidar_point_value(lidardb, points_data, 'plot_id', 'DBH')

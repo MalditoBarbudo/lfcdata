@@ -43,7 +43,7 @@ if (interactive()) {
     catdrought_get_raster(catdroughtdb, '2020-04-25', 'smoothed', 'stars')
 
   # we can use pipes
-  catdroughtdb \%>\%
+  catdroughtdb |>
     catdrought_get_raster('2020-04-25', 'smoothed', 'raster')
 
   # catdroughtdb is an R6 object, so the previous examples are the same as:

@@ -31,7 +31,7 @@ if (interactive()) {
   allometries_get_data(allomdb, 'allometries')
 
   # we can use pipes
-  allomdb \%>\%
+  allomdb |>
     allometries_get_data('allometries')
 
   # allomdb is an R6 object, so the previous examples are the same as:

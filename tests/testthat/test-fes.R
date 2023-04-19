@@ -89,7 +89,7 @@ test_that("cache works", {
   expect_s3_class(bar, 'tbl_df')
   expect_identical(
     bar,
-    dplyr::tbl(fesdb$.__enclos_env__$private$pool_conn, 'static') %>%
+    dplyr::tbl(fesdb$.__enclos_env__$private$pool_conn, 'static') |>
       dplyr::collect()
   )
   expect_length(fesdb$.__enclos_env__$private$data_cache, 3)

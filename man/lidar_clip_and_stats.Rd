@@ -47,7 +47,7 @@ if (interactive()) {
 library(dplyr)
 lidardb <- lidar()
 
-polygons_data <- lidar_get_data('lidar_provincias', 'DBH') \%>\%
+polygons_data <- lidar_get_data('lidar_provincias', 'DBH') |>
   select(poly_id, DBH_check = DBH_mean, geometry)
 
 dbh_provinces <- lidar_clip_and_stats(lidardb, polygons_data, 'poly_id', 'DBH')

@@ -36,8 +36,8 @@ Dates must be provided as a two elements character vector, with
 if (interactive()) {
   library(lfcdata)
   meteolanddb <- meteoland()
-  sf_points <- nfi()$get_data('plots', spatial = TRUE) \%>\%
-  dplyr::slice(1:5) \%>\%
+  sf_points <- nfi()$get_data('plots', spatial = TRUE) |>
+  dplyr::slice(1:5) |>
   dplyr::select(plot_id)
 
   meteoland_historical_points_interpolation(

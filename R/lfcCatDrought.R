@@ -141,8 +141,8 @@ lfcCatDrought <- R6::R6Class(
       }
 
       if (spatial == 'stars') {
-        res <- res %>%
-          stars::st_as_stars() %>%
+        res <- res |>
+          stars::st_as_stars() |>
           split('band')
       }
 
@@ -189,21 +189,21 @@ lfcCatDrought <- R6::R6Class(
       table_name <- "catdrought_low"
 
       # transform the sf to the coord system in the db
-      sf_transf <- sf %>%
+      sf_transf <- sf |>
         # first thing here is to transform to the correct coordinates system
         sf::st_transform(crs = 4326)
 
       # we need also the identifiers of the polygons
-      sf_id <- sf_transf %>%
+      sf_id <- sf_transf |>
         dplyr::pull(1)
 
       # get the correct geometry column
       sf_column <- attr(sf_transf, 'sf_column')
 
       # we need the sf as text to create the SQL query
-      sf_text <- sf_transf %>%
+      sf_text <- sf_transf |>
         # convert to text
-        dplyr::pull({{sf_column}}) %>%
+        dplyr::pull({{sf_column}}) |>
         sf::st_as_text()
 
       # look which kind of sf is, points or polygons
@@ -223,8 +223,8 @@ lfcCatDrought <- R6::R6Class(
          WHERE
            ST_Intersects(rast, geom)
          GROUP BY day;", .con = pool_checkout
-        ) %>%
-          magrittr::set_names(sf_id)
+        ) |>
+          purrr::set_names(sf_id)
 
         pool::poolReturn(pool_checkout)
 
@@ -236,17 +236,17 @@ lfcCatDrought <- R6::R6Class(
 
         tictoc::tic()
         res <-
-          data_queries %>%
+          data_queries |>
           purrr::imap_dfr(
-            ~ pool::dbGetQuery(private$pool_conn, .x) %>%
+            ~ pool::dbGetQuery(private$pool_conn, .x) |>
               dplyr::mutate(polygon_id = .y)
-          ) %>%
-          dplyr::arrange(day, polygon_id) %>%
-          dplyr::select(day, polygon_id, dplyr::everything()) %>%
+          ) |>
+          dplyr::arrange(day, polygon_id) |>
+          dplyr::select(day, polygon_id, dplyr::everything()) |>
           dplyr::mutate(
             stderror = stddev/sqrt(count)
-          ) %>%
-          dplyr::as_tibble() %>%
+          ) |>
+          dplyr::as_tibble() |>
           dplyr::filter(day %in% dates_available)
         tictoc::toc()
 
@@ -279,8 +279,8 @@ lfcCatDrought <- R6::R6Class(
             st_geomfromtext({sf_text}, 4326)
           )
         ", .con = pool_checkout
-        ) %>%
-          magrittr::set_names(sf_id)
+        ) |>
+          purrr::set_names(sf_id)
         pool::poolReturn(pool_checkout)
 
         dates_available <- seq(
@@ -291,13 +291,13 @@ lfcCatDrought <- R6::R6Class(
 
         tictoc::tic()
         res <-
-          data_queries %>%
+          data_queries |>
           purrr::imap_dfr(
-            ~ pool::dbGetQuery(private$pool_conn, .x) %>%
+            ~ pool::dbGetQuery(private$pool_conn, .x) |>
               dplyr::mutate(point_id = .y)
-          ) %>%
-          dplyr::arrange(day, point_id) %>%
-          dplyr::select(day, point_id, "{variable}" := pixel_value) %>%
+          ) |>
+          dplyr::arrange(day, point_id) |>
+          dplyr::select(day, point_id, "{variable}" := pixel_value) |>
           dplyr::filter(day %in% dates_available)
         tictoc::toc()
 
@@ -365,7 +365,7 @@ lfcCatDrought <- R6::R6Class(
 #'     catdrought_get_raster(catdroughtdb, '2020-04-25', 'smoothed', 'stars')
 #'
 #'   # we can use pipes
-#'   catdroughtdb %>%
+#'   catdroughtdb |>
 #'     catdrought_get_raster('2020-04-25', 'smoothed', 'raster')
 #'
 #'   # catdroughtdb is an R6 object, so the previous examples are the same as:

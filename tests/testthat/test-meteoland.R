@@ -19,46 +19,46 @@ historical_end_date <- '1981-04-27'
 
 # sf objects to test
 sf_polygons <-
-  lidar()$get_data('lidar_municipalities', 'DBH') %>%
-  dplyr::slice(1:5) %>%
+  lidar()$get_data('lidar_municipalities', 'DBH') |>
+  dplyr::slice(1:5) |>
   dplyr::select(tururu = poly_id)
 
 sf_points <-
-  nfi()$get_data('plots', spatial = TRUE) %>%
-  dplyr::slice(1:5) %>%
+  nfi()$get_data('plots', spatial = TRUE) |>
+  dplyr::slice(1:5) |>
   dplyr::select(plot_id)
 
 sf_points_3043 <- sf::st_transform(sf_points, crs = 3043)
 
-sf_points_all_out <- sf_points %>%
-  dplyr::mutate(geometry = geometry + 10, plot_id = paste0('out', 1:5)) %>%
+sf_points_all_out <- sf_points |>
+  dplyr::mutate(geometry = geometry + 10, plot_id = paste0('out', 1:5)) |>
   sf::st_set_crs(4326)
 
-sf_points_one_out <- rbind(sf_points, sf_points_all_out %>% dplyr::slice(1))
+sf_points_one_out <- rbind(sf_points, sf_points_all_out |> dplyr::slice(1))
 
 sf_multipoints <-
   dplyr::tibble(
     point_id = 'wrong',
-    geometry = sf::st_multipoint(matrix(1:10, , 2)) %>% sf::st_sfc()
-  ) %>%
+    geometry = sf::st_multipoint(matrix(1:10, , 2)) |> sf::st_sfc()
+  ) |>
   sf::st_as_sf(sf_column_name = 'geometry')
 
 sf_polygons_latlong <-
-  sf_polygons %>% sf::st_transform(crs = 4326)
+  sf_polygons |> sf::st_transform(crs = 4326)
 
 sf_empty_polygon <-
-  lidar()$get_data('lidar_xn2000', 'DBH') %>%
-  dplyr::slice(19) %>%
+  lidar()$get_data('lidar_xn2000', 'DBH') |>
+  dplyr::slice(19) |>
   dplyr::select(poly_id)
 
-sf_polygons_all_out <- sf_polygons %>%
+sf_polygons_all_out <- sf_polygons |>
   dplyr::mutate(
     geometry = geometry + c(500000, 0),
     tururu = paste0("out_", 1:5)
-  ) %>%
+  ) |>
   sf::st_set_crs(3043)
 
-sf_polygons_one_out <- rbind(sf_polygons, sf_polygons_all_out) %>%
+sf_polygons_one_out <- rbind(sf_polygons, sf_polygons_all_out) |>
   dplyr::slice(1:6)
 
 ## get data method works ####
@@ -343,10 +343,10 @@ test_that("historical points_interpolation method works", {
   expect_identical(
     meteolanddb$historical_points_interpolation(
       sf_points, c(historical_start_date, historical_end_date), 'plot_id'
-    ) %>% dplyr::pull(MeanTemperature),
+    ) |> dplyr::pull(MeanTemperature),
     meteolanddb$historical_points_interpolation(
       sf_points_3043, c(historical_start_date, historical_end_date), 'plot_id'
-    ) %>% dplyr::pull(MeanTemperature)
+    ) |> dplyr::pull(MeanTemperature)
   )
 })
 

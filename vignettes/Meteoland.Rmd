@@ -80,7 +80,7 @@ with the `meteoland_points_interpolation`:
 
 ```{r onthefly_interpolation, warning=FALSE}
 # points spatial object, obtained from fes database
-points_sf <- lfcdata::fes()$get_data('plot_nfi_4_results', spatial = TRUE) %>%
+points_sf <- lfcdata::fes()$get_data('plot_nfi_4_results', spatial = TRUE) |>
   slice(1:5)
 
 
@@ -123,7 +123,7 @@ with the interpolated data for the polygons provided.
 
 ```{r raster_interpolation, warning=FALSE}
 # polygons object obtained from lidar database
-sf_polygons <- lfcdata::lidar()$get_data('lidar_municipalities', 'AB') %>%
+sf_polygons <- lfcdata::lidar()$get_data('lidar_municipalities', 'AB') |>
   slice(1:5)
 
 meteoland_raster_interpolation(

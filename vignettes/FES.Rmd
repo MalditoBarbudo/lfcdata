@@ -48,7 +48,7 @@ fes_get_data(fesdb, 'static', spatial = FALSE)
 As stated before, we can get a spatial object, and use it to plot the variables:
 
 ```{r get_data_spatial}
-fes_get_data(fesdb, 'static', spatial = TRUE) %>%
+fes_get_data(fesdb, 'static', spatial = TRUE) |>
   plot()
 ```
 

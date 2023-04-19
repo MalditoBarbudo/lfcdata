@@ -30,8 +30,8 @@ library(dplyr)
 lidardb <- lidar()
 
 points_data <-
-  nfi()$get_data('plots', spatial = TRUE) \%>\%
-  dplyr::slice(1:5) \%>\%
+  nfi()$get_data('plots', spatial = TRUE) |>
+  dplyr::slice(1:5) |>
   dplyr::select(plot_id)
 
 dbh_plots <- lidar_point_value(lidardb, points_data, 'plot_id', 'DBH')

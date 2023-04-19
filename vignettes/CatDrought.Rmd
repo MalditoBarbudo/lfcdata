@@ -90,7 +90,7 @@ for the set of points provided:
 
 ```{r time_series_points}
 # points spatial object, obtained from fes database
-points_sf <- lfcdata::fes()$get_data('plot_nfi_4_results', spatial = TRUE) %>%
+points_sf <- lfcdata::fes()$get_data('plot_nfi_4_results', spatial = TRUE) |>
   slice(1:5)
 
 catdrought_get_current_time_series(
@@ -118,7 +118,7 @@ The process is exactly the same as for points:
 
 ```{r time_series_polygons}
 # points spatial object, obtained from fes database
-polygons_sf <- lfcdata::lidar()$get_data('lidar_municipalities', 'AB') %>%
+polygons_sf <- lfcdata::lidar()$get_data('lidar_municipalities', 'AB') |>
   slice(1:5)
 
 catdrought_get_current_time_series(

@@ -19,9 +19,9 @@ check_args_for <- function(
   # browser()
   # characters
   if (!rlang::is_null(character)) {
-    not_complying <- character %>%
-      purrr::map(rlang::is_character) %>%
-      purrr::keep(.p = ~!isTRUE(.x)) %>%
+    not_complying <- character |>
+      purrr::map(rlang::is_character) |>
+      purrr::keep(.p = ~!isTRUE(.x)) |>
       names()
     if (length(not_complying) > 0) {
       error_message <- glue::glue(
@@ -33,9 +33,9 @@ check_args_for <- function(
 
   # numerical
   if (!rlang::is_null(numerical)) {
-    not_complying <- numerical %>%
-      purrr::map(rlang::is_bare_numeric) %>%
-      purrr::keep(.p = ~!isTRUE(.x)) %>%
+    not_complying <- numerical |>
+      purrr::map(rlang::is_bare_numeric) |>
+      purrr::keep(.p = ~!isTRUE(.x)) |>
       names()
     if (length(not_complying) > 0) {
       error_message <- glue::glue(
@@ -47,9 +47,9 @@ check_args_for <- function(
 
   # logical
   if (!rlang::is_null(logical)) {
-    not_complying <- logical %>%
-      purrr::map(rlang::is_logical) %>%
-      purrr::keep(.p = ~!isTRUE(.x)) %>%
+    not_complying <- logical |>
+      purrr::map(rlang::is_logical) |>
+      purrr::keep(.p = ~!isTRUE(.x)) |>
       names()
     if (length(not_complying) > 0) {
       error_message <- glue::glue(
@@ -61,9 +61,9 @@ check_args_for <- function(
 
   # na
   if (!rlang::is_null(na)) {
-    not_complying <- na %>%
-      purrr::map(rlang::is_na) %>%
-      purrr::keep(.p = ~isTRUE(.x)) %>%
+    not_complying <- na |>
+      purrr::map(rlang::is_na) |>
+      purrr::keep(.p = ~isTRUE(.x)) |>
       names()
     if (length(not_complying) > 0) {
       error_message <- glue::glue(
@@ -75,9 +75,9 @@ check_args_for <- function(
 
   # sf
   if (!rlang::is_null(sf)) {
-    not_complying <- sf %>%
-      purrr::map(inherits, what = 'sf') %>%
-      purrr::keep(.p = ~ !isTRUE(.x)) %>%
+    not_complying <- sf |>
+      purrr::map(inherits, what = 'sf') |>
+      purrr::keep(.p = ~ !isTRUE(.x)) |>
       names()
     if (length(not_complying) > 0) {
       error_message <- glue::glue(
@@ -89,12 +89,12 @@ check_args_for <- function(
 
   # points
   if (!rlang::is_null(points)) {
-    not_complying <- points %>%
+    not_complying <- points |>
       purrr::map(
         ~ all(sf::st_is(.x, type = 'POINT'))
         # sf::st_is, type = 'POINT'
-      ) %>%
-      purrr::keep(.p = ~ !isTRUE(.x)) %>%
+      ) |>
+      purrr::keep(.p = ~ !isTRUE(.x)) |>
       names()
     if (length(not_complying) > 0) {
       error_message <- glue::glue(
@@ -106,13 +106,13 @@ check_args_for <- function(
 
   # polygons
   if (!rlang::is_null(polygons)) {
-    not_complying <- polygons %>%
+    not_complying <- polygons |>
       purrr::map(
         .f = function(x) {
           all(sf::st_is(x, c('POLYGON', 'MULTIPOLYGON')))
         }
-      ) %>%
-      purrr::keep(.p = ~ !isTRUE(.x)) %>%
+      ) |>
+      purrr::keep(.p = ~ !isTRUE(.x)) |>
       names()
     if (length(not_complying) > 0) {
       error_message <- glue::glue(
@@ -125,7 +125,7 @@ check_args_for <- function(
 
   # dates
   if (!rlang::is_null(date)) {
-    not_complying <- date %>%
+    not_complying <- date |>
       purrr::map(
         .f = function(x) {
           date_check <- try(as.Date(x))
@@ -139,8 +139,8 @@ check_args_for <- function(
           }
           return(TRUE)
         }
-      ) %>%
-      purrr::keep(.p = ~ !isTRUE(.x)) %>%
+      ) |>
+      purrr::keep(.p = ~ !isTRUE(.x)) |>
       names()
 
     if (length(not_complying) > 0) {
@@ -246,13 +246,13 @@ fes_table_dictionary <- function() {
 nfi_describe_table_cat <- function(table, tables_dict, variables_thes) {
 
   # variables present in the table (courtesy of variables_thesaurus)
-  variable_names <- variables_thes %>%
-    dplyr::filter(.data$var_table == table) %>%
-    dplyr::pull(.data$var_id) %>%
+  variable_names <- variables_thes |>
+    dplyr::filter(.data$var_table == table) |>
+    dplyr::pull(.data$var_id) |>
     unique()
 
   # table name deconstructed to query the nfi table dictionary
-  table_deconstructed <- stringr::str_split(table, '_') %>%
+  table_deconstructed <- stringr::str_split(table, '_') |>
     purrr::flatten_chr()
 
   ## cats
@@ -260,9 +260,9 @@ nfi_describe_table_cat <- function(table, tables_dict, variables_thes) {
   cat('\n', crayon::yellow$bold(table), '\n', sep = '')
   # table description
   cat(
-    glue::glue("{tables_dict[table_deconstructed] %>% purrr::discard(is.na)}") %>%
-      glue::glue_collapse() %>%
-      crayon::green() %>%
+    glue::glue("{tables_dict[table_deconstructed] |> purrr::discard(is.na)}") |>
+      glue::glue_collapse() |>
+      crayon::green() |>
       strwrap(width = 75),
     # '\n',
     fill = 80, sep = ''
@@ -270,8 +270,8 @@ nfi_describe_table_cat <- function(table, tables_dict, variables_thes) {
   # table variables
   cat('Variables in table:\n')
   cat(
-    glue::glue(" - {sort(variable_names)}") %>%
-      glue::glue_collapse(sep = '\n') %>%
+    glue::glue(" - {sort(variable_names)}") |>
+      glue::glue_collapse(sep = '\n') |>
       crayon::magenta()
   )
   cat('\n')
@@ -288,17 +288,17 @@ nfi_describe_var_cat <- function(variable, variables_thes, numerical_thes) {
   # get the var thes, the numerical var thes filter by the variable and
   # prepare the result with cat, glue and crayon, as a function to apply to
   # a vector of variables.
-  variables_thes %>%
-    dplyr::filter(.data$var_id == variable) %>%
-    check_filter_for(glue::glue("{variable} variable not found")) %>%
-    dplyr::left_join(numerical_thes, by = c("var_id", "var_table")) %>%
-    dplyr::group_by(.data$var_description_eng) %>%
+  variables_thes |>
+    dplyr::filter(.data$var_id == variable) |>
+    check_filter_for(glue::glue("{variable} variable not found")) |>
+    dplyr::left_join(numerical_thes, by = c("var_id", "var_table")) |>
+    dplyr::group_by(.data$var_description_eng) |>
     dplyr::group_walk(
       ~ cat(
         "\n",
         # var name
         crayon::yellow$bold(glue::glue(
-          "{.x$translation_eng %>% unique()} ({.x$var_id %>% unique()})"
+          "{.x$translation_eng |> unique()} ({.x$var_id |> unique()})"
         )),
         "\n",
         # var description
@@ -308,7 +308,7 @@ nfi_describe_var_cat <- function(variable, variables_thes, numerical_thes) {
         crayon::blue$bold(
           "Units: [" %+%
             crayon::blue$italic$bold(
-              glue::glue("{(.x$var_units %na% ' - ') %>% unique()}")
+              glue::glue("{(.x$var_units %na% ' - ') |> unique()}")
             ) %+%
             "]"
         ),
@@ -331,10 +331,10 @@ allometries_describe_var_cat <- function(variables, thes) {
   # trick to use "." withou CRAN note
   . <- NULL
 
-  no_returned <- thes %>%
-    dplyr::filter(.data$text_id %in% variables) %>%
-    check_filter_for(glue::glue("one or more variables not found")) %>%
-    dplyr::group_by(.data$translation_eng) %>%
+  no_returned <- thes |>
+    dplyr::filter(.data$text_id %in% variables) |>
+    check_filter_for(glue::glue("one or more variables not found")) |>
+    dplyr::group_by(.data$translation_eng) |>
     dplyr::group_walk(
       ~ cat(
         # var name
@@ -344,18 +344,18 @@ allometries_describe_var_cat <- function(variables, thes) {
         "Units:  ",
         crayon::blue$bold("[") %+%
           crayon::blue$italic$bold(
-            glue::glue("{(.x$var_units %na% ' - ') %>% unique()}")
+            glue::glue("{(.x$var_units %na% ' - ') |> unique()}")
           ) %+%
           crayon::blue$bold("]"),
         "\n",
         "English abbreviation:  ",
         crayon::blue$italic$bold(
-          glue::glue("{(.x$var_abbr_eng %na% ' - ') %>% unique()}")
+          glue::glue("{(.x$var_abbr_eng %na% ' - ') |> unique()}")
         ),
         "\n",
         "Data abbreviation:  ",
         crayon::blue$italic$bold(
-          glue::glue("{(.x$var_abbr_spa %na% ' - ') %>% unique()}")
+          glue::glue("{(.x$var_abbr_spa %na% ' - ') |> unique()}")
         ),
         "\n\n",
         sep = ''
@@ -365,10 +365,10 @@ allometries_describe_var_cat <- function(variables, thes) {
 }
 
 lidar_describe_var_cat <- function(variables, thes) {
-  no_returned <- thes %>%
-    dplyr::filter(.data$var_id %in% variables) %>%
-    dplyr::collect() %>%
-    dplyr::group_by(.data$var_id) %>%
+  no_returned <- thes |>
+    dplyr::filter(.data$var_id %in% variables) |>
+    dplyr::collect() |>
+    dplyr::group_by(.data$var_id) |>
     dplyr::group_walk(
       ~ cat(
         # var name
@@ -378,13 +378,13 @@ lidar_describe_var_cat <- function(variables, thes) {
         "Units:  ",
         crayon::blue$bold("[") %+%
           crayon::blue$italic$bold(
-            glue::glue("{(.x$var_units %na% ' - ') %>% unique()}")
+            glue::glue("{(.x$var_units %na% ' - ') |> unique()}")
           ) %+%
           crayon::blue$bold("]"),
         "\n",
         "Details:  ",
         crayon::blue$italic$bold(
-          glue::glue("{(.x$var_description_eng %na% ' - ') %>% unique()}")
+          glue::glue("{(.x$var_description_eng %na% ' - ') |> unique()}")
         ),
         "\n\n",
         sep = ''
@@ -396,13 +396,13 @@ lidar_describe_var_cat <- function(variables, thes) {
 fes_describe_table_cat <- function(table, tables_dict, variables_thes) {
 
   # variables present in the table (courtesy of variables_thesaurus)
-  variable_names <- variables_thes %>%
-    dplyr::filter(.data$var_table == table) %>%
-    dplyr::pull(.data$var_id) %>%
+  variable_names <- variables_thes |>
+    dplyr::filter(.data$var_table == table) |>
+    dplyr::pull(.data$var_id) |>
     unique()
 
   # table name deconstructed to query the nfi table dictionary
-  table_deconstructed <- stringr::str_split(table, '_') %>%
+  table_deconstructed <- stringr::str_split(table, '_') |>
     purrr::flatten_chr()
 
   ## cats
@@ -410,9 +410,9 @@ fes_describe_table_cat <- function(table, tables_dict, variables_thes) {
   cat('\n', crayon::yellow$bold(table), '\n', sep = '')
   # table description
   cat(
-    glue::glue("{tables_dict[table_deconstructed] %>% purrr::discard(is.na)}") %>%
-      glue::glue_collapse() %>%
-      crayon::green() %>%
+    glue::glue("{tables_dict[table_deconstructed] |> purrr::discard(is.na)}") |>
+      glue::glue_collapse() |>
+      crayon::green() |>
       strwrap(width = 75),
     # '\n',
     fill = 80, sep = ''
@@ -420,8 +420,8 @@ fes_describe_table_cat <- function(table, tables_dict, variables_thes) {
   # table variables
   cat('Variables in table:\n')
   cat(
-    glue::glue(" - {sort(variable_names)}") %>%
-      glue::glue_collapse(sep = '\n') %>%
+    glue::glue(" - {sort(variable_names)}") |>
+      glue::glue_collapse(sep = '\n') |>
       crayon::magenta()
   )
   cat('\n')
@@ -438,16 +438,16 @@ fes_describe_var_cat <- function(variable, variables_thes) {
   # get the var thes, the numerical var thes filter by the variable and
   # prepare the result with cat, glue and crayon, as a function to apply to
   # a vector of variables.
-  variables_thes %>%
-    dplyr::filter(.data$var_id == variable) %>%
-    check_filter_for(glue::glue("{variable} variable not found")) %>%
-    dplyr::group_by(.data$var_description_eng) %>%
+  variables_thes |>
+    dplyr::filter(.data$var_id == variable) |>
+    check_filter_for(glue::glue("{variable} variable not found")) |>
+    dplyr::group_by(.data$var_description_eng) |>
     dplyr::group_walk(
       ~ cat(
         "\n",
         # var name
         crayon::yellow$bold(glue::glue(
-          "{.x$translation_eng %>% unique()} ({.x$var_id %>% unique()})"
+          "{.x$translation_eng |> unique()} ({.x$var_id |> unique()})"
         )),
         "\n",
         # var description
@@ -457,7 +457,7 @@ fes_describe_var_cat <- function(variable, variables_thes) {
         crayon::blue$bold(
           "Units: [" %+%
             crayon::blue$italic$bold(
-              glue::glue("{(.x$var_units %na% ' - ') %>% unique()}")
+              glue::glue("{(.x$var_units %na% ' - ') |> unique()}")
             ) %+%
             "]"
         ),
@@ -529,9 +529,9 @@ catdrought_describe_var_cat <- function(variables) {
     "", "", "",
   )
 
-  no_returned <- variable_thesaurus %>%
-    dplyr::filter(.data$var_id %in% variables) %>%
-    dplyr::group_by(.data$var_id) %>%
+  no_returned <- variable_thesaurus |>
+    dplyr::filter(.data$var_id %in% variables) |>
+    dplyr::group_by(.data$var_id) |>
     dplyr::group_walk(
       ~ cat(
         # var name
@@ -541,13 +541,13 @@ catdrought_describe_var_cat <- function(variables) {
         "Units:  ",
         crayon::blue$bold("[") %+%
           crayon::blue$italic$bold(
-            glue::glue("{(.x$var_units %na% ' - ') %>% unique()}")
+            glue::glue("{(.x$var_units %na% ' - ') |> unique()}")
           ) %+%
           crayon::blue$bold("]"),
         "\n",
         "Details:  ",
         crayon::blue$italic$bold(
-          glue::glue("{(.x$var_description_eng %na% ' - ') %>% unique()}")
+          glue::glue("{(.x$var_description_eng %na% ' - ') |> unique()}")
         ),
         "\n\n",
         sep = ''
@@ -606,21 +606,21 @@ siteDrought_table_dictionary <- function() {
 
 siteDrought_describe_table_cat = function(table, tables_dict){
 
-  variable_names <- sitedrought_var_thes %>%
-    dplyr::filter(.data$var_table == table) %>%
-    dplyr::pull(.data$var_id) %>%
+  variable_names <- sitedrought_var_thes |>
+    dplyr::filter(.data$var_table == table) |>
+    dplyr::pull(.data$var_id) |>
     unique()
 
-  table_deconstructed <- stringr::str_split(table, '_') %>%
+  table_deconstructed <- stringr::str_split(table, '_') |>
     purrr::flatten_chr()
 
 
   cat('\n', crayon::yellow$bold(table), '\n', sep = '')
   # table descriptio
   cat(
-    glue::glue("{tables_dict[table_deconstructed] %>% purrr::discard(is.na)}") %>%
-      glue::glue_collapse() %>%
-      crayon::green() %>%
+    glue::glue("{tables_dict[table_deconstructed] |> purrr::discard(is.na)}") |>
+      glue::glue_collapse() |>
+      crayon::green() |>
       strwrap(width = 75),
     # '\n',
     fill = 80, sep = ''
@@ -628,8 +628,8 @@ siteDrought_describe_table_cat = function(table, tables_dict){
 
   cat('Variables in table:\n')
   cat(
-    glue::glue(" - {sort(variable_names)}") %>%
-      glue::glue_collapse(sep = '\n') %>%
+    glue::glue(" - {sort(variable_names)}") |>
+      glue::glue_collapse(sep = '\n') |>
       crayon::magenta()
   )
   cat('\n')
@@ -652,15 +652,15 @@ siteDrought_describe_table_cat = function(table, tables_dict){
 
 siteDrought_describe_var_cat <- function(variable) {
 
-    sitedrought_var_thes %>%
-    dplyr::filter(.data$var_id == variable) %>%
-    check_filter_for(glue::glue("{variable} variable not found")) %>%
+    sitedrought_var_thes |>
+    dplyr::filter(.data$var_id == variable) |>
+    check_filter_for(glue::glue("{variable} variable not found")) |>
     dplyr::group_walk(
       ~ cat(
         "\n",
         # var name
         crayon::yellow$bold(glue::glue(
-          "{.x$var_description_eng %>% unique()} ({.x$var_id %>% unique()})"
+          "{.x$var_description_eng |> unique()} ({.x$var_id |> unique()})"
         )),
         "\n",
         # var description
@@ -670,7 +670,7 @@ siteDrought_describe_var_cat <- function(variable) {
         crayon::blue$bold(
           "Units:" %+%
             crayon::blue$italic$bold(
-              glue::glue("{(.x$var_units_eng %na% ' - ') %>% unique()}")
+              glue::glue("{(.x$var_units_eng %na% ' - ') |> unique()}")
             )
         ),
         "\n",

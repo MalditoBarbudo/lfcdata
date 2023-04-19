@@ -90,9 +90,9 @@ nfi_describe_var(nfidb, c('density', 'basal_area'))
 #### Complete list of NFI variables
 
 ```{r var_info_complete, echo = FALSE, comment = ''}
-vars <- nfi_get_data(nfidb, 'variables_thesaurus') %>%
-  dplyr::pull(var_id) %>%
-  unique() %>% 
+vars <- nfi_get_data(nfidb, 'variables_thesaurus') |>
+  dplyr::pull(var_id) |>
+  unique() |> 
   sort()
 for (var in vars) {
   nfi_describe_var(nfidb, var)

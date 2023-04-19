@@ -37,7 +37,7 @@ if (interactive()) {
   fes_get_data(fesdb, 'static', TRUE)
 
   # we can use pipes
-  fesdb \%>\%
+  fesdb |>
     fes_get_data('static', TRUE)
 
   # fesdb is an R6 object, so the previous examples are the same as:

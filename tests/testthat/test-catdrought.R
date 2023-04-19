@@ -13,44 +13,44 @@ catdroughtdb <- catdrought()
 date_to_check <- as.character(Sys.Date() - sample(1:364, 1))
 # sf objects to test
 sf_polygons <-
-  lidar()$get_data('lidar_municipalities', 'DBH') %>%
-  dplyr::slice(1:5) %>%
+  lidar()$get_data('lidar_municipalities', 'DBH') |>
+  dplyr::slice(1:5) |>
   dplyr::select(tururu = poly_id)
 
 sf_points <-
-  nfi()$get_data('plots', spatial = TRUE) %>%
-  dplyr::slice(1:5) %>%
+  nfi()$get_data('plots', spatial = TRUE) |>
+  dplyr::slice(1:5) |>
   dplyr::select(plot_id)
 
 sf_points_3043 <- sf::st_transform(sf_points, crs = 3043)
 
-sf_points_all_out <- sf_points %>%
-  dplyr::mutate(geometry = geometry + 10, plot_id = paste0('out', 1:5)) %>%
+sf_points_all_out <- sf_points |>
+  dplyr::mutate(geometry = geometry + 10, plot_id = paste0('out', 1:5)) |>
   sf::st_set_crs(4326)
 
-sf_points_one_out <- rbind(sf_points, sf_points_all_out %>% dplyr::slice(1))
+sf_points_one_out <- rbind(sf_points, sf_points_all_out |> dplyr::slice(1))
 
 sf_multipoints <-
   dplyr::tibble(
     point_id = 'wrong',
-    geometry = sf::st_multipoint(matrix(1:10, , 2)) %>% sf::st_sfc()
-  ) %>%
+    geometry = sf::st_multipoint(matrix(1:10, , 2)) |> sf::st_sfc()
+  ) |>
   sf::st_as_sf(sf_column_name = 'geometry')
 
 sf_polygons_latlong <-
-  sf_polygons %>% sf::st_transform(crs = 4326)
+  sf_polygons |> sf::st_transform(crs = 4326)
 
-sf_polygons_all_out <- sf_polygons %>%
+sf_polygons_all_out <- sf_polygons |>
   dplyr::mutate(
     geometry = geometry + c(500000, 0),
     tururu = paste0("out_", 1:5)
-  ) %>%
+  ) |>
   sf::st_set_crs(3043)
 
-sf_polygons_one_out <- rbind(sf_polygons, sf_polygons_all_out) %>%
+sf_polygons_one_out <- rbind(sf_polygons, sf_polygons_all_out) |>
   dplyr::slice(1:6)
 
-sf_polygons_naves <- lidar()$get_data('lidar_municipalities', 'DBH') %>%
+sf_polygons_naves <- lidar()$get_data('lidar_municipalities', 'DBH') |>
   dplyr::filter(poly_id == 'Navès')
 
 ## get data method works ####

@@ -62,17 +62,21 @@ lfcAllometries <- R6::R6Class(
       dots_expressions <- rlang::quos(...)
 
       if (is.null(id)) {
-        res <- super$get_data('allometries') %>%
-          dplyr::filter(!!! dots_expressions) %>%
-          split(.$allometry_id) %>%
-          purrr::map(~ as.list(.x))
+        nested_alloms <- super$get_data('allometries') |>
+          dplyr::filter(!!! dots_expressions) |>
+          tidyr::nest(.by = allometry_id)
+        res <- dplyr::pull(nested_alloms, data) |>
+          purrr::map(.f = \(.x) {as.list(.x)}) |>
+          purrr::set_names(nested_alloms[["allometry_id"]])
       } else {
         # argument validation (here, because is when first id is used)
         check_args_for(character = list(id = id))
-        res <- super$get_data('allometries') %>%
-          dplyr::filter(allometry_id %in% id) %>%
-          split(.$allometry_id) %>%
-          purrr::map(~ as.list(.x))
+        res <- super$get_data('allometries') |>
+          dplyr::filter(allometry_id %in% id) |>
+          tidyr::nest(.by = allometry_id) |>
+          dplyr::pull(data) |>
+          purrr::set_names(id) |>
+          purrr::map(.f = \(.x) {as.list(.x)})
       }
 
       if (length(res) < 1) {
@@ -105,7 +109,11 @@ lfcAllometries <- R6::R6Class(
         allo_desc[[allometry_id]][['independent_var_1']],
         allo_desc[[allometry_id]][['independent_var_2']],
         allo_desc[[allometry_id]][['independent_var_3']]
-      ) %>% magrittr::extract(!is.na(.))
+      ) |> magrittr::extract(!is.na(c(
+        allo_desc[[allometry_id]][['independent_var_1']],
+        allo_desc[[allometry_id]][['independent_var_2']],
+        allo_desc[[allometry_id]][['independent_var_3']]
+      )))
 
       var_needed_np <- var_needed[!var_needed %in% var_provided]
       if (length(var_needed_np) > 0) {
@@ -134,10 +142,10 @@ lfcAllometries <- R6::R6Class(
       param_c <- allo_desc[[allometry_id]][['param_c']]
       param_d <- allo_desc[[allometry_id]][['param_d']]
       # equation parsing and evaluation
-      preformatted_eqs <- allo_desc[[allometry_id]][['equation']] %>%
-        stringr::str_split(pattern = ' = ', n = 2) %>%
-        unlist() %>%
-        magrittr::extract(2) %>%
+      preformatted_eqs <- allo_desc[[allometry_id]][['equation']] |>
+        stringr::str_split(pattern = ' = ', n = 2) |>
+        unlist() |>
+        magrittr::extract(2) |>
         private$eq_formatter()
 
       # convert to exprs
@@ -148,8 +156,8 @@ lfcAllometries <- R6::R6Class(
         )
       }
 
-      preformatted_eqs %>%
-        rlang::parse_expr() %>%
+      preformatted_eqs |>
+        rlang::parse_expr() |>
         rlang::eval_tidy()
     },
 
@@ -176,18 +184,18 @@ lfcAllometries <- R6::R6Class(
 
     # equation formatter for using it to calculate
     eq_formatter = function(eq) {
-      eq_res <- eq %>%
+      eq_res <- eq |>
         # this first step (remove '\u00C2') is in case no UTF-8 system, i.e. win 'latin1'
-        stringr::str_remove_all('\u00C2') %>%
+        stringr::str_remove_all('\u00C2') |>
         # replace · with *
-        stringr::str_replace_all('\u00B7', '*') %>%
+        stringr::str_replace_all('\u00B7', '*') |>
         # replace \u00B2 and \u00B3 with \u005E2 and \u005E3
-        stringr::str_replace_all('\u00B2', '\u005E2') %>%
-        stringr::str_replace_all('\u00B3', '\u005E3') %>%
+        stringr::str_replace_all('\u00B2', '\u005E2') |>
+        stringr::str_replace_all('\u00B3', '\u005E3') |>
         # replace parameter letters with param_letter
-        stringr::str_replace('\\ba\\b', 'param_a') %>%
-        stringr::str_replace('\\bb\\b', 'param_b') %>%
-        stringr::str_replace('\\bc\\b', 'param_c') %>%
+        stringr::str_replace('\\ba\\b', 'param_a') |>
+        stringr::str_replace('\\bb\\b', 'param_b') |>
+        stringr::str_replace('\\bc\\b', 'param_c') |>
         stringr::str_replace('\\bd\\b', 'param_d')
 
       return(eq_res)
@@ -219,7 +227,7 @@ lfcAllometries <- R6::R6Class(
 #'   allometries_get_data(allomdb, 'allometries')
 #'
 #'   # we can use pipes
-#'   allomdb %>%
+#'   allomdb |>
 #'     allometries_get_data('allometries')
 #'
 #'   # allomdb is an R6 object, so the previous examples are the same as:
@@ -297,13 +305,13 @@ allometries_description <- function(object, ..., id = NULL) {
 #'   allometries_calculate(allomdb, DR = c(0.55, 0.46, 0.37), allometry_id = "BH_287")
 #'
 #'   # inside a dplyr mutate, with a different allometry for each species
-#'   iris_foo <- iris %>%
-#'     mutate(allom = rep(c("BH_287","BH_288","BH_290"), each = 50)) %>%
+#'   iris_foo <- iris |>
+#'     mutate(allom = rep(c("BH_287","BH_288","BH_290"), each = 50)) |>
 #'     select(branch_diameter = Sepal.Length, Species, allom)
 #'   iris_foo
 #'
-#'   iris_foo %>%
-#'     group_by(Species) %>%
+#'   iris_foo |>
+#'     group_by(Species) |>
 #'     mutate(BH = allometries_calculate(
 #'         allomdb, DR = branch_diameter, allometry_id = first(allom)
 #'     ))

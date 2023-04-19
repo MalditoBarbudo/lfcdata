@@ -42,11 +42,11 @@ if (interactive()) {
   ab_stars <- lidar_get_lowres_raster(lidardb, 'AB', 'stars')
 
   # we can use pipes
-  lidardb \%>\%
+  lidardb |>
     lidar_get_lowres_raster('AB', 'raster')
 
   # or retrieve several tables at one time
-  lidardb \%>\%
+  lidardb |>
     lidar_get_lowres_raster(c('AB', 'DBH'), 'stars')
 
   # lidardb is an R6 object, so the previous examples are the same as:

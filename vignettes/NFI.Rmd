@@ -69,8 +69,8 @@ Select the table to access and use the `nfi_get_data` function. Tables can be re
 ```{r, collapse=TRUE}
 library(dplyr)
 
-all_info_nfi4 <- nfi_get_data(nfidb, 'plots') %>%
-  right_join(nfi_get_data(nfidb, 'plot_nfi_4_results')) %>%
+all_info_nfi4 <- nfi_get_data(nfidb, 'plots') |>
+  right_join(nfi_get_data(nfidb, 'plot_nfi_4_results')) |>
   left_join(nfi_get_data(nfidb, 'plots_nfi_4_dynamic_info'))
 
 all_info_nfi4
@@ -83,7 +83,7 @@ Data can be retrieved in a spatial object (with plot coordinates as `POINT`), us
 library(sf)
 
 nfi_get_data(nfidb, 'plot_nfi_4_results', spatial = TRUE)
-nfi_get_data(nfidb, 'plot_nfi_4_results', spatial = TRUE) %>%
+nfi_get_data(nfidb, 'plot_nfi_4_results', spatial = TRUE) |>
   plot()
 ```
 

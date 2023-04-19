@@ -30,7 +30,7 @@ if (interactive()) {
   # sf tibble
   lfcdata::siteDrought_get_data(siteDroughtdb,'data_day')
   # we can uses pipes
-  siteDroughtdb \%>\%
+  siteDroughtdb |>
      lfcdata::siteDrought_get_data('data_day')
 
   # siteDroughtdb is an R6 object, so the previous examples are the same as:

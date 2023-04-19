@@ -51,9 +51,9 @@ library(lfcdata)
 library(dplyr)
 nfidb <- nfi()
 nfidb
-nfidb %>%
-  nfi_get_data('plot_nfi_4_results', spatial = TRUE) %>%
-  select(geometry, density, basal_area) %>%
+nfidb |>
+  nfi_get_data('plot_nfi_4_results', spatial = TRUE) |>
+  select(geometry, density, basal_area) |>
   plot()
 ```
 
@@ -62,7 +62,7 @@ nfidb %>%
 ```{r allometries}
 allometriesdb <- allometries()
 allometriesdb
-allometriesdb %>%
+allometriesdb |>
   allometries_get_data('allometries')
 ```
 
@@ -71,7 +71,7 @@ allometriesdb %>%
 ```{r lidar}
 lidardb <- lidar()
 lidardb
-lidardb %>%
-  lidar_get_data('lidar_provinces', 'AB') %>%
+lidardb |>
+  lidar_get_data('lidar_provinces', 'AB') |>
   plot()
 ```

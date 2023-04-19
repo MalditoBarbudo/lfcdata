@@ -117,7 +117,7 @@ lfcsiteDrought <- R6::R6Class(
       tables_dict <- siteDrought_table_dictionary()
       variables_thes <- sitedrought_var_thes
 
-      tables %>%
+      tables |>
         purrr::map(
           siteDrought_describe_table_cat,
           tables_dict = tables_dict
@@ -140,7 +140,7 @@ lfcsiteDrought <- R6::R6Class(
 
       # variables_thes <- suppressMessages(super$get_data('variables_thesaurus_sitedr'))
 
-      variables %>%
+      variables |>
         purrr::map(
           siteDrought_describe_var_cat#,
           # variables_thes = variables_thes
@@ -224,7 +224,7 @@ lfcsiteDrought <- R6::R6Class(
 #'   lfcdata::siteDrought_get_data(siteDroughtdb,'data_day')
 
 #'   # we can uses pipes
-#'   siteDroughtdb %>%
+#'   siteDroughtdb |>
 #'      lfcdata::siteDrought_get_data('data_day')
 #'
 #'   # siteDroughtdb is an R6 object, so the previous examples are the same as:

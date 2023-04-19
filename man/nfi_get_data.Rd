@@ -37,7 +37,7 @@ if (interactive()) {
   nfi_get_data(nfidb, 'plots', TRUE)
 
   # we can use pipes
-  nfidb \%>\%
+  nfidb |>
     nfi_get_data('plots', TRUE)
 
   # nfidb is an R6 object, so the previous examples are the same as:

@@ -73,7 +73,7 @@ test_that("cache works", {
   expect_s3_class(bar, 'tbl_df')
   expect_identical(
     bar,
-    dplyr::tbl(nfidb$.__enclos_env__$private$pool_conn, 'plots') %>%
+    dplyr::tbl(nfidb$.__enclos_env__$private$pool_conn, 'plots') |>
       dplyr::collect()
   )
   expect_length(nfidb$.__enclos_env__$private$data_cache, 4)

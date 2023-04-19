@@ -66,20 +66,20 @@ lfcNFI <- R6::R6Class(
               c('coords_longitude', 'coords_latitude') %in%
               names(super$get_data(table_name))
             )) {
-              query_data_spatial <- super$get_data(table_name) %>%
+              query_data_spatial <- super$get_data(table_name) |>
                 sf::st_as_sf(
                   coords = c('coords_longitude', 'coords_latitude'),
                   remove = FALSE, crs = 4326
                 )
             } else {
               # if there is no lat long vars, then get them from plots
-              query_data_spatial <- super$get_data(table_name) %>%
+              query_data_spatial <- super$get_data(table_name) |>
                 dplyr::left_join(
-                  super$get_data('plots') %>%
-                    dplyr::select(plot_id, coords_longitude, coords_latitude) %>%
+                  super$get_data('plots') |>
+                    dplyr::select(plot_id, coords_longitude, coords_latitude) |>
                     dplyr::collect(),
                   by = 'plot_id'
-                ) %>%
+                ) |>
                 sf::st_as_sf(
                   coords = c('coords_longitude', 'coords_latitude'),
                   remove = FALSE, crs = 4326
@@ -97,9 +97,9 @@ lfcNFI <- R6::R6Class(
 
     # available tables method
     avail_tables = function() {
-      pool::dbListTables(private$pool_conn) %>%
-        tolower() %>%
-        unique() %>%
+      pool::dbListTables(private$pool_conn) |>
+        tolower() |>
+        unique() |>
         sort()
     },
 
@@ -114,7 +114,7 @@ lfcNFI <- R6::R6Class(
       variables_thes <- suppressMessages(self$get_data('variables_thesaurus'))
 
       # map to apply to all tables
-      tables %>%
+      tables |>
         purrr::map(
           nfi_describe_table_cat,
           tables_dict = tables_dict, variables_thes = variables_thes
@@ -135,7 +135,7 @@ lfcNFI <- R6::R6Class(
       numerical_thes <- suppressMessages(self$get_data('variables_numerical'))
 
       # map to apply to all variables
-      variables %>%
+      variables |>
         purrr::map(
           nfi_describe_var_cat,
           variables_thes = variables_thes, numerical_thes = numerical_thes
@@ -202,7 +202,7 @@ lfcNFI <- R6::R6Class(
 #'   nfi_get_data(nfidb, 'plots', TRUE)
 #'
 #'   # we can use pipes
-#'   nfidb %>%
+#'   nfidb |>
 #'     nfi_get_data('plots', TRUE)
 #'
 #'   # nfidb is an R6 object, so the previous examples are the same as:
