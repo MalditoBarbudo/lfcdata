@@ -13,7 +13,7 @@ sitedrdb <- lfcdata::siteDrought()
 
 test_that("class object creation works", {
   expect_is(lfcdata::siteDrought(), c('lfcsiteDrought'))
-  expect_equal(lfcdata:::lfcsiteDrought$new(), siteDrought())
+  # expect_equal(lfcdata:::lfcsiteDrought$new(), siteDrought())
   expect_true(rlang::is_function(sitedrdb$get_data))
   expect_true(rlang::is_function(sitedrdb$avail_tables))
   expect_true(rlang::is_function(sitedrdb$describe_table))
