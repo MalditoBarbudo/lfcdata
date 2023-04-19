@@ -134,19 +134,21 @@ lfcAllometries <- R6::R6Class(
       param_c <- allo_desc[[allometry_id]][['param_c']]
       param_d <- allo_desc[[allometry_id]][['param_d']]
       # equation parsing and evaluation
-      allo_desc[[allometry_id]][['equation']] %>%
+      preformatted_eqs <- allo_desc[[allometry_id]][['equation']] %>%
         stringr::str_split(pattern = ' = ', n = 2) %>%
         unlist() %>%
         magrittr::extract(2) %>%
-        private$eq_formatter() %>% {
-          for (var in var_provided[var_provided %in% var_needed]) {
-            . <- stringr::str_replace_all(
-              ., pattern = var,
-              replacement = paste0('rlang::eval_tidy(dots_vars$', var, ')')
-            )
-          }
-          .
-        } %>%
+        private$eq_formatter()
+
+      # convert to exprs
+      for (var in var_provided[var_provided %in% var_needed]) {
+        preformatted_eqs <- stringr::str_replace_all(
+          preformatted_eqs, pattern = var,
+          replacement = paste0('rlang::eval_tidy(dots_vars$', var, ')')
+        )
+      }
+
+      preformatted_eqs %>%
         rlang::parse_expr() %>%
         rlang::eval_tidy()
     },

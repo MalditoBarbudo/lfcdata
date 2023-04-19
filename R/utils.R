@@ -187,6 +187,7 @@ check_filter_for <- function(object, error_message) {
   if (nrow(object) < 1) {
     stop(error_message)
   }
+  invisible(object)
 }
 
 ## dictionaries and lookup tables ####
@@ -288,10 +289,8 @@ nfi_describe_var_cat <- function(variable, variables_thes, numerical_thes) {
   # prepare the result with cat, glue and crayon, as a function to apply to
   # a vector of variables.
   variables_thes %>%
-    dplyr::filter(.data$var_id == variable) %>% {
-      check_filter_for(., glue::glue("{variable} variable not found"))
-      .
-    } %>%
+    dplyr::filter(.data$var_id == variable) %>%
+    check_filter_for(glue::glue("{variable} variable not found")) %>%
     dplyr::left_join(numerical_thes, by = c("var_id", "var_table")) %>%
     dplyr::group_by(.data$var_description_eng) %>%
     dplyr::group_walk(
@@ -333,10 +332,8 @@ allometries_describe_var_cat <- function(variables, thes) {
   . <- NULL
 
   no_returned <- thes %>%
-    dplyr::filter(.data$text_id %in% variables) %>% {
-      check_filter_for(., glue::glue("one or more variables not found"))
-      .
-    } %>%
+    dplyr::filter(.data$text_id %in% variables) %>%
+    check_filter_for(glue::glue("one or more variables not found")) %>%
     dplyr::group_by(.data$translation_eng) %>%
     dplyr::group_walk(
       ~ cat(
@@ -442,10 +439,8 @@ fes_describe_var_cat <- function(variable, variables_thes) {
   # prepare the result with cat, glue and crayon, as a function to apply to
   # a vector of variables.
   variables_thes %>%
-    dplyr::filter(.data$var_id == variable) %>% {
-      check_filter_for(., glue::glue("{variable} variable not found"))
-      .
-    } %>%
+    dplyr::filter(.data$var_id == variable) %>%
+    check_filter_for(glue::glue("{variable} variable not found")) %>%
     dplyr::group_by(.data$var_description_eng) %>%
     dplyr::group_walk(
       ~ cat(
@@ -658,10 +653,8 @@ siteDrought_describe_table_cat = function(table, tables_dict){
 siteDrought_describe_var_cat <- function(variable) {
 
     sitedrought_var_thes %>%
-    dplyr::filter(.data$var_id == variable) %>% {
-      check_filter_for(., glue::glue("{variable} variable not found"))
-      .
-    }  %>%
+    dplyr::filter(.data$var_id == variable) %>%
+    check_filter_for(glue::glue("{variable} variable not found")) %>%
     dplyr::group_walk(
       ~ cat(
         "\n",
