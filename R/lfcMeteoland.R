@@ -595,11 +595,13 @@ lfcMeteoland <- R6::R6Class(
       # TODO what happens when no table is found?????? We need to check this
       # and avoid the error, just maybe purrr::possibly or similar
       helper_station_data_getter <- function(.x) {
-        dplyr::tbl(private$pool_conn, .x) |>
+        res_wo_rownames <- dplyr::tbl(private$pool_conn, .x) |>
           dplyr::collect() |>
           # essential to cross results with meteo stations:
-          as.data.frame() |>
-          magrittr::set_rownames(.$stationCode)
+          as.data.frame()
+        # add rownames
+        res_wo_rownames |>
+          magrittr::set_rownames(res_wo_rownames$stationCode)
       }
 
       helper_station_data_getter <- purrr::possibly(
