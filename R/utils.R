@@ -688,3 +688,142 @@ siteDrought_describe_var_cat <- function(variable) {
 
   return(invisible(NULL))
 }
+
+## postgis raster functions ####
+
+get_raster_from_db <- function(
+  conn, table_name, rast_column = "rast", bands = TRUE, clip = NULL
+) {
+
+  browser()
+
+  ## assertions
+  check_args_for(
+    character = list(table_name = table_name, rast_column = rast_column)
+  )
+
+  ## db checks
+  if (!all(c(
+    # valid pool
+    pool::dbIsValid(conn),
+    # table exists
+    pool::dbExistsTable(conn, table_name)
+  ))) {
+    stop("Connection to DB invalid or table missing")
+  }
+
+  ## bands
+  band_index_query <- glue::glue_sql(
+    "SELECT ST_NumBands({`rast_column`})
+      FROM {`table_name`}
+      WHERE {`rast_column`} IS NOT NULL LIMIT 1;",
+    .con = conn
+  )
+
+  db_band_index <- 1:pool::dbGetQuery(conn, band_index_query)[,1]
+
+  band_names_query <- glue::glue_sql(
+    "SELECT DISTINCT band_names as band_names
+      FROM {`table_name`};",
+    .con = conn
+  )
+
+  db_band_names <- pool::dbGetQuery(conn, band_names_query)[["band_names"]]
+
+  db_band_names <- db_band_names |>
+    as.character() |>
+    stringr::str_remove_all(pattern = "[{|}]*") |>
+    stringr::str_split(pattern = ',', simplify = FALSE) |>
+    magrittr::extract2(1)
+
+
+  if (!rlang::is_logical(bands)) {
+    # check if is numeric
+    check_args_for(numerical = list(bands = bands))
+
+    # check if provided bands are in the db raster bands range
+    check_if_in_for(bands, db_band_index)
+
+    db_band_index <- db_band_index[bands]
+    db_band_names <- db_band_names[bands]
+
+  }
+
+  ## SRID (to get the crs for later)
+  srid_query <- glue::glue_sql(
+    "SELECT DISTINCT (ST_SRID({`rast_column`}))
+    FROM {`table_name`}
+    WHERE {`rast_column`} IS NOT NULL;",
+    .con = conn
+  )
+
+  raster_srid <- pool::dbGetQuery(conn, srid_query)[["st_srid"]]
+
+  if (length(raster_srid) > 1) {
+    stop("Raster table has more than one SRID")
+  } else if (length(raster_srid) < 1) {
+    stop("Raster table is empty")
+  }
+
+  ## alignment
+  # Should I check the aligment??? Not for now
+
+  ## clip
+  # default query, is the end of the info and values queries that come later
+  clip_subquery <- glue::glue_sql(") as a", .con = conn)
+  # if clip is an sf, the query needs a WHERE with the intersection with the polygon
+  if (!rlang::is_null(clip)) {
+    # check that clip is an sf and a polygon
+    check_args_for(
+      sf = list(clip = clip),
+      polygons = list(clip = clip)
+    )
+    # get the poly wkt
+    polygon_ewkt <- clip |>
+      sf::st_transform(crs = raster_srid) |>
+      sf::st_geometry() |>
+      sf::st_as_text(EWKT = TRUE)
+
+    # build the subquery
+    clip_subquery <- glue::glue_sql(
+      "WHERE ST_Intersects({`rast_column`}, ST_GeomFromEWKT({polygon_ewkt}))) as a",
+      .con = conn
+    )
+  }
+
+  ## raster info for later calling terra::rast
+  query_info <- glue::glue_sql(
+    "SELECT
+        ST_XMax(ST_Envelope(rast)) as xmax,
+        ST_XMin(ST_Envelope(rast)) as xmin,
+        ST_XMax(ST_Envelope(rast)) as xmax,
+        ST_XMin(ST_Envelope(rast)) as xmin,
+        ST_Width(rast) as ncols,
+        ST_Height(rast) as nrows
+    FROM
+        (SELECT ST_Union({`rast_column`}) rast
+        FROM {`table_name`}{clip_subquery};",
+    .con = conn
+  )
+
+  raster_info <- pool::dbGetQuery(conn, query_info)
+
+  query_values <- glue::glue_sql(
+    "SELECT ST_DumpValues(rast) as vals
+    FROM
+        (SELECT ST_UNION({`rast_column`}) rast
+        FROM {`table_name`}{clip_subquery};",
+    .con = conn
+  )
+
+  raster_values <- pool::dbGetQuery(conn, query_values)
+
+
+
+
+
+
+
+
+
+}

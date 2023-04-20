@@ -313,7 +313,7 @@ lfcMeteoland <- R6::R6Class(
 
       res <- private$data_cache[[raster_table_name]] %||% {
         # pool checkout
-        pool_checkout <- pool::poolCheckout(private$pool_conn)
+        # pool_checkout <- pool::poolCheckout(private$pool_conn)
 
         message(
           'Querying low res (1000x1000 meters) raster from LFC database',
@@ -322,12 +322,15 @@ lfcMeteoland <- R6::R6Class(
 
         # get raster
         meteoland_raster <- try(
-          rpostgis::pgGetRast(
-            pool_checkout, raster_table_name, bands = TRUE
+          get_raster_from_db(
+            private$pool_conn, raster_table_name
           )
+          # rpostgis::pgGetRast(
+          #   pool_checkout, raster_table_name, bands = TRUE
+          # )
         )
         # close checkout
-        pool::poolReturn(pool_checkout)
+        # pool::poolReturn(pool_checkout)
 
         # check if raster inherits from try-error to stop
         if (inherits(meteoland_raster, "try-error")) {
