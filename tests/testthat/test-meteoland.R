@@ -1,6 +1,6 @@
 ## class object creation works ####
 test_that("class object creation works", {
-  expect_is(meteoland(), c('lfcMeteoland'))
+  expect_true(inherits(meteoland(), c('lfcMeteoland')))
   # expect_equal(lfcdata:::lfcMeteoland$new(), meteoland())
   expect_true(rlang::is_function(meteoland()$get_data))
   expect_true(rlang::is_function(meteoland()$points_interpolation))
@@ -144,7 +144,7 @@ test_that("points_interpolation method works", {
     'end date must be equal or more recent'
   )
 
-  expect_is(
+  expect_s3_class(
     meteolanddb$points_interpolation(sf_points, c(start_date, end_date)),
     'sf'
   )
@@ -169,9 +169,9 @@ test_that("points_interpolation method works", {
   # if we have elevation on the points, all should work, but without taking the topo from
   # the db. So we will not have aspect and slope as they are missing from the points object
   expect_s3_class(
-    ok_with_topo_interpolation <- meteolanddb$points_interpolation(
+    suppressWarnings(ok_with_topo_interpolation <- meteolanddb$points_interpolation(
       sf_points_elevation, c(start_date, end_date)
-    ),
+    )),
     "sf"
   )
 
@@ -359,7 +359,7 @@ test_that("raster_interpolation method works", {
     meteolanddb$raster_interpolation(sf_polygons, c(end_date, start_date)),
     'end date must be equal or more recent'
   )
-  expect_is(
+  expect_type(
     meteolanddb$raster_interpolation(sf_polygons, c(start_date, end_date)),
     'list'
   )
@@ -369,7 +369,7 @@ test_that("raster_interpolation method works", {
     meteolanddb$raster_interpolation(sf_polygons, c(start_date, end_date))
 
   expect_length(ok_raster_interpolation, 3)
-  expect_is(ok_raster_interpolation[[1]], 'stars')
+  expect_true(inherits(ok_raster_interpolation[[1]], 'stars'))
   expect_true(
     all(
       names(ok_raster_interpolation[[1]]) %in%
@@ -387,7 +387,7 @@ test_that("raster_interpolation method works", {
     )), "Some dates"
   )
   expect_length(one_day_missing_interpolation, 2)
-  expect_is(one_day_missing_interpolation[[1]], 'stars')
+  expect_true(inherits(one_day_missing_interpolation[[1]], 'stars'))
 
   # when all dates are out of range, then error occurs
   expect_error(
@@ -403,17 +403,17 @@ test_that("raster_interpolation method works", {
   one_coord_missing_interpolation <-
     meteolanddb$raster_interpolation(sf_polygons_one_out, c(start_date, end_date))
   expect_length(one_coord_missing_interpolation, 3)
-  expect_is(one_coord_missing_interpolation[[1]], 'stars')
+  expect_true(inherits(one_coord_missing_interpolation[[1]], 'stars'))
 
   expect_error(
     meteolanddb$raster_interpolation(sf_polygons_all_out, c(start_date, end_date)),
     "No data for the specified dates"
   )
 
-  expect_is(
+  expect_true(inherits(
     meteolanddb$raster_interpolation(sf_polygons, c('1981-04-24', '1981-04-26'))[[1]],
     'stars'
-  )
+  ))
 
 })
 
