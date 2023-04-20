@@ -60,38 +60,30 @@ lfcMeteoland <- R6::R6Class(
     },
 
     # current points interpolation
-    points_interpolation = function(
-      sf, user_dates, points_id, .topo = NULL, .as_sf = TRUE
-    ) {
+    points_interpolation = function(sf, user_dates) {
 
       # argument checks are done in the ancillary functions, except for sf and
       # topo
       check_args_for(
-        sf = list(sf = sf),
-        character = list(points_id = points_id)
+        sf = list(sf = sf)
       )
       check_length_for(user_dates, 2, 'user_dates')
-
-      # get user topo
-      if (is.null(.topo)) {
-        user_topo <- private$get_points_topography(sf)
-      } else {
-        # check .topo class
-        check_for_topo <- is(.topo, 'sf')
-
-        if (!check_for_topo) {
-          stop(".topo is not a sf object")
-        }
-
-        user_topo <- .topo
-        # if the topo is provided, then we need to create the attribute of
-        # offending coords, empty
-        attr(user_topo, 'offending_coords') <- numeric(0)
-      }
 
       # message("Getting the interpolator")
       # get the interpolator
       interpolator <- private$build_points_interpolator(user_dates)
+
+      # get topo if needed
+      if (! "elevation" %in% names(sf)) {
+        user_topo <- private$get_points_topography(sf) |>
+          sf::st_transform(sf::st_crs(interpolator))
+      } else {
+        user_topo <- sf |>
+          sf::st_transform(sf::st_crs(interpolator))
+        # if the topo is provided, then we need to create the attribute of
+        # offending coords, empty
+        attr(user_topo, 'offending_coords') <- numeric(0)
+      }
 
       # subset the interpolator to the bbox in the sf object, this way we
       # avoid the burden of using more stations that we need, which results in
@@ -110,12 +102,6 @@ lfcMeteoland <- R6::R6Class(
           meteoland::get_interpolation_params(interpolator)
         )
 
-      # default parameters
-      # default_params <- meteoland::defaultInterpolationParams()
-      # buffer_days <- max(
-      #   default_params$St_Precipitation, default_params$St_TemperatureRange
-      # )
-
       # dates vec for the interpolation
       user_dates <- as.Date(user_dates)
       datevec <-
@@ -128,46 +114,6 @@ lfcMeteoland <- R6::R6Class(
         dplyr::mutate(ThermalAmplitude = MaxTemperature - MinTemperature) |>
         dplyr::select(-DOY, -WindDirection)
 
-      # message("Points interpolation")
-      # res_spm <- meteoland::interpolationpoints(
-      #   object = interpolator_trimmed,
-      #   points = user_topo,
-      #   verbose = TRUE,
-      #   dates = datevec[datevec %in% interpolator_trimmed@dates]
-      # )
-
-      # message("Naming")
-      # now we need to create the names of the list res_spm@data. Each element is
-      # a point, so, we need to take the names, remove the offending coords
-      # and set the names.
-      # points_names <- sf |>
-      #   dplyr::filter(
-      #     !dplyr::row_number() %in% attr(user_topo, 'offending_coords')
-      #   ) |>
-      #   dplyr::pull(!! rlang::sym(points_id))
-      #
-      # names(res_spm@data) <- points_names
-
-      if (isFALSE(.as_sf)) {
-        res_interpolation <- dplyr::as_tibble(res_interpolation)
-      }
-
-      # res_sf_pre <- sf::st_as_sf(sp::SpatialPoints(res_spm)) |>
-      #   dplyr::mutate(!! points_id := names(res_spm@data))
-
-      # res_spm@data |>
-      #   purrr::imap_dfr(~ dplyr::mutate(
-      #     .x, !! points_id := .y,
-      #     date = rownames(.x)
-      #   )) |>
-      #   # purrr::map_dfr(~ dplyr::slice(.x, -(1:buffer_days))) |>
-      #   dplyr::select(
-      #     dplyr::all_of(c('date', points_id)), dplyr::everything(), -DOY,
-      #     -WindDirection
-      #   ) |>
-      #   dplyr::left_join(res_sf_pre) |>
-      #   dplyr::mutate(ThermalAmplitude = MaxTemperature - MinTemperature) |>
-      #   sf::st_as_sf(crs = 3043)
       return(res_interpolation)
     },
 
@@ -189,9 +135,6 @@ lfcMeteoland <- R6::R6Class(
         stop('end date must be equal or more recent than the start date')
       }
 
-      # transform sf to the raster projection
-      sf <- sf::st_transform(sf, 3043)
-
       datevec <-
         user_dates[[1]]:user_dates[[2]] |>
         as.Date(format = '%j', origin = as.Date('1970-01-01'))
@@ -204,49 +147,38 @@ lfcMeteoland <- R6::R6Class(
           stop(glue::glue("Date provided ({as.character(date)}) is not historical, but current"))
         }
 
-        as.character(date) |>
-          self$get_lowres_raster('raster') |>
-          raster::extract(sf::as_Spatial(sf), sp = TRUE) |>
-          sf::st_as_sf() |>
-          dplyr::mutate(date = as.character(date)) |>
+        date_raster <- self$get_lowres_raster(as.character(date))
+
+        date_raster |>
+          stars::st_extract(sf::st_transform(sf, crs = sf::st_crs(date_raster))) |>
+          dplyr::mutate(
+            date = as.character(date),
+            !! points_id := sf[[points_id]]
+          ) |>
           dplyr::select(dplyr::all_of(c('date', points_id)), dplyr::everything())
       }
 
-      failsafe_sf <- sf |>
-        dplyr::mutate(
-          date = NA_character_,
-          MeanTemperature = NA_real_, MinTemperature = NA_real_,
-          MaxTemperature = NA_real_,
-          MeanRelativeHumidity = NA_real_, MinRelativeHumidity = NA_real_,
-          MaxRelativeHumidity = NA_real_,
-          Precipitation = NA_real_, Radiation = NA_real_, WindSpeed = NA_real_,
-          PET = NA_real_, ThermalAmplitude = NA_real_
-        ) |>
-        dplyr::select(dplyr::all_of(c('date', points_id)), dplyr::everything())
-
       hpih_safe <- purrr::possibly(
-        .f = historical_points_interpolation_helper, otherwise = failsafe_sf
+        .f = historical_points_interpolation_helper, otherwise = NULL
       )
 
       res <- datevec |>
-        purrr::map_dfr(
+        purrr::map(
           ~ hpih_safe(.x, sf, points_id)
-        )
+        ) |>
+        purrr::list_rbind()
 
       # checks to deliver warning or errors for missing dates or data
-      if (any(is.na(res |> dplyr::pull(date)))) {
-        res_dates <- res |> dplyr::pull(date)
-        offending_dates <-
-          datevec[which(!as.character(datevec) %in% res_dates)] |>
-          as.character() |>
-          stringr::str_flatten(collapse = ', ')
+      if (length(unique(res[["date"]])) < length(datevec)) {
+
+        offending_dates <- datevec[which(! as.character(datevec) %in% unique(res[["date"]]))]
 
         warning(glue::glue(
           "Some dates ({offending_dates}) are not available on the database, skipping them"
         ))
       }
 
-      if (all(is.na(res |> dplyr::pull(date)))) {
+      if (nrow(res) < 1) {
         stop("No meteo data found for any of the dates provided")
       }
 
@@ -254,7 +186,7 @@ lfcMeteoland <- R6::R6Class(
 
         offending_points <- res |>
           dplyr::filter(is.na(MeanTemperature)) |>
-          dplyr::pull(!! rlang::sym(points_id))
+          dplyr::pull(!! points_id)
 
         warning(glue::glue(
           "Some points are not in Catalonia ",
@@ -267,11 +199,13 @@ lfcMeteoland <- R6::R6Class(
         stop("All coordinates are not in Catalonia")
       }
 
-      return(res)
+      # return the extraction, as an sf
+      res |>
+        sf::st_as_sf()
 
     },
 
-    # current raster interpolation
+    # current raster interpolation, which is basically clip the polygon from the low res raster ;)
     raster_interpolation = function(sf, user_dates) {
       # argument checks
       check_length_for(user_dates, 2, 'user_dates')
@@ -282,8 +216,6 @@ lfcMeteoland <- R6::R6Class(
         sf = list(sf = sf),
         polygons = list(sf = sf)
       )
-
-      # browser()
 
       # This method iterate by dates to get the final rasters, as a list
       # with one element for each date supplied
@@ -305,19 +237,14 @@ lfcMeteoland <- R6::R6Class(
       raster_interpolation_helper <-
         function(date, sf) {
 
-          stars_object <- self$get_lowres_raster(date, 'stars')
+          stars_object <- self$get_lowres_raster(date)
           sf_transformed <- sf |>
             sf::st_transform(crs = sf::st_crs(stars_object))
 
           res <- stars_object |>
-            sf::st_crop(sf_transformed, as_points = FALSE) |>
-            # merge attributes (variables) as a dimension. This allows the
-            # direct conversion from stars to rasterBrick
-            merge() |>
-            as('Raster') |>
-            purrr::set_names(names(stars_object))
+            sf::st_crop(sf_transformed, as_points = FALSE)
 
-          if (all(is.na(raster::values(res)))) {
+          if (all(is.na(res[["MeanTemperature"]]))) {
             stop('No data for these polygons')
           }
 
@@ -442,25 +369,7 @@ lfcMeteoland <- R6::R6Class(
         points = list(sf = sf)
       )
 
-      # we need here to transform the coordinates to UTM, reach the topography
-      # raster in the db, get the value vectors for each variable (elevation,
-      # aspect, slope) and use the meteoland SpatialPointsTopography function
-      # to get the topography object
-
-      # Transform the coordinates, We need sp for meteoland, wkt for getting
-      # the values from the db.
-      # user_coords <-
-      #   sf |>
-      #   sf::st_geometry() |>
-      #   sf::st_transform(crs = 3043)
-
-      # user_coords_sp <-
-      #   user_coords |>
-      #   # sf::st_transform(
-      #   #   crs = "+proj=utm +zone=31 +ellps=WGS84 +datum=WGS84 +units=m +towgs84=0,0,0"
-      #   # ) |>
-      #   sf::as_Spatial()
-
+      # get well known text coords
       user_coords_wkt <-
         sf |>
         sf::st_geometry() |>
@@ -470,7 +379,6 @@ lfcMeteoland <- R6::R6Class(
       # Get db raster values
       # pool checkout
       pool_checkout <- pool::poolCheckout(private$pool_conn)
-      # browser()
       # SQL queries
       point_queries <-
         user_coords_wkt |>
@@ -558,16 +466,7 @@ lfcMeteoland <- R6::R6Class(
         dplyr::filter(!is.na(raster_topography_values$coords_text)) |>
         dplyr::bind_cols(filtered_topo_values)
 
-      # user_topo <- meteoland::SpatialPointsTopography(
-      #   points = user_coords_sp,
-      #   elevation = raster_topography_values[['elevation']],
-      #   slope = raster_topography_values[['slope']],
-      #   aspect = raster_topography_values[['aspect']]
-      # )
-
-      # lets create an attribute with the offending coords, this way we can
-      # name later the SpatialPointsMetereology@data with the identifier of the
-      # geometry
+      # lets create an attribute with the offending coords
       attr(user_topo, 'offending_coords') <- offending_coords_index
 
       return(user_topo)
@@ -576,7 +475,6 @@ lfcMeteoland <- R6::R6Class(
     # meteoland interpolator
     build_points_interpolator = function(user_dates) {
 
-      # browser()
       # argument checks
       check_args_for(
         character = list(user_dates = user_dates),
@@ -602,23 +500,7 @@ lfcMeteoland <- R6::R6Class(
         (user_dates[[1]] - buffer_days):user_dates[[2]] |>
         as.Date(format = '%j', origin = as.Date('1970-01-01'))
       table_names <-
-        glue::glue("daily_meteo_{stringr::str_remove_all(datevec, '-')}") #|>
-        # magrittr::extract(. %in% pool::dbListTables(private$pool_conn))
-
-      # meteo data
-      # TODO what happens when no table is found?????? We need to check this
-      # and avoid the error, just maybe purrr::possibly or similar
-      # helper_station_data_getter <- function(.x) {
-      #   super$get_data(.x)
-      #
-      #     # dplyr::tbl(private$pool_conn, .x) |>
-      #     # dplyr::collect() |>
-      #     # # essential to cross results with meteo stations:
-      #     # as.data.frame()
-      #   # add rownames
-      #   # res_wo_rownames |>
-      #   #   magrittr::set_rownames(res_wo_rownames$stationCode)
-      # }
+        glue::glue("daily_meteo_{stringr::str_remove_all(datevec, '-')}")
 
       helper_station_data_getter <- purrr::possibly(
         .f = super$get_data,
@@ -672,6 +554,15 @@ lfcMeteoland <- R6::R6Class(
         ) |>
         purrr::list_rbind() |>
         dplyr::rename(stationID = stationCode) |>
+        # sometimes, aemet and others changes coordinates, elevation... We need to fix the coords
+        # to avoid hitting a non unique stations error in meteoland::with_meteo
+        dplyr::mutate(
+          lat = dplyr::last(lat),
+          long = dplyr::last(long),
+          elevation = dplyr::last(elevation),
+          .by = stationID
+        ) |>
+        # finally convert to sf and set the CRS
         sf::st_as_sf(coords = c('long', 'lat')) |>
         sf::st_set_crs(4326)
 
@@ -699,23 +590,6 @@ lfcMeteoland <- R6::R6Class(
           ),
           verbose = FALSE
         )
-
-      # interpolator_res <-
-      #   unique_meteo_stations |>
-      #   dplyr::select(long, lat) |>
-      #   as.data.frame() |>
-      #   magrittr::set_rownames(unique_meteo_stations$stationCode) |>
-      #   sp::SpatialPoints(sp::CRS("+proj=longlat +datum=WGS84")) |>
-      #   sp::spTransform(sp::CRS(
-      #     "+proj=utm +zone=31 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs"
-      #   )) |>
-      #   meteoland::SpatialPointsMeteorology(meteo_data, datevec_trimmed, TRUE) |>
-      #   meteoland::MeteorologyInterpolationData(
-      #     elevation = unique_meteo_stations$elevation,
-      #     params = default_params
-      #   )
-
-
 
       return(interpolator_res)
     }
@@ -786,12 +660,8 @@ meteoland_get_lowres_raster <- function(object, date, spatial = 'stars') {
 #' @param dates character vector of length 2 with the dates range (start-end) to
 #'   interpolate (i.e. \code{c("2020-04-25", "2020-04-30")}). See details for
 #'   more information.
-#' @param points_id character with the name of the variable holding the points
-#'   id on the sf object
 #' @param .topo optional custom SpatialPointsTopology object. If not provided
 #'   topology will be retrieved from database (only for Catalonia)
-#' @param .as_sf logical indicating if the returned object should be an sf
-#'   object (default) or an SpatialPointsMetereology object (FALSE)
 #'
 #' @return An sf object if \code{.as_sf} is TRUE (default), an
 #'   SpatialPointsMetereology object (see
@@ -816,20 +686,20 @@ meteoland_get_lowres_raster <- function(object, date, spatial = 'stars') {
 #'   dplyr::select(plot_id)
 #'
 #'   meteoland_points_interpolation(
-#'     meteolanddb, sf_points, c(Sys.Date()-1, Sys.Date()-2, "plot_id")
+#'     meteolanddb, sf_points, c(Sys.Date()-1, Sys.Date()-2)
 #'   )
 #' }
 #'
 #'
 #' @export
 meteoland_points_interpolation <- function(
-  object, sf, dates, points_id, .topo = NULL, .as_sf = TRUE
+    object, sf, dates
 ) {
   # argument validation
   # NOTE: variables and spatial are validated in the method
   check_class_for(object, 'lfcMeteoland')
   # call to the class method
-  object$points_interpolation(sf, dates, points_id, .topo = NULL, .as_sf = TRUE)
+  object$points_interpolation(sf, dates)
 }
 
 #' Historical points (coordinates) interpolation
@@ -872,7 +742,7 @@ meteoland_points_interpolation <- function(
 #'
 #' @export
 meteoland_historical_points_interpolation <- function(
-  object, sf, dates, points_id
+    object, sf, dates, points_id
 ) {
   # argument validation
   # NOTE: variables and spatial are validated in the method

@@ -4,14 +4,7 @@
 \alias{meteoland_points_interpolation}
 \title{Current points (coordinates) interpolation}
 \usage{
-meteoland_points_interpolation(
-  object,
-  sf,
-  dates,
-  points_id,
-  .topo = NULL,
-  .as_sf = TRUE
-)
+meteoland_points_interpolation(object, sf, dates)
 }
 \arguments{
 \item{object}{\code{lfcMeteoland} object, as created by
@@ -23,14 +16,8 @@ meteoland_points_interpolation(
 interpolate (i.e. \code{c("2020-04-25", "2020-04-30")}). See details for
 more information.}
 
-\item{points_id}{character with the name of the variable holding the points
-id on the sf object}
-
 \item{.topo}{optional custom SpatialPointsTopology object. If not provided
 topology will be retrieved from database (only for Catalonia)}
-
-\item{.as_sf}{logical indicating if the returned object should be an sf
-object (default) or an SpatialPointsMetereology object (FALSE)}
 }
 \value{
 An sf object if \code{.as_sf} is TRUE (default), an
@@ -60,7 +47,7 @@ if (interactive()) {
   dplyr::select(plot_id)
 
   meteoland_points_interpolation(
-    meteolanddb, sf_points, c(Sys.Date()-1, Sys.Date()-2, "plot_id")
+    meteolanddb, sf_points, c(Sys.Date()-1, Sys.Date()-2)
   )
 }
 
