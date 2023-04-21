@@ -16,7 +16,6 @@ check_args_for <- function(
   sf = NULL, points = NULL, polygons = NULL, date = NULL
 ) {
 
-  # browser()
   # characters
   if (!rlang::is_null(character)) {
     not_complying <- character |>
@@ -726,13 +725,17 @@ get_raster_from_db <- function(
     .con = conn
   )
 
-  db_band_names <- pool::dbGetQuery(conn, band_names_query)[["band_names"]]
+  db_band_names <- try({pool::dbGetQuery(conn, band_names_query)[["band_names"]]})
 
-  db_band_names <- db_band_names |>
-    as.character() |>
-    stringr::str_remove_all(pattern = "[{|}]*") |>
-    stringr::str_split(pattern = ',', simplify = FALSE) |>
-    magrittr::extract2(1)
+  if (inherits(db_band_names, "try-error")) {
+    db_band_names <- letters[db_band_index]
+  } else {
+    db_band_names <- db_band_names |>
+      as.character() |>
+      stringr::str_remove_all(pattern = "[{|}]*") |>
+      stringr::str_split(pattern = ',', simplify = FALSE) |>
+      magrittr::extract2(1)
+  }
 
 
   if (!rlang::is_logical(bands)) {
@@ -813,7 +816,7 @@ get_raster_from_db <- function(
 
     # build the subquery
     clip_subquery <- glue::glue_sql(
-      " WHERE ST_Intersects({`rast_column`}, ST_GeomFromEWKT({polygon_ewkt}))) as a",
+      " WHERE ST_Intersects({`rast_column`}, ST_GeomFromEWKT({polygon_ewkt}))) as tururu",
       .con = conn
     )
   }

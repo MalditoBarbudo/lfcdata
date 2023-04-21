@@ -81,7 +81,7 @@ lfcCatDrought <- R6::R6Class(
     },
 
     get_raster = function(
-      date, spatial = 'stars'
+      date, spatial = 'stars', rast_column = "rast", bands = TRUE, clip = NULL
     ) {
       # argument validation
       check_args_for(
@@ -97,22 +97,36 @@ lfcCatDrought <- R6::R6Class(
         "catdrought_low_{date_parsed}"
       )
 
-      res <- private$data_cache[[raster_table_name]] %||% {
+      cache_name <- glue::glue("{raster_table_name}_{rlang::hash(bands)}{rlang::hash(clip)}")
+
+      res <- private$data_cache[[cache_name]] %||% {
         # pool checkout
-        pool_checkout <- pool::poolCheckout(private$pool_conn)
+        # pool_checkout <- pool::poolCheckout(private$pool_conn)
 
         message(
           "Querying raster from LFC database, ",
           "this can take a while..."
         )
 
+        # get the fixed table name (as catdrought uses the daily schema)
+        schema <- "daily"
+        raster_table_name <- glue::glue_sql("{`schema`}.{`raster_table_name`}", .con = private$pool_conn)
+
         # try to get the raster
         catdrought_raster <- try({
-          rpostgis::pgGetRast(
-            pool_checkout, name = c('daily', raster_table_name), bands = TRUE
+          get_raster_from_db(
+            private$pool_conn,
+            # c
+            raster_table_name,
+            rast_column, bands, clip
           )
         })
-        pool::poolReturn(pool_checkout)
+        # catdrought_raster <- try({
+        #   rpostgis::pgGetRast(
+        #     pool_checkout, name = c('daily', raster_table_name), bands = TRUE
+        #   )
+        # })
+        # pool::poolReturn(pool_checkout)
 
         # if there is an error, stop
         if (
@@ -130,12 +144,12 @@ lfcCatDrought <- R6::R6Class(
           'DDS', 'DeepDrainage', 'Eplant', 'Esoil', 'Infiltration',
           'Interception', 'LAI', 'LMFC', 'PET', 'Precipitation', 'Psi', 'REW',
           'Runoff', 'Theta'
-        )
+        )[bands]
 
         message("Done")
 
         # update cache
-        private$data_cache[[raster_table_name]] <- catdrought_raster
+        private$data_cache[[cache_name]] <- catdrought_raster
         # return the raster
         catdrought_raster
       }
@@ -374,12 +388,12 @@ lfcCatDrought <- R6::R6Class(
 #' }
 #'
 #' @export
-catdrought_get_raster <- function(object, date, spatial = 'stars') {
+catdrought_get_raster <- function(object, date, spatial = 'stars', rast_column = "rast", bands = TRUE, clip = NULL) {
   # argument validation
   # NOTE: variables and spatial are validated in the method
   check_class_for(object, 'lfcCatDrought')
   # call to the class method
-  object$get_raster(date, spatial)
+  object$get_raster(date, spatial, rast_column, bands, clip)
 }
 
 #' Create time series for CatDrought variables for the current year
