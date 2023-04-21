@@ -1,6 +1,6 @@
 ## class object creation works ####
 test_that("class object creation works", {
-  expect_true(inherits(siteDrought(), c('lfcCatDrought')))
+  expect_true(inherits(siteDrought(), c('lfcsiteDrought')))
   expect_true(rlang::is_function(siteDrought()$get_data))
   expect_true(rlang::is_function(siteDrought()$avail_tables))
   expect_true(rlang::is_function(siteDrought()$describe_table))
