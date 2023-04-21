@@ -273,6 +273,11 @@ test_that("points_interpolation method works", {
   #     sf_points, c(as.character(Sys.Date() - 2), as.character(Sys.Date() + 1))
   #   )), "Some dates"
   # )
+  one_day_missing_interpolation <- suppressWarnings(
+    meteolanddb$points_interpolation(
+      sf_points, c(as.character(Sys.Date() - 2), as.character(Sys.Date() + 1))
+    )
+  )
 
   expect_equal(nrow(one_day_missing_interpolation), 2*5)
   expect_equal(ncol(one_day_missing_interpolation), length(expected_names))

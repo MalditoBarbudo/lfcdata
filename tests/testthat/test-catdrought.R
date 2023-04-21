@@ -7,7 +7,7 @@ test_that("class object creation works", {
   expect_true(rlang::is_function(catdrought()$get_current_time_series))
 })
 
-#catdroughtdb to avoid call too often
+# catdroughtdb to avoid call too often
 catdroughtdb <- catdrought()
 # dates for testing
 date_to_check <- as.character(Sys.Date() - sample(1:364, 1))
