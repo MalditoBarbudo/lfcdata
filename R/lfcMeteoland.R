@@ -286,9 +286,15 @@ lfcMeteoland <- R6::R6Class(
     },
 
     # get_lowres_raster method.
-    # Meteoland db is a postgis db so we need to access with rpostgis and
+    # Meteoland db is a postgis db so we need to
     # retrieve the 1000x1000 raster table for the specified date.
-    get_lowres_raster = function(date, spatial = 'stars') {
+    # 2023-04-21: rpostgis will be retired, so we implement a function to read rasters from
+    # postgis (get_raster_from_db)
+    get_lowres_raster = function(
+      date, spatial = 'stars',
+      # get_raster specific options
+      rast_column = "rast", bands = TRUE, clip = NULL
+    ) {
 
       # argument validation
       check_args_for(
@@ -311,9 +317,8 @@ lfcMeteoland <- R6::R6Class(
         )
       }
 
-      res <- private$data_cache[[raster_table_name]] %||% {
-        # pool checkout
-        # pool_checkout <- pool::poolCheckout(private$pool_conn)
+      cache_name <- glue::glue("{raster_table_name}_{rlang::hash(bands)}{rlang::hash(clip)}")
+      res <- private$data_cache[[cache_name]] %||% {
 
         message(
           'Querying low res (1000x1000 meters) raster from LFC database',
@@ -323,14 +328,10 @@ lfcMeteoland <- R6::R6Class(
         # get raster
         meteoland_raster <- try(
           get_raster_from_db(
-            private$pool_conn, raster_table_name
+            private$pool_conn, raster_table_name,
+            rast_column, bands, clip
           )
-          # rpostgis::pgGetRast(
-          #   pool_checkout, raster_table_name, bands = TRUE
-          # )
         )
-        # close checkout
-        # pool::poolReturn(pool_checkout)
 
         # check if raster inherits from try-error to stop
         if (inherits(meteoland_raster, "try-error")) {
@@ -340,16 +341,21 @@ lfcMeteoland <- R6::R6Class(
         message('Done')
 
         # update cache
-        private$data_cache[[raster_table_name]] <- meteoland_raster
+        private$data_cache[[cache_name]] <- meteoland_raster
         # return raster
         meteoland_raster
       }
 
-      # now we can return a raster (just as is) or a stars object
+      # now we can return a SpatRaster (just as is) or a stars object
       if (spatial == 'stars') {
         res <- res |>
-          stars::st_as_stars() |>
-          split("band")
+          stars::st_as_stars()
+        # only one band, stars added as attribute. More than one, stars added as
+        # dimension, so we split them to attributes:
+        if (rlang::is_logical(bands) || length(bands) > 1) {
+          res <- res |>
+            split("band")
+        }
       }
 
       # return the raster
@@ -780,8 +786,6 @@ meteoland_historical_points_interpolation <- function(
 #'  actual date minus one day.
 #'  Interpolation for polygons is made based on a 1000x1000 meters topology
 #'  raster.
-#'
-#' @examples
 #'
 #' @export
 meteoland_raster_interpolation <- function(object, sf, dates) {

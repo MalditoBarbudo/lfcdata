@@ -76,8 +76,8 @@ test_that("get_data method works", {
 test_that("get_lowres_raster method works", {
   skip_on_cran()
   skip_on_travis()
-  expect_is(meteolanddb$get_lowres_raster(start_date, 'raster'), 'RasterBrick')
-  expect_is(meteolanddb$get_lowres_raster('1981-04-25', 'raster'), 'RasterBrick')
+  expect_s4_class(meteolanddb$get_lowres_raster(start_date, 'raster'), 'SpatRaster')
+  expect_s4_class(meteolanddb$get_lowres_raster('1981-04-25', 'raster'), 'SpatRaster')
   expect_s3_class(meteolanddb$get_lowres_raster(start_date, 'stars'), 'stars')
   expect_error(meteolanddb$get_lowres_raster(25, 'stars'), "not character")
   expect_error(meteolanddb$get_lowres_raster(start_date, 25), "not character")
@@ -113,6 +113,94 @@ test_that("get_lowres_raster method works", {
         )
     )
   )
+
+  # add tests for clip, bands...
+  ## tests for bands
+  expect_true(
+    all(
+      names(meteolanddb$get_lowres_raster(end_date, 'stars', bands = c(1,4))) %in%
+        c("MeanTemperature", "MeanRelativeHumidity")
+    )
+  )
+
+  expect_true(
+    all(
+      names(meteolanddb$get_lowres_raster(historical_end_date, 'stars', bands = c(1,4))) %in%
+        c("MeanTemperature", "Precipitation")
+    )
+  )
+
+  ## tests for clip
+  expect_true(
+    all(
+      names(meteolanddb$get_lowres_raster(end_date, 'stars', clip = dplyr::slice(sf_polygons, 1))) %in%
+        c(
+          "MeanTemperature", "MinTemperature", "MaxTemperature",
+          "MeanRelativeHumidity", "MinRelativeHumidity", "MaxRelativeHumidity",
+          "Precipitation", "Radiation", "WindSpeed", "PET", "ThermalAmplitude"
+        )
+    )
+  )
+
+  expect_true(
+    all(
+      names(meteolanddb$get_lowres_raster(historical_end_date, 'stars', clip = dplyr::slice(sf_polygons, 1))) %in%
+        c(
+          "MeanTemperature", "MinTemperature", "MaxTemperature",
+          "MeanRelativeHumidity", "MinRelativeHumidity", "MaxRelativeHumidity",
+          "Precipitation", "Radiation", "WindSpeed", "PET", "ThermalAmplitude"
+        )
+    )
+  )
+
+  clipped_raster <- meteolanddb$get_lowres_raster(
+    historical_end_date, 'stars', clip = dplyr::slice(sf_polygons, 1)
+  )
+  not_clipped_raster <- meteolanddb$get_lowres_raster(historical_start_date, 'stars')
+
+  expect_true(
+    (sf::st_bbox(not_clipped_raster) |> sf::st_as_sfc() |> sf::st_area()) >
+      (sf::st_bbox(clipped_raster) |> sf::st_as_sfc() |> sf::st_area())
+  )
+
+  ## tests for clip and bands
+  expect_true(
+    all(
+      names(meteolanddb$get_lowres_raster(end_date, 'stars', bands = c(1,4), clip = dplyr::slice(sf_polygons, 1))) %in%
+        c("MeanTemperature", "MeanRelativeHumidity")
+    )
+  )
+
+  clipped_and_banded_raster <- meteolanddb$get_lowres_raster(
+    historical_end_date, 'stars', bands = c(1,4), clip = dplyr::slice(sf_polygons, 1)
+  )
+  expect_identical(sf::st_bbox(clipped_raster), sf::st_bbox(clipped_and_banded_raster))
+
+  ## tests for more than one polygon in clip
+  expect_true(
+    all(
+      names(meteolanddb$get_lowres_raster(end_date, 'stars', bands = c(1,4), clip = sf_polygons)) %in%
+        c("MeanTemperature", "MeanRelativeHumidity")
+    )
+  )
+
+  multipolygon_clipped_and_banded_raster <-
+    meteolanddb$get_lowres_raster(historical_end_date, 'stars', bands = c(1,4), clip = sf_polygons)
+
+  expect_true(
+    (sf::st_bbox(multipolygon_clipped_and_banded_raster) |> sf::st_as_sfc() |> sf::st_area()) >
+      (sf::st_bbox(clipped_and_banded_raster) |> sf::st_as_sfc() |> sf::st_area())
+  )
+
+  ## test only one band
+  expect_true(
+    all(
+      names(meteolanddb$get_lowres_raster(historical_end_date, 'stars', bands = 1, clip = sf_polygons)) %in%
+        c("MeanTemperature")
+    )
+  )
+
+
 })
 
 ## points interpolation works ####

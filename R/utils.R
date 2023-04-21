@@ -695,8 +695,6 @@ get_raster_from_db <- function(
   conn, table_name, rast_column = "rast", bands = TRUE, clip = NULL
 ) {
 
-  browser()
-
   ## assertions
   check_args_for(
     character = list(table_name = table_name, rast_column = rast_column)
@@ -764,6 +762,21 @@ get_raster_from_db <- function(
   } else if (length(raster_srid) < 1) {
     stop("Raster table is empty")
   }
+  # query to get the custom ref for debugging purposes
+  # pool::dbGetQuery(
+  #   conn,
+  #   glue::glue_sql("SELECT * FROM spatial_ref_sys WHERE srid = {raster_srid}")
+  # )
+
+  # historical rasters have custom srids, why? i don't know but for now we get this
+  # shorted here:
+  if (raster_srid == 880001) {
+    # raster_srid <- 3043
+    raster_srid <- pool::dbGetQuery(
+      conn,
+      glue::glue_sql("SELECT * FROM spatial_ref_sys WHERE srid = {raster_srid}")
+    )$proj4text
+  }
 
   ## alignment
   # Should I check the aligment??? Not for now
@@ -773,6 +786,12 @@ get_raster_from_db <- function(
   clip_subquery <- glue::glue_sql(") as a", .con = conn)
   # if clip is an sf, the query needs a WHERE with the intersection with the polygon
   if (!rlang::is_null(clip)) {
+
+    #### TODO: What to do when clip has more than one polgyon:
+    ####    - option 1: union all (I go with this one)
+    ####    - option 2: filter the first (Nope)
+    ####    - non an option: looping through polygons and returning a raster for each polygon
+
     # check that clip is an sf and a polygon
     check_args_for(
       sf = list(clip = clip),
@@ -780,13 +799,21 @@ get_raster_from_db <- function(
     )
     # get the poly wkt
     polygon_ewkt <- clip |>
+      sf::st_union() |>
       sf::st_transform(crs = raster_srid) |>
       sf::st_geometry() |>
       sf::st_as_text(EWKT = TRUE)
 
+    # if crs is 88* (custom), we need to add a fix to the intersect
+    if (is.character(raster_srid)) {
+      polygon_ewkt <- glue::glue(
+        "SRID=880001;{polygon_ewkt}"
+      )
+    }
+
     # build the subquery
     clip_subquery <- glue::glue_sql(
-      "WHERE ST_Intersects({`rast_column`}, ST_GeomFromEWKT({polygon_ewkt}))) as a",
+      " WHERE ST_Intersects({`rast_column`}, ST_GeomFromEWKT({polygon_ewkt}))) as a",
       .con = conn
     )
   }
@@ -796,8 +823,8 @@ get_raster_from_db <- function(
     "SELECT
         ST_XMax(ST_Envelope(rast)) as xmax,
         ST_XMin(ST_Envelope(rast)) as xmin,
-        ST_XMax(ST_Envelope(rast)) as xmax,
-        ST_XMin(ST_Envelope(rast)) as xmin,
+        ST_YMax(ST_Envelope(rast)) as ymax,
+        ST_YMin(ST_Envelope(rast)) as ymin,
         ST_Width(rast) as ncols,
         ST_Height(rast) as nrows
     FROM
@@ -808,8 +835,14 @@ get_raster_from_db <- function(
 
   raster_info <- pool::dbGetQuery(conn, query_info)
 
+  # raster values
+  unnest_subquery <- glue::glue_sql(
+    "unnest(ST_DumpValues(rast, {db_band_index})) as {`db_band_names`}", .con = conn
+  ) |>
+    glue::glue_sql_collapse(sep = ", ")
+
   query_values <- glue::glue_sql(
-    "SELECT ST_DumpValues(rast) as vals
+    "SELECT {unnest_subquery}
     FROM
         (SELECT ST_UNION({`rast_column`}) rast
         FROM {`table_name`}{clip_subquery};",
@@ -818,12 +851,26 @@ get_raster_from_db <- function(
 
   raster_values <- pool::dbGetQuery(conn, query_values)
 
+  if (all(is.na(raster_values))) {
+    stop("No values found in the raster table")
+  }
 
+  ## build the raster object
+  # we use the first band to build the base raster
+  res <- terra::rast(
+    nrows = raster_info$nrows, ncols = raster_info$ncols,
+    xmin = raster_info$xmin, xmax = raster_info$xmax,
+    ymin = raster_info$ymin, ymax = raster_info$ymax,
+    crs = sf::st_crs(raster_srid)[["wkt"]],
+    vals = raster_values[, db_band_names[1]],
+    names = db_band_names[1]
+  )
+  # and if there is more bands, then we add them to the raster
+  if (length(db_band_index) > 1) {
+    for (index in 2:length(db_band_index)) {
+      res[[db_band_names[index]]] <- raster_values[, db_band_names[index]]
+    }
+  }
 
-
-
-
-
-
-
+  return(res)
 }
