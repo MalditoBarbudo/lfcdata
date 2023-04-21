@@ -123,7 +123,7 @@ lfcLiDAR <- R6::R6Class(
       # chache name, as to avoid caching the same if the same tables, but in
       # different order, are provided
       cache_name <- glue::glue(
-        "raster_{rlang::hash(variables)}"
+        "raster_{rlang::hash(variables)}{rlang::hash(clip)}"
         # glue::glue_collapse(variables |> sort(), sep = '_'), '_raster'
       )
 
