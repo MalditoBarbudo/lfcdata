@@ -107,7 +107,7 @@ lfcLiDAR <- R6::R6Class(
     # get_lowres_raster method.
     # LiDAR db is a postgis db so we need to access with rpostgis and retrieve the
     # 400x400 raster table.
-    get_lowres_raster = function(variables, spatial = 'stars') {
+    get_lowres_raster = function(variables, spatial = 'stars', rast_column = 'rast', clip = NULL) {
 
       # argument validation
       check_args_for(
@@ -122,7 +122,8 @@ lfcLiDAR <- R6::R6Class(
       # chache name, as to avoid caching the same if the same tables, but in
       # different order, are provided
       cache_name <- glue::glue(
-        glue::glue_collapse(variables |> sort(), sep = '_'), '_raster'
+        "raster_{rlang::hash(variables)}"
+        # glue::glue_collapse(variables |> sort(), sep = '_'), '_raster'
       )
 
       # check cache, retrieve it or make the query
@@ -140,7 +141,7 @@ lfcLiDAR <- R6::R6Class(
           )
 
         # temp persistent conn object (rpostgis not working with pool objects)
-        temp_postgresql_conn <- pool::poolCheckout(private$pool_conn)
+        # temp_postgresql_conn <- pool::poolCheckout(private$pool_conn)
         message(
           'Querying low res (400x400m) raster from LFC database',
           ', this can take a while...'
@@ -148,13 +149,19 @@ lfcLiDAR <- R6::R6Class(
         # let's try to get the raster. With any error, the pool checkout is
         # not returned resulting in dangling db connections, so we use `try``
         lidar_raster <- try(
-          rpostgis::pgGetRast(
-            temp_postgresql_conn, c('public', 'lidar_stack_utm'),
-            bands = variables_as_numbers
+          get_raster_from_db(
+            private$pool_conn, table_name = "lidar_stack_utm",
+            rast_column = rast_column, bands = variables_as_numbers, clip = clip
           )
         )
+        # lidar_raster <- try(
+        #   rpostgis::pgGetRast(
+        #     temp_postgresql_conn, c('public', 'lidar_stack_utm'),
+        #     bands = variables_as_numbers
+        #   )
+        # )
         # return the pool checkout, before anything else
-        pool::poolReturn(temp_postgresql_conn)
+        # pool::poolReturn(temp_postgresql_conn)
         # check if lidar_raster inherits from try-error to stop
         if (inherits(lidar_raster, "try-error")) {
           stop("Can not connect to the database:\n", lidar_raster[1])
@@ -302,12 +309,12 @@ lfcLiDAR <- R6::R6Class(
       poly_area <- as.numeric(sf::st_area(sf_transformed)) / 1000000
 
       # pool checkout
-      pool_checkout <- pool::poolCheckout(private$pool_conn)
+      # pool_checkout <- pool::poolCheckout(private$pool_conn)
 
       # feature query. In this query we create the simple feature table-like
       feat_query <- glue::glue_sql(
         "SELECT {poly_id} As poly_id, ST_GeomFromEWKT({wkt_poly}) As geometry",
-        .con = pool_checkout
+        .con = private$pool_conn
       )
 
       # stats query. In this query, IIUC, we join the raster to the feature on the tiles
@@ -323,10 +330,10 @@ lfcLiDAR <- R6::R6Class(
          WHERE
            ST_Intersects(rast, geometry)
          GROUP BY poly_id;",
-        .con = pool_checkout
+        .con = private$pool_conn
       )
 
-      pool::poolReturn(pool_checkout)
+      # pool::poolReturn(pool_checkout)
 
       # execute the query and retrieve the data
       # polygon_stats_pre_check <-
@@ -362,49 +369,6 @@ lfcLiDAR <- R6::R6Class(
         dplyr::select(
           poly_id, poly_km2, everything(), -sum
         )
-
-
-
-      # polygon stats could be empty (polygon cover raster area with no data)
-      # if (nrow(polygon_stats_pre_check) < 1) {
-      #   polygon_stats <- dplyr::tibble(
-      #     poly_id = poly_id,
-      #     # area of the polygon
-      #     poly_km2 = poly_area,
-      #     # regular stats
-      #     !! glue::glue("{toupper(var_name)}_pixels") := NA_real_,
-      #     !! glue::glue("{toupper(var_name)}_average") := NA_real_,
-      #     !! glue::glue("{toupper(var_name)}_min") := NA_real_,
-      #     !! glue::glue("{toupper(var_name)}_max") := NA_real_,
-      #     !! glue::glue("{toupper(var_name)}_sd") := NA_real_,
-      #     # area covered by raster (km2). Each pixel 20x20m=400m2=4e-04km2
-      #     !! glue::glue("{toupper(var_name)}_km2") := NA_real_,
-      #     # prop of poly area covered by raster
-      #     !! glue::glue("{toupper(var_name)}_km2_perc") := NA_real_
-      #   )
-      # } else {
-      #   polygon_stats <-
-      #     polygon_stats_pre_check |>
-      #     dplyr::summarise(
-      #       # area of the polygon
-      #       poly_km2 = poly_area,
-      #       # regular stats
-      #       !! glue::glue("{toupper(var_name)}_pixels") := sum(.data[['count']]),
-      #       !! glue::glue("{toupper(var_name)}_average") :=
-      #         sum(.data[['count']]*.data[['mean']])/sum(.data[['count']]),
-      #       !! glue::glue("{toupper(var_name)}_min") := min(.data[['min']]),
-      #       !! glue::glue("{toupper(var_name)}_max") := max(.data[['max']]),
-      #       !! glue::glue("{toupper(var_name)}_sd") := cochrane_sd_reduce(
-      #         n = .data[['count']], m = .data[['mean']], s = .data[['stddev']]
-      #       ),
-      #       # area covered by raster (km2). Each pixel 20x20m=400m2=4e-04km2
-      #       !! glue::glue("{toupper(var_name)}_km2") :=
-      #         !! rlang::sym(glue::glue("{toupper(var_name)}_pixels")) * 4e-04,
-      #       # prop of poly area covered by raster
-      #       !! glue::glue("{toupper(var_name)}_km2_perc") :=
-      #         100 * !! rlang::sym(glue::glue("{toupper(var_name)}_km2")) / poly_km2
-      #     )
-      # }
 
       cat(
         crayon::green$bold(glue::glue(" done.")), '\n'
@@ -460,7 +424,7 @@ lfcLiDAR <- R6::R6Class(
       var_name <- tolower(variable)
 
       # pool checkout
-      pool_checkout <- pool::poolCheckout(private$pool_conn)
+      # pool_checkout <- pool::poolCheckout(private$pool_conn)
 
       # SQL query
       point_query <- glue::glue_sql(
@@ -473,10 +437,10 @@ lfcLiDAR <- R6::R6Class(
            rast,
            ST_Transform(ST_GeomFromEWKT({wkt_point}),25831)
          );",
-        .con = pool_checkout
+        .con = private$pool_conn
       )
 
-      pool::poolReturn(pool_checkout)
+      # pool::poolReturn(pool_checkout)
 
       # execute the query and return the result
       res <-
@@ -612,12 +576,12 @@ lidar_get_data <- function(
 #' }
 #'
 #' @export
-lidar_get_lowres_raster <- function(object, variables, spatial = 'stars') {
+lidar_get_lowres_raster <- function(object, variables, spatial = 'stars', rast_column = 'rast', clip = NULL) {
   # argument validation
   # NOTE: variables and spatial are validated in the method
   check_class_for(object, 'lfcLiDAR')
   # call to the class method
-  object$get_lowres_raster(variables, spatial)
+  object$get_lowres_raster(variables, spatial, rast_column, clip)
 }
 
 #' Get the available tables in LiDAR db

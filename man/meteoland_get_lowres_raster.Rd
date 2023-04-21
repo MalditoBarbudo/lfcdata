@@ -4,7 +4,14 @@
 \alias{meteoland_get_lowres_raster}
 \title{Access to the low resolution (1000x1000m) rasters in the Meteoland database}
 \usage{
-meteoland_get_lowres_raster(object, date, spatial = "stars")
+meteoland_get_lowres_raster(
+  object,
+  date,
+  spatial = "stars",
+  rast_column = "rast",
+  bands = TRUE,
+  clip = NULL
+)
 }
 \arguments{
 \item{object}{\code{lfcMeteoland} object, as created by

@@ -4,7 +4,13 @@
 \alias{lidar_get_lowres_raster}
 \title{Access to the low resolution (400x400m) rasters in the LiDAR database}
 \usage{
-lidar_get_lowres_raster(object, variables, spatial = "stars")
+lidar_get_lowres_raster(
+  object,
+  variables,
+  spatial = "stars",
+  rast_column = "rast",
+  clip = NULL
+)
 }
 \arguments{
 \item{object}{\code{lfcLiDAR} object, as created by \code{\link{lidar}}}

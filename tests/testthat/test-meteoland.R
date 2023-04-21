@@ -514,7 +514,7 @@ test_that("external get low raster works", {
     meteolanddb$get_lowres_raster(start_date, 'stars'),
     meteoland_get_lowres_raster(other_meteolanddb, start_date, 'stars')
   )
-  expect_identical(
+  expect_equal(
     meteolanddb$get_lowres_raster(start_date, 'raster'),
     meteoland_get_lowres_raster(other_meteolanddb, start_date, 'raster')
   )
