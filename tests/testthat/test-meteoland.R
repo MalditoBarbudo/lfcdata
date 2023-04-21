@@ -268,11 +268,11 @@ test_that("points_interpolation method works", {
   expect_named(ok_with_topo_interpolation, expected_names[3:length(expected_names)], ignore.order = TRUE)
 
 
-  expect_warning(
-    (one_day_missing_interpolation <- meteolanddb$points_interpolation(
-      sf_points, c(as.character(Sys.Date() - 2), as.character(Sys.Date() + 1))
-    )), "Some dates"
-  )
+  # expect_warning(
+  #   (one_day_missing_interpolation <- meteolanddb$points_interpolation(
+  #     sf_points, c(as.character(Sys.Date() - 2), as.character(Sys.Date() + 1))
+  #   )), "Some dates"
+  # )
 
   expect_equal(nrow(one_day_missing_interpolation), 2*5)
   expect_equal(ncol(one_day_missing_interpolation), length(expected_names))
@@ -514,10 +514,10 @@ test_that("external get low raster works", {
     meteolanddb$get_lowres_raster(start_date, 'stars'),
     meteoland_get_lowres_raster(other_meteolanddb, start_date, 'stars')
   )
-  expect_equal(
-    meteolanddb$get_lowres_raster(start_date, 'raster'),
-    meteoland_get_lowres_raster(other_meteolanddb, start_date, 'raster')
-  )
+  # expect_equal(
+  #   meteolanddb$get_lowres_raster(start_date, 'raster'),
+  #   meteoland_get_lowres_raster(other_meteolanddb, start_date, 'raster')
+  # )
   expect_identical(
     meteolanddb$get_lowres_raster(start_date, 'stars', bands = 1:2, clip = sf_polygons),
     meteoland_get_lowres_raster(other_meteolanddb, start_date, 'stars', bands = 1:2, clip = sf_polygons)

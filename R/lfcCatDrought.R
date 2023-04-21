@@ -131,7 +131,7 @@ lfcCatDrought <- R6::R6Class(
         # if there is an error, stop
         if (
           inherits(catdrought_raster, "try-error") && stringr::str_detect(
-            catdrought_raster, "raster column 'rast' not found"
+            catdrought_raster, "table missing"
           )
         ) {
           stop(glue::glue("Selected date {date} is not available in the database"))

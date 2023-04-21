@@ -35,5 +35,7 @@ Suggests:
     knitr,
     rmarkdown
 VignetteBuilder: knitr
+Config/testthat/edition: 3
+Config/testthat/parallel: true
 URL: https://github.com/MalditoBarbudo/lfcdata
 BugReports: https://github.com/MalditoBarbudo/lfcdata/issues
