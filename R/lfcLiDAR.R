@@ -105,8 +105,9 @@ lfcLiDAR <- R6::R6Class(
     },
 
     # get_lowres_raster method.
-    # LiDAR db is a postgis db so we need to access with rpostgis and retrieve the
-    # 400x400 raster table.
+    # LiDAR db is a postgis db so we need to retrieve the 400x400 raster table.
+    # 2023-04-21: rpostgis will be retired, so we implement a function to read rasters from
+    # postgis (get_raster_from_db)
     get_lowres_raster = function(variables, spatial = 'stars', rast_column = 'rast', clip = NULL) {
 
       # argument validation
@@ -140,8 +141,6 @@ lfcLiDAR <- R6::R6Class(
             )
           )
 
-        # temp persistent conn object (rpostgis not working with pool objects)
-        # temp_postgresql_conn <- pool::poolCheckout(private$pool_conn)
         message(
           'Querying low res (400x400m) raster from LFC database',
           ', this can take a while...'
@@ -154,14 +153,6 @@ lfcLiDAR <- R6::R6Class(
             rast_column = rast_column, bands = variables_as_numbers, clip = clip
           )
         )
-        # lidar_raster <- try(
-        #   rpostgis::pgGetRast(
-        #     temp_postgresql_conn, c('public', 'lidar_stack_utm'),
-        #     bands = variables_as_numbers
-        #   )
-        # )
-        # return the pool checkout, before anything else
-        # pool::poolReturn(temp_postgresql_conn)
         # check if lidar_raster inherits from try-error to stop
         if (inherits(lidar_raster, "try-error")) {
           stop("Can not connect to the database:\n", lidar_raster[1])
