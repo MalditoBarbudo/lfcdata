@@ -19,7 +19,6 @@ Imports:
     sf,
     rlang,
     glue,
-    rpostgis (>= 1.4.3),
     stars,
     magrittr,
     crayon,
@@ -28,7 +27,8 @@ Imports:
     meteoland,
     dbplyr,
     tictoc,
-    withr
+    withr,
+    terra
 RoxygenNote: 7.2.3
 Suggests: 
     testthat (>= 2.1.0),
