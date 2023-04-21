@@ -509,13 +509,18 @@ test_that("raster_interpolation method works", {
 test_that("external get low raster works", {
   skip_on_cran()
   skip_on_travis()
+  other_meteolanddb <- meteoland()
   expect_identical(
     meteolanddb$get_lowres_raster(start_date, 'stars'),
-    meteoland_get_lowres_raster(meteolanddb, start_date, 'stars')
+    meteoland_get_lowres_raster(other_meteolanddb, start_date, 'stars')
   )
   expect_identical(
     meteolanddb$get_lowres_raster(start_date, 'raster'),
-    meteoland_get_lowres_raster(meteolanddb, start_date, 'raster')
+    meteoland_get_lowres_raster(other_meteolanddb, start_date, 'raster')
+  )
+  expect_identical(
+    meteolanddb$get_lowres_raster(start_date, 'stars', bands = 1:2, clip = sf_polygons),
+    meteoland_get_lowres_raster(other_meteolanddb, start_date, 'stars', bands = 1:2, clip = sf_polygons)
   )
   expect_error(
     meteoland_get_lowres_raster('meteolanddb', start_date, 'raster'),

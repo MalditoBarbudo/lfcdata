@@ -649,12 +649,12 @@ lfcMeteoland <- R6::R6Class(
 #' }
 #'
 #' @export
-meteoland_get_lowres_raster <- function(object, date, spatial = 'stars') {
+meteoland_get_lowres_raster <- function(object, date, spatial = 'stars', rast_column = "rast", bands = TRUE, clip = NULL) {
   # argument validation
   # NOTE: variables and spatial are validated in the method
   check_class_for(object, 'lfcMeteoland')
   # call to the class method
-  object$get_lowres_raster(date, spatial)
+  object$get_lowres_raster(date, spatial, rast_column, bands, clip)
 }
 
 #' Current points (coordinates) interpolation
