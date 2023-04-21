@@ -1,6 +1,6 @@
 ## class object creation works ####
 test_that("class object creation works", {
-  expect_is(lidar(), c('lfcLiDAR'))
+  expect_true(inherits(lidar(), c('lfcLiDAR')))
   # expect_equal(lfcdata:::lfcLiDAR$new(), lidar())
   expect_true(rlang::is_function(lidar()$get_data))
   expect_true(rlang::is_function(lidar()$get_lowres_raster))
@@ -71,7 +71,7 @@ test_that("avail_tables method works", {
 test_that("describe_var method works", {
   skip_on_cran()
   skip_on_travis()
-  expect_is(lidardb$describe_var('AB'), c('lfcLiDAR'))
+  expect_true(inherits(lidardb$describe_var('AB'), c('lfcLiDAR')))
   expect_output(lidardb$describe_var('AB'))
   expect_output(lidardb$describe_var(c('AB', 'DBH')))
   expect_error(lidardb$describe_var(c('AB', 'DBH', 'tururu')), 'Must be one of')

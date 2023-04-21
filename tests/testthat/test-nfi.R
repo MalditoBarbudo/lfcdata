@@ -1,5 +1,5 @@
 test_that("class object creation works", {
-  expect_is(nfi(), c('lfcNFI'))
+  expect_true(inherits(nfi(), c('lfcNFI')))
   # expect_equal(lfcdata:::lfcNFI$new(), nfi())
   expect_true(rlang::is_function(nfi()$get_data))
   expect_true(rlang::is_function(nfi()$avail_tables))
@@ -46,7 +46,7 @@ test_that("avail_tables method works", {
 test_that("describe_table method works", {
   skip_on_cran()
   skip_on_travis()
-  expect_is(nfidb$describe_table('plot_nfi_4_results'), c('lfcNFI'))
+  expect_true(inherits(nfidb$describe_table('plot_nfi_4_results'), c('lfcNFI')))
   expect_output(nfidb$describe_table('plot_nfi_4_results'))
   expect_output(nfidb$describe_table(c('plot_nfi_4_results', 'variables_thesaurus')))
   expect_error(nfidb$describe_table(c('plot_nfi_4_results', 'density_dead')), 'not found')
@@ -57,7 +57,7 @@ test_that("describe_table method works", {
 test_that("describe_var method works", {
   skip_on_cran()
   skip_on_travis()
-  expect_is(nfidb$describe_var('density'), c('lfcNFI'))
+  expect_true(inherits(nfidb$describe_var('density'), c('lfcNFI')))
   expect_output(nfidb$describe_var('density'))
   expect_output(nfidb$describe_var(c('density', 'density_dead')))
   expect_error(nfidb$describe_var(c('density', 'density_dead', 'tururu')), 'variable not found')

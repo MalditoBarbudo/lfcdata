@@ -1,5 +1,5 @@
 test_that("class object creation works", {
-  expect_is(allometries(), c('lfcAllometries'))
+  expect_true(inherits(allometries(), c('lfcAllometries')))
   # expect_equal(lfcdata:::lfcAllometries$new(), allometries())
   expect_true(rlang::is_function(allometries()$get_data))
   expect_true(rlang::is_function(allometries()$description))
@@ -119,7 +119,8 @@ test_that("calculate method works", {
 test_that("describe_var method works", {
   skip_on_cran()
   skip_on_travis()
-  expect_is(allomdb$describe_var('BR'), c('lfcAllometries'))
+
+  expect_true(inherits(allomdb$describe_var('BR'), c('lfcAllometries')))
   expect_output(allomdb$describe_var('BR'))
   expect_output(allomdb$describe_var(c('BR', 'DBH')))
   expect_output(allomdb$describe_var(c('BR', 'DBH', 'tururu')))

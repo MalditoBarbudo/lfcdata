@@ -12,7 +12,7 @@ sitedrdb <- lfcdata::siteDrought()
 #       .) Testar las principles funciones
 
 test_that("class object creation works", {
-  expect_is(lfcdata::siteDrought(), c('lfcsiteDrought'))
+  expect_true(inherits(siteDrought(), c('lfcsiteDrought')))
   # expect_equal(lfcdata:::lfcsiteDrought$new(), siteDrought())
   expect_true(rlang::is_function(sitedrdb$get_data))
   expect_true(rlang::is_function(sitedrdb$avail_tables))
@@ -63,8 +63,7 @@ test_that("avail_table method works", {
   skip_on_cran()
   skip_on_travis()
 
-  expect_is(sitedrdb$avail_tables(), c('character'))
-  expect_type(sitedrdb$avail_tables(),'character')
+  expect_type(sitedrdb$avail_tables(), 'character')
   expect_true("data_day_fire" == sitedrdb$avail_tables())
 
   # errors
@@ -87,7 +86,7 @@ test_that("describe_table method works", {
   skip_on_cran()
   skip_on_travis()
 
-  expect_is(sitedrdb$describe_table("data_day_fire"), c('lfcsiteDrought'))
+  expect_true(inherits(sitedrdb$describe_table("data_day_fire"), 'lfcsiteDrought'))
   expect_output(sitedrdb$describe_table("data_day_fire"))
 
   # errors
@@ -118,7 +117,7 @@ test_that("describe_var method works", {
   skip_on_cran()
   skip_on_travis()
 
-  expect_is(sitedrdb$describe_var("REW"),c('lfcsiteDrought'))
+  expect_true(inherits(sitedrdb$describe_var("REW"), c('lfcsiteDrought')))
   expect_output(sitedrdb$describe_var("Precipitation"))
   expect_output(sitedrdb$describe_var(c("REW","Precipitation")))
 

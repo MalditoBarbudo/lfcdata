@@ -4,7 +4,14 @@
 \alias{catdrought_get_raster}
 \title{Access to the rasters in the Catdrought database}
 \usage{
-catdrought_get_raster(object, date, spatial = "stars")
+catdrought_get_raster(
+  object,
+  date,
+  spatial = "stars",
+  rast_column = "rast",
+  bands = TRUE,
+  clip = NULL
+)
 }
 \arguments{
 \item{object}{\code{lfcCatDrought} object, as created by

@@ -1,6 +1,6 @@
 ## class object creation works ####
 test_that("class object creation works", {
-  expect_is(catdrought(), c('lfcCatDrought'))
+  expect_true(inherits(catdrought(), c('lfcCatDrought')))
   # expect_equal(lfcdata:::lfcCatDrought$new(), catdrought())
   expect_true(rlang::is_function(catdrought()$get_data))
   expect_true(rlang::is_function(catdrought()$get_raster))
@@ -65,7 +65,8 @@ test_that("get_data method works", {
 test_that("describe_var method works", {
   skip_on_cran()
   skip_on_travis()
-  expect_is(catdroughtdb$describe_var('REW'), c('lfcCatDrought'))
+
+  expect_true(inherits(catdroughtdb$describe_var('REW'), c('lfcCatDrought')))
   expect_output(catdroughtdb$describe_var('REW'))
   expect_output(catdroughtdb$describe_var(c('REW', 'DDS')))
   expect_error(catdroughtdb$describe_var(c('REW', 'DDS', 'tururu')), 'Must be one of')
@@ -77,8 +78,8 @@ test_that("describe_var method works", {
 test_that("get_raster method works", {
   skip_on_cran()
   skip_on_travis()
-  expect_is(
-    catdroughtdb$get_raster(date_to_check, 'raster'), 'RasterBrick'
+  expect_s4_class(
+    catdroughtdb$get_raster(date_to_check, 'raster'), 'SpatRaster'
   )
   expect_s3_class(
     catdroughtdb$get_raster(date_to_check, 'stars'), 'stars'
@@ -135,15 +136,15 @@ test_that("get_current_time_series method works", {
   )
 
   # ok
-  expect_is(
+  expect_s3_class(
     catdroughtdb$get_current_time_series(sf_points, 'Esoil'),
     'data.frame'
   )
-  expect_is(
+  expect_s3_class(
     catdroughtdb$get_current_time_series(sf_points_3043, 'Esoil'),
     'data.frame'
   )
-  expect_is(
+  expect_s3_class(
     catdroughtdb$get_current_time_series(sf_polygons, 'Esoil'),
     'data.frame'
   )
@@ -152,7 +153,7 @@ test_that("get_current_time_series method works", {
       c('day', 'polygon_id', 'count', 'sum', 'mean', 'stddev', 'min', 'max', 'stderror'))
   )
   # work with multipolygon (two rows for each quantile)
-  expect_is(
+  expect_s3_class(
     catdroughtdb$get_current_time_series(sf_polygons_naves, 'Esoil'),
     'data.frame'
   )

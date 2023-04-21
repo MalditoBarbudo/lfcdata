@@ -1,5 +1,5 @@
 test_that("class object creation works", {
-  expect_is(fes(), c('lfcFES'))
+  expect_true(inherits(fes(), c('lfcFES')))
   # expect_equal(lfcdata:::lfcFES$new(), fes())
   expect_true(rlang::is_function(fes()$get_data))
   expect_true(rlang::is_function(fes()$avail_tables))
@@ -55,7 +55,7 @@ test_that("avail_tables method works", {
 test_that("describe_table method works", {
   skip_on_cran()
   skip_on_travis()
-  expect_is(fesdb$describe_table('plot_nfi_4_results'), c('lfcFES'))
+  expect_true(inherits(fesdb$describe_table('plot_nfi_4_results'), c('lfcFES')))
   expect_output(fesdb$describe_table('plot_nfi_4_results'))
   expect_output(
     fesdb$describe_table(c('plot_nfi_4_results', 'variables_thesaurus'))
@@ -70,7 +70,7 @@ test_that("describe_table method works", {
 test_that("describe_var method works", {
   skip_on_cran()
   skip_on_travis()
-  expect_is(fesdb$describe_var('mushrooms_production'), c('lfcFES'))
+  expect_true(inherits(fesdb$describe_var('mushrooms_production'), c('lfcFES')))
   expect_output(fesdb$describe_var('mushrooms_production'))
   expect_output(fesdb$describe_var(c('mushrooms_production', 'exported_water')))
   expect_error(
