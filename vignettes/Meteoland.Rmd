@@ -87,8 +87,7 @@ points_sf <- lfcdata::fes()$get_data('plot_nfi_4_results', spatial = TRUE) |>
 meteoland_points_interpolation(
   meteolanddb,
   sf = points_sf,
-  dates = c(as.character(Sys.Date() - 5), as.character(Sys.Date() - 1)),
-  points_id = 'plot_id'
+  dates = c(as.character(Sys.Date() - 5), as.character(Sys.Date() - 1))
 )
 ```
 
