@@ -689,7 +689,42 @@ siteDrought_describe_var_cat <- function(variable) {
 }
 
 ## postgis raster functions ####
+is_postgis_db <- function(conn) {
+  check_postgis <- pool::dbGetQuery(
+    conn,
+    "SELECT name FROM pg_available_extensions WHERE name = 'postgis';"
+  ) |>
+    nrow()
 
+  return(check_postgis == 1L)
+}
+
+# write raster
+write_raster_to_db <- function(conn, table_name) {
+
+  ## assertions
+  check_args_for(
+    character = list(table_name = table_name)
+  )
+
+  ## db checks
+  if (!is_postgis_db(conn)) {
+    stop("PostGIS extension not available in connected database")
+  }
+
+  if (!all(c(
+    # valid pool
+    pool::dbIsValid(conn),
+    # table exists
+    pool::dbExistsTable(conn, table_name)
+  ))) {
+    stop("Connection to DB invalid or table missing")
+  }
+
+
+}
+
+# read raster
 get_raster_from_db <- function(
   conn, table_name, rast_column = "rast", bands = TRUE, clip = NULL
 ) {
@@ -700,6 +735,10 @@ get_raster_from_db <- function(
   )
 
   ## db checks
+  if (!is_postgis_db(conn)) {
+    stop("PostGIS extension not available in connected database")
+  }
+
   if (!all(c(
     # valid pool
     pool::dbIsValid(conn),
@@ -765,11 +804,15 @@ get_raster_from_db <- function(
   } else if (length(raster_srid) < 1) {
     stop("Raster table is empty")
   }
+
+  ####
+  # DEBUG!!
   # query to get the custom ref for debugging purposes
   # pool::dbGetQuery(
   #   conn,
   #   glue::glue_sql("SELECT * FROM spatial_ref_sys WHERE srid = {raster_srid}")
   # )
+  ####
 
   # historical rasters have custom srids, why? i don't know but for now we get this
   # shorted here:
@@ -790,7 +833,7 @@ get_raster_from_db <- function(
   # if clip is an sf, the query needs a WHERE with the intersection with the polygon
   if (!rlang::is_null(clip)) {
 
-    #### TODO: What to do when clip has more than one polgyon:
+    #### What to do when clip has more than one polgyon:
     ####    - option 1: union all (I go with this one)
     ####    - option 2: filter the first (Nope)
     ####    - non an option: looping through polygons and returning a raster for each polygon
