@@ -226,7 +226,7 @@ lfcCatDrought <- R6::R6Class(
 
         # Now we build the query and get the polygon/s values
         # data query to get the dump of the data
-        pool_checkout <- pool::poolCheckout(private$pool_conn)
+        # pool_checkout <- pool::poolCheckout(private$pool_conn)
         data_queries <- glue::glue_sql(
           "SELECT
            day,
@@ -236,11 +236,11 @@ lfcCatDrought <- R6::R6Class(
            (select st_geomfromtext({sf_text}, 4326) as geom) AS feat
          WHERE
            ST_Intersects(rast, geom)
-         GROUP BY day;", .con = pool_checkout
+         GROUP BY day;", .con = private$pool_conn
         ) |>
           purrr::set_names(sf_id)
 
-        pool::poolReturn(pool_checkout)
+        # pool::poolReturn(pool_checkout)
 
         dates_available <- seq(
           lubridate::ymd(Sys.Date() - 366), lubridate::ymd(Sys.Date() - 1),
@@ -279,7 +279,7 @@ lfcCatDrought <- R6::R6Class(
       if (all(sf::st_is(sf, type = c('POINT', 'MULTIPOINT')))) {
         # Now we build the query and get the polygon/s values
         # data query to get the dump of the data
-        pool_checkout <- pool::poolCheckout(private$pool_conn)
+        # pool_checkout <- pool::poolCheckout(private$pool_conn)
         data_queries <- glue::glue_sql(
           "
           SELECT day, ST_Value(
@@ -292,10 +292,10 @@ lfcCatDrought <- R6::R6Class(
             rast,
             st_geomfromtext({sf_text}, 4326)
           )
-        ", .con = pool_checkout
+        ", .con = private$pool_conn
         ) |>
           purrr::set_names(sf_id)
-        pool::poolReturn(pool_checkout)
+        # pool::poolReturn(pool_checkout)
 
         dates_available <- seq(
           lubridate::ymd(Sys.Date() - 366), lubridate::ymd(Sys.Date() - 1),

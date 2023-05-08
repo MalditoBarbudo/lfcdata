@@ -387,7 +387,7 @@ lfcMeteoland <- R6::R6Class(
 
       # Get db raster values
       # pool checkout
-      pool_checkout <- pool::poolCheckout(private$pool_conn)
+      # pool_checkout <- pool::poolCheckout(private$pool_conn)
       # SQL queries
       point_queries <-
         user_coords_wkt |>
@@ -408,11 +408,11 @@ lfcMeteoland <- R6::R6Class(
               rast,
               ST_Transform(ST_GeomFromEWKT({.x}),3043)
             );",
-            .con = pool_checkout
+            .con = private$pool_conn
           )
         )
       # return the checkout, we don't want ghost db connections
-      pool::poolReturn(pool_checkout)
+      # pool::poolReturn(pool_checkout)
 
       query_helper <- function(query) {
         query_res <- pool::dbGetQuery(private$pool_conn, statement = query)
