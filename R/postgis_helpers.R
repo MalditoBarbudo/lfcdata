@@ -12,61 +12,82 @@ is_postgis_db <- function(conn) {
 ## bs
 # Return indexes for an exact number of blocks for a raster
 #
+# Taken from original code from rpostgis library
+#
 # @param r a raster
 # @param blocks Number of desired blocks (columns, rows)
 bs <- function(r, blocks) {
+
+  # ensure blocks are integers
   blocks <- as.integer(blocks)
-  if (any(is.na(blocks)) || length(blocks) > 2) stop("blocks must be a 1- or 2-length integer vector.")
-  if (any(blocks == 0)) stop("Invalid number of blocks (0).")
-  if (length(blocks) == 1) blocks <- c(blocks, blocks)
+
+  # blocks checks
+  # must be numbers no na with length 1 or 2
+  if (any(is.na(blocks)) || length(blocks) > 2) {
+    stop("blocks must be a 1- or 2-length integer vector")
+  }
+  # must not be 0
+  if (any(blocks == 0)) {
+    stop("blocks must be greater than zero (0)")
+  }
+  # if length 1, the create the 2-length vector
+  if (length(blocks) == 1) {
+    blocks <- rep(blocks, 2)
+  }
+
+  # prepare raster
+  if (!inherits(r, "SpatRaster")) {
+    stop("r must be a SpatRaster object")
+  }
+  # we only need one layer for this
   r <- r[[1]]
 
-  cr <- list()
-  tr <- list()
+  # prepare results objects with default 1 block
+  cr <- list(row = 1, nrows = terra::ncol(r), n = 1)
+  tr <- list(row = 1, nrows = terra::nrow(r), n = 1)
 
   # cr
   b <- blocks[1]
-  n.r <- raster::ncol(r)
-  if (b == 1) {
-    cr$row <- 1
-    cr$nrows <- n.r
-    cr$n <- 1
-  } else {
-    if (b >= n.r) b <- n.r
-    if (n.r%%b == 0) {
+  n.r <- terra::ncol(r)
+  if (b != 1) {
+    if (b >= n.r) {
+      b <- n.r
+    }
+
+    if (n.r %% b == 0) {
       by <- n.r/b
       cr$row <- seq(1, to = n.r, by = by)
       cr$nrows <- rep(by, b)
       cr$n <- length(cr$row)
     } else {
       by <- floor(n.r/b)
-      cr$row <- c(1,seq(1+by+(n.r%%b), to = n.r, by = by))
-      cr$nrows <- c(cr$row[2:length(cr$row)], n.r+1) - cr$row
+      cr$row <- c(1, seq(1 + by + (n.r %% b), to = n.r, by = by))
+      cr$nrows <- c(cr$row[2:length(cr$row)], n.r + 1) - cr$row
       cr$n <- length(cr$row)
     }
   }
 
   # tr
   b <- blocks[2]
-  n.r <- raster::nrow(r)
-  if (b == 1) {
-    tr$row <- 1
-    tr$nrows <- n.r
-    tr$n <- 1
-  } else {
-    if (b >= n.r) b <- n.r
-    if (n.r%%b == 0) {
+  n.r <- terra::nrow(r)
+  if (b != 1) {
+    if (b >= n.r) {
+      b <- n.r
+    }
+
+    if (n.r %% b == 0) {
       by <- n.r/b
       tr$row <- seq(1, to = n.r, by = by)
       tr$nrows <- rep(by, b)
       tr$n <- length(tr$row)
     } else {
       by <- floor(n.r/b)
-      tr$row <- c(1,seq(1+by+(n.r%%b), to = n.r, by = by))
-      tr$nrows <- c(tr$row[2:length(tr$row)], n.r+1) - tr$row
+      tr$row <- c(1, seq(1 + by + (n.r %% b), to = n.r, by = by))
+      tr$nrows <- c(tr$row[2:length(tr$row)], n.r + 1) - tr$row
       tr$n <- length(tr$row)
     }
   }
+
   return(list(cr = cr, tr = tr))
 }
 
@@ -268,7 +289,7 @@ get_raster_from_db <- function(
 }
 
 # write raster
-write_raster_to_db <- function(raster_obj, conn, table_name, .overwrite = FALSE, .append = FALSE) {
+write_raster_to_db <- function(raster_obj, conn, table_name, blocks = NULL, .overwrite = FALSE, .append = FALSE) {
 
   ## assertions
   check_args_for(
@@ -316,7 +337,7 @@ write_raster_to_db <- function(raster_obj, conn, table_name, .overwrite = FALSE,
       .con = conn
     )
     pool::dbExecute(conn, create_table_query)
-    # n_base <- 1
+    n_base <- 0
     .append <- FALSE
   } else {
     if (!.append) {
@@ -371,15 +392,14 @@ write_raster_to_db <- function(raster_obj, conn, table_name, .overwrite = FALSE,
     stop("raster CRS is not in the database spatial_ref_sys")
   }
 
-  # rid counter
-  n_base <- 1
+  # block size
+  if (is.null(blocks)) {
+    warning("no blocks provided, using one single block. This can cause errors when writing big rasters to the database")
+    blocks <- 1
+  }
+  blocks_size <- bs(raster_obj, blocks)
 
-  # raster extent & dimension
-  raster_extent <- terra::ext(raster_obj)
-  raster_dimensions <- dim(raster_obj[[1]])
-
-  ## TODO
-  # TODO calculate blocks (taking the old default values of rpostgis)
+  message("Splitting ",length(names(raster_obj))," band(s) into ", blocks_size$cr$n, " x ", blocks_size$tr$n, " blocks...")
 
   # loop by bands for writing the values
   for (band_index in 1:length(names(raster_obj))) {
@@ -387,69 +407,97 @@ write_raster_to_db <- function(raster_obj, conn, table_name, .overwrite = FALSE,
     # get raster with the band
     raster_band <- raster_obj[[band_index]]
 
-    # convert NA values to ndval
-    raster_matrix <- terra::as.matrix(raster_band, wide = TRUE)
-    raster_matrix[is.na(raster_matrix)] <- no_data_val
+    # rid counter
+    rid_index <- n_base
 
-    # if is the first band, we need to prepare the table
-    if (band_index == 1L) {
-      # make an empty raster
-      # ST_MakeEmptyRaster needs:
-      #   - width, which are the columns, so dim[2]
-      #   - height, which are the rows, so dim[1]
-      #   - upperleftx, which is the x coord of the top left corner, so ext[1]
-      #   - upperlefty, which is the y coord of the top left corner, so ext[4]
-      #   - scalex, which is the resolution in x, so res[1],
-      #   - scaley, which is the resoluction in y, so -res[2],
-      #   - skewx and skewy, which are 0
-      #   - srid of the raster, so raster_srid
-      create_empty_raster_query <- glue::glue_sql(
-        "INSERT INTO {`table_name`} (rid, band_names, rast)
-            VALUES ({n_base}, {band_names_subquery},
+    # # convert NA values to ndval
+    # raster_matrix <- terra::as.matrix(raster_band, wide = TRUE)
+    # raster_matrix[is.na(raster_matrix)] <- no_data_val
+
+    for (block_index_t in 1:blocks_size$tr$n) {
+      raster_band_t <- raster_band[
+        blocks_size$tr$row[block_index_t]:(blocks_size$tr$row[block_index_t] + blocks_size$tr$nrows[block_index_t] - 1), , drop = FALSE
+      ]
+
+      for (block_index_c in 1:blocks_size$cr$n) {
+
+        raster_band_t_c <- raster_band_t[
+          , blocks_size$cr$row[block_index_c]:(blocks_size$cr$row[block_index_c] + blocks_size$cr$nrows[block_index_c] - 1), drop = FALSE
+        ]
+
+        # raster extent & dimension
+        raster_extent <- terra::ext(raster_band_t_c)
+        raster_dimensions <- dim(raster_band_t_c[[1]])
+        # rid counter
+        rid_index <- rid_index + 1
+        message("Writing block ", rid_index, " for band ", band_index)
+
+        # if is the first band, we need to prepare the table
+        if (band_index == 1L) {
+          # make an empty raster
+          # ST_MakeEmptyRaster needs:
+          #   - width, which are the columns, so dim[2]
+          #   - height, which are the rows, so dim[1]
+          #   - upperleftx, which is the x coord of the top left corner, so ext[1]
+          #   - upperlefty, which is the y coord of the top left corner, so ext[4]
+          #   - scalex, which is the resolution in x, so res[1],
+          #   - scaley, which is the resoluction in y, so -res[2],
+          #   - skewx and skewy, which are 0
+          #   - srid of the raster, so raster_srid
+          create_empty_raster_query <- glue::glue_sql(
+            "INSERT INTO {`table_name`} (rid, band_names, rast)
+            VALUES ({rid_index}, {band_names_subquery},
               ST_MakeEmptyRaster({raster_dimensions[2]}, {raster_dimensions[1]}, {raster_extent[1]}, {raster_extent[4]}, {raster_resolution[1]}, {-raster_resolution[2]}, 0, 0, {raster_srid[1]}));",
-        .con = conn
-      )
-      pool::dbExecute(conn, create_empty_raster_query)
+            .con = conn
+          )
+          pool::dbExecute(conn, create_empty_raster_query)
 
-      # upperleft for alignment snapping if needed
-      upper_left_x <- pool::dbGetQuery(
-        conn,
-        glue::glue_sql("SELECT ST_UpperLeftX(rast) x FROM {`table_name`} where rid = 1;", .con = conn)
-      ) |> as.numeric()
-      upper_left_y <- pool::dbGetQuery(
-        conn,
-        glue::glue_sql("SELECT ST_UpperLeftY(rast) x FROM {`table_name`} where rid = 1;", .con = conn)
-      ) |> as.numeric()
+          # upperleft for alignment snapping if needed
+          upper_left_x <- pool::dbGetQuery(
+            conn,
+            glue::glue_sql("SELECT ST_UpperLeftX(rast) x FROM {`table_name`} where rid = 1;", .con = conn)
+          ) |> as.numeric()
+          upper_left_y <- pool::dbGetQuery(
+            conn,
+            glue::glue_sql("SELECT ST_UpperLeftY(rast) x FROM {`table_name`} where rid = 1;", .con = conn)
+          ) |> as.numeric()
 
-      # add new band
-      snap_to_grid <- glue::glue_sql(") WHERE rid = {n_base}", .con = conn)
-      if (raster_resolution[1] != raster_resolution[2]) {
-        snap_to_grid <- glue::glue_sql(", {raster_resolution[1]}, {-raster_resolution[2]}) WHERE rid = {n_base}", .con = conn)
-      }
+          # add new band
+          snap_to_grid <- glue::glue_sql(") WHERE rid = {rid_index}", .con = conn)
+          if (raster_resolution[1] != raster_resolution[2]) {
+            snap_to_grid <- glue::glue_sql(", {raster_resolution[1]}, {-raster_resolution[2]}) WHERE rid = {rid_index}", .con = conn)
+          }
 
-      band_arguments <- glue::glue_sql("ROW({1:length(names(raster_obj))}, {bit_depth}::text,0,{no_data_val})", .con = conn) |>
-        glue::glue_sql_collapse(sep = ',')
+          band_arguments <- glue::glue_sql("ROW({1:length(names(raster_obj))}, {bit_depth}::text,0,{no_data_val})", .con = conn) |>
+            glue::glue_sql_collapse(sep = ',')
 
-      snap_band_query <- glue::glue_sql(
-        "UPDATE {`table_name`}
+          snap_band_query <- glue::glue_sql(
+            "UPDATE {`table_name`}
             SET rast = ST_SnapToGrid(ST_AddBand(rast, ARRAY[{band_arguments}]::addbandarg[]), {upper_left_x}, {upper_left_y}{snap_to_grid};",
-        .con = conn
-      )
-      pool::dbExecute(conn, snap_band_query)
-    }
+            .con = conn
+          )
+          pool::dbExecute(conn, snap_band_query)
+        }
 
-    values_array <- purrr::map_chr(
-      1:nrow(raster_matrix),
-      \(row_index) {glue::glue_sql("[{glue::glue_sql_collapse(raster_matrix[row_index,], sep = ',')}]", .con = conn)}
-    ) |>
-      glue::glue_sql_collapse(sep = ',')
-    update_values_query <- glue::glue_sql(
-      "UPDATE {`table_name`}
+        # convert NA values to ndval
+        raster_matrix <- terra::as.matrix(raster_band_t_c, wide = TRUE)
+        raster_matrix[is.na(raster_matrix)] <- no_data_val
+
+        values_array <- purrr::map_chr(
+          1:nrow(raster_matrix),
+          \(row_index) {glue::glue_sql("[{glue::glue_sql_collapse(raster_matrix[row_index,], sep = ',')}]", .con = conn)}
+        ) |>
+          glue::glue_sql_collapse(sep = ',')
+        update_values_query <- glue::glue_sql(
+          "UPDATE {`table_name`}
           SET rast = ST_SetValues(rast, {band_index}, 1, 1, ARRAY[{values_array}]::double precision[][])
-          WHERE rid = {n_base};",
-      .con = conn
-    )
-    pool::dbExecute(conn, update_values_query)
+          WHERE rid = {rid_index};",
+          .con = conn
+        )
+        pool::dbExecute(conn, update_values_query)
+
+      }
+    }
   }
 
   # create index
