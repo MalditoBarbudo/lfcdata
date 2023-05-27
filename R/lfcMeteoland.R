@@ -367,7 +367,7 @@ lfcMeteoland <- R6::R6Class(
   # private methods
   private = list(
     # connection values
-    dbname = 'meteoland',
+    dbname = 'new_meteoland',
 
     # point value helper methods #
     # user topography
