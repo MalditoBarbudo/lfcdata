@@ -65,7 +65,8 @@ lfcMeteoland <- R6::R6Class(
       # argument checks are done in the ancillary functions, except for sf and
       # topo
       check_args_for(
-        sf = list(sf = sf)
+        sf = list(sf = sf),
+        points = list(sf = sf)
       )
       check_length_for(user_dates, 2, 'user_dates')
 
@@ -566,14 +567,19 @@ lfcMeteoland <- R6::R6Class(
         # sometimes, aemet and others changes coordinates, elevation... We need to fix the coords
         # to avoid hitting a non unique stations error in meteoland::with_meteo
         dplyr::mutate(
-          lat = dplyr::last(lat),
-          long = dplyr::last(long),
+          geometry = dplyr::last(geometry),
           elevation = dplyr::last(elevation),
           .by = stationID
         ) |>
+        dplyr::mutate(
+          geometry = geometry |>
+            rlang::parse_exprs() |>
+            purrr::map(eval) |>
+            purrr::map(sf::st_point) |>
+            sf::st_as_sfc(crs = 4326)
+        ) |>
         # finally convert to sf and set the CRS
-        sf::st_as_sf(coords = c('long', 'lat')) |>
-        sf::st_set_crs(4326)
+        sf::st_as_sf()
 
       # Before returning the interpolator, we need to change some params based
       # on the latest calibrations
