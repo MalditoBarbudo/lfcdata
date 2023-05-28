@@ -552,9 +552,9 @@ lfcMeteoland <- R6::R6Class(
               dplyr::mutate(dates = as.Date(date))
             # sometimes there is repeated station codes with different elevation,
             # lets get only the first station with a code
-            if (length(unique(res[["stationCode"]])) != nrow(res)) {
+            if (length(unique(res[["stationID"]])) != nrow(res)) {
               res |>
-                dplyr::group_by(stationCode) |>
+                dplyr::group_by(stationID) |>
                 dplyr::summarise_all(dplyr::first)
             }
 
@@ -562,7 +562,7 @@ lfcMeteoland <- R6::R6Class(
           }
         ) |>
         purrr::list_rbind() |>
-        dplyr::rename(stationID = stationCode) |>
+        dplyr::rename(stationID = stationID) |>
         # sometimes, aemet and others changes coordinates, elevation... We need to fix the coords
         # to avoid hitting a non unique stations error in meteoland::with_meteo
         dplyr::mutate(
