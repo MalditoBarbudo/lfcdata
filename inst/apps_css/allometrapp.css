@@ -1,0 +1,25 @@
+/*
+Custom css for Allometr app
+*/
+
+input[type="number"] {
+  max-width: 80%;
+}
+
+/*
+div.table_container {
+  overflow-y: scroll;
+}
+*/
+
+/* debug */
+#debug {
+  z-index: 1500;
+}
+
+/* table body */
+table.dataTable tbody tr {
+  background-color: var(--main-bg-color) !important;
+  color: var(--main-dark-color);
+}
+

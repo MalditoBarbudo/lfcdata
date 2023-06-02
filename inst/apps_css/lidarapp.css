@@ -1,0 +1,156 @@
+/*
+Custom css for Allometr app
+*/
+
+input[type="number"] {
+  max-width: 80%;
+}
+
+/*
+div.table_container {
+  overflow-y: scroll;
+}
+*/
+
+/* debug */
+#debug {
+  z-index: 1500;
+}
+
+/* language selector */
+.navbar-form {
+  margin-top: 5px;
+  margin-bottom: 0px;
+}
+
+/* we need to change the leaflet layer control z-index */
+.navbar-static-top {
+  z-index: 2000 !important;
+}
+
+.navbar-form > .form-group {
+  position: fixed;
+  right: 25px;
+}
+
+.flag-lang {
+  display: inline;
+  vertical-align: middle;
+  padding-left: 10px;
+}
+
+.flag-image {
+  border-radius: 50%;
+}
+
+.shiny-output-error-drawed_polygon_warn {
+  color: red;
+}
+
+/* position of the modal */
+div.modal-dialog {
+  position: relative;
+  top: 10px;
+}
+
+/* table body */
+table.dataTable tbody tr {
+  background-color: var(--main-bg-color) !important;
+  color: var(--main-dark-color);
+}
+
+
+span>a.paginate_button {
+  color: var(--main-bg-color) !important;
+}
+
+span>a.paginate_button.current {
+  background-color: var(--main-selected-color);
+  color: var(--main-bg-color) !important;
+}
+
+/* waiter-waitress css custom */
+.waitress-overlay-content {
+  top: 5px;
+  right: 30%;
+}
+
+.progressjs-theme-blueOverlayRadiusWithPercentBar {
+  background-color: var(--main-bg-color);
+}
+
+.waiter-overlay-content {
+  width: 100%;
+  text-align: center;
+  height: auto;
+  position: relative;
+  right: 0%;
+  margin-right: 0px;
+  top: 0%;
+  margin-top: 0px;
+}
+
+.waiter-overlay-content > h3 {
+  width: 100%;
+  left: 0%;
+  text-align: center;
+  color: var(--main-dark-color);
+}
+.waiter-overlay-content > p {
+  width: 100%;
+  left: 0%;
+  text-align: center;
+  color: var(--main-dark-color);
+}
+
+.waiter-overlay {
+  top: 0px !important;
+  left: 0px !important;
+  z-index: 9999 !important;
+}
+
+.ldBar {
+  /*margin-top: 50px;
+  left: 30%;*/
+  margin: auto;
+}
+
+.ldBar-label {
+  color: var(--main-dark-color);
+}
+
+#mod_infoUI-info_plot > .waiter-overlay {
+    top: 50px !important;
+    z-index: 9999 !important;
+    background-color: var(--main-dark-color) !important;
+    position: absolute !important;
+}
+
+.timer-loader:not(:required) {
+  border: 6px solid var(--main-selected-color);
+  border-top-color: var(--main-selected-color);
+  border-top-style: solid;
+  border-top-width: 6px;
+  border-right-color: var(--main-selected-color);
+  border-right-style: solid;
+  border-right-width: 6px;
+  border-bottom-color: var(--main-selected-color);
+  border-bottom-style: solid;
+  border-bottom-width: 6px;
+  border-left-color: var(--main-selected-color);
+  border-left-style: solid;
+  border-left-width: 6px;
+  border-image-source: initial;
+  border-image-slice: initial;
+  border-image-width: initial;
+  border-image-outset: initial;
+  border-image-repeat: initial;
+}
+
+.timer-loader:not(:required)::after {
+  background: var(--main-selected-color);
+}
+
+.timer-loader:not(:required)::before {
+  background: var(--main-selected-color);
+}
