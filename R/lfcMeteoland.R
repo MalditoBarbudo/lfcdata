@@ -312,7 +312,7 @@ lfcMeteoland <- R6::R6Class(
         "daily_raster_interpolated_{stringr::str_remove_all(date, '-')}"
       )
 
-      if (as.Date(date) < Sys.Date()-365) {
+      if (as.Date(date) < Sys.Date() - 366) {
         raster_table_name <- glue::glue(
           "daily_historic_raster_interpolated_{stringr::str_remove_all(date, '-')}"
         )
