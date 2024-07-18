@@ -183,20 +183,20 @@ lfcCatDrought <- R6::R6Class(
       # switches
       band <- switch(
         variable,
-        'DDS' = 1,
-        'DeepDrainage' = 2,
-        'Eplant' = 3,
-        'Esoil' = 4,
-        'Infiltration' = 5,
-        'Interception' = 6,
-        'LAI' = 7,
-        'LMFC' = 8,
-        'PET' = 9,
-        'Precipitation' = 10,
-        'Psi' = 11,
-        'REW' = 12,
-        'Runoff' = 13,
-        'Theta' = 14
+        'DDS' = 1L,
+        'DeepDrainage' = 2L,
+        'Eplant' = 3L,
+        'Esoil' = 4L,
+        'Infiltration' = 5L,
+        'Interception' = 6L,
+        'LAI' = 7L,
+        'LMFC' = 8L,
+        'PET' = 9L,
+        'Precipitation' = 10L,
+        'Psi' = 11L,
+        'REW' = 12L,
+        'Runoff' = 13L,
+        'Theta' = 14L
       )
 
       # now the table name
