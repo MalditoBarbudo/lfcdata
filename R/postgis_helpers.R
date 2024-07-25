@@ -436,18 +436,18 @@ write_raster_to_db <- function(raster_obj, conn, table_name, blocks = NULL, .ove
         if (band_index == 1L) {
           # make an empty raster
           # ST_MakeEmptyRaster needs:
-          #   - width, which are the columns, so dim[2]
-          #   - height, which are the rows, so dim[1]
-          #   - upperleftx, which is the x coord of the top left corner, so ext[1]
-          #   - upperlefty, which is the y coord of the top left corner, so ext[4]
-          #   - scalex, which is the resolution in x, so res[1],
-          #   - scaley, which is the resoluction in y, so -res[2],
-          #   - skewx and skewy, which are 0
-          #   - srid of the raster, so raster_srid
+          #   - width, which are the columns, so dim[2] INTEGER
+          #   - height, which are the rows, so dim[1] INTEGER
+          #   - upperleftx, which is the x coord of the top left corner, so ext[1] FLOAT8
+          #   - upperlefty, which is the y coord of the top left corner, so ext[4] FLOAT8
+          #   - scalex, which is the resolution in x, so res[1], FLOAT8
+          #   - scaley, which is the resoluction in y, so -res[2], FLOAT8
+          #   - skewx and skewy, which are 0 FLOAT8
+          #   - srid of the raster, so raster_srid INTEGER
           create_empty_raster_query <- glue::glue_sql(
             "INSERT INTO {`table_name`} (rid, band_names, rast)
             VALUES ({rid_index}, {band_names_subquery},
-              ST_MakeEmptyRaster({raster_dimensions[2]}, {raster_dimensions[1]}, {raster_extent[1]}, {raster_extent[4]}, {raster_resolution[1]}, {-raster_resolution[2]}, 0, 0, {raster_srid[1]}));",
+              ST_MakeEmptyRaster({as.integer(raster_dimensions[2])}, {as.integer(raster_dimensions[1])}, {raster_extent[1]}, {raster_extent[4]}, {raster_resolution[1]}, {-raster_resolution[2]}, 0, 0, {as.integer(raster_srid[1])}));",
             .con = conn
           )
           pool::dbExecute(conn, create_empty_raster_query)
