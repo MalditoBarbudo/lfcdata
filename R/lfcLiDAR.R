@@ -290,7 +290,7 @@ lfcLiDAR <- R6::R6Class(
       sf_transformed <-
         sf |>
         sf::st_geometry() |>
-        sf::st_transform(crs = 25831)
+        sf::st_transform(crs = 3043)
 
       wkt_poly <-
         sf_transformed |>
