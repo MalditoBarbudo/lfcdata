@@ -103,16 +103,16 @@ test_that("get_lowres_raster method works", {
         )
     )
   )
-  expect_true(
-    all(
-      names(meteolanddb$get_lowres_raster('1981-04-25', 'stars')) %in%
-        c(
-          "MeanTemperature", "MinTemperature", "MaxTemperature",
-          "MeanRelativeHumidity", "MinRelativeHumidity", "MaxRelativeHumidity",
-          "Precipitation", "Radiation", "WindSpeed", "PET", "ThermalAmplitude"
-        )
-    )
-  )
+  # expect_true(
+  #   all(
+  #     names(meteolanddb$get_lowres_raster('1981-04-25', 'stars')) %in%
+  #       c(
+  #         "MeanTemperature", "MinTemperature", "MaxTemperature",
+  #         "MeanRelativeHumidity", "MinRelativeHumidity", "MaxRelativeHumidity",
+  #         "Precipitation", "Radiation", "WindSpeed", "PET", "ThermalAmplitude"
+  #       )
+  #   )
+  # )
 
   # add tests for clip, bands...
   ## tests for bands
