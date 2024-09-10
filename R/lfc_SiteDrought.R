@@ -76,8 +76,8 @@ lfcsiteDrought <- R6::R6Class(
       check_length_for(table_name, 1, "table_name")
       check_args_for(character = list(table_name = table_name))
 
-
-      res <- private$data_cache[[glue::glue("{table_name}_TRUE")]] %||% {
+      res <- private$data_cache$get(tolower(glue::glue("{table_name}_TRUE")))
+      if (cachem::is.key_missing(res)) {
         message('Querying table from LFC database, this can take a while...')
         query_data_spatial <- try(sf::st_read(private$pool_conn, table_name))
         message('Done')
@@ -86,9 +86,22 @@ lfcsiteDrought <- R6::R6Class(
           stop("Can not connect to the database:\n", query_data_spatial[1])
         }
         # update cache and return the query result
-        private$data_cache[[glue::glue("{table_name}_TRUE")]] <- query_data_spatial
-        query_data_spatial
+        private$data_cache$set(tolower(glue::glue("{table_name}_TRUE")), query_data_spatial)
+        res <- query_data_spatial
       }
+
+      # res <- private$data_cache[[glue::glue("{table_name}_TRUE")]] %||% {
+      #   message('Querying table from LFC database, this can take a while...')
+      #   query_data_spatial <- try(sf::st_read(private$pool_conn, table_name))
+      #   message('Done')
+      #   # check if any error
+      #   if (inherits(query_data_spatial, "try-error")) {
+      #     stop("Can not connect to the database:\n", query_data_spatial[1])
+      #   }
+      #   # update cache and return the query result
+      #   private$data_cache[[glue::glue("{table_name}_TRUE")]] <- query_data_spatial
+      #   query_data_spatial
+      # }
 
       return(res)
     },

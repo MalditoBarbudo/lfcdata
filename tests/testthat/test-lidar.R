@@ -184,7 +184,7 @@ test_that("point_value method works", {
 test_that("cache works", {
   skip_on_cran()
   skip_on_travis()
-  expect_length(lidardb$.__enclos_env__$private$data_cache, 6)
+  expect_length(lidardb$.__enclos_env__$private$data_cache$keys(), 6)
   bar <- lidardb$get_lowres_raster('AB', 'raster')
   expect_s4_class(lidardb$get_lowres_raster('AB', 'raster'), 'SpatRaster')
   # temp_postgresql_conn <- pool::poolCheckout(
@@ -203,9 +203,9 @@ test_that("cache works", {
   #   )
   # )
   # pool::poolReturn(temp_postgresql_conn)
-  expect_length(lidardb$.__enclos_env__$private$data_cache, 6)
+  expect_length(lidardb$.__enclos_env__$private$data_cache$keys(), 6)
   baz <- lidardb$get_lowres_raster('DBH', 'raster')
-  expect_length(lidardb$.__enclos_env__$private$data_cache, 7)
+  expect_length(lidardb$.__enclos_env__$private$data_cache$keys(), 7)
 })
 
 ## external methods ####
@@ -234,7 +234,7 @@ test_that("external get lowres_raster wrapper works", {
     lidardb$get_lowres_raster(c('REC', 'BAT'), 'stars'),
     lidar_get_lowres_raster(lidardb, c('REC', 'BAT'), 'stars')
   )
-  expect_length(lidardb$.__enclos_env__$private$data_cache, 8)
+  expect_length(lidardb$.__enclos_env__$private$data_cache$keys(), 8)
 })
 
 test_that("external describe_var wrapper works", {

@@ -131,7 +131,7 @@ test_that("describe_var method works", {
 test_that("cache works", {
   skip_on_cran()
   skip_on_travis()
-  expect_length(allomdb$.__enclos_env__$private$data_cache, 2)
+  expect_length(allomdb$.__enclos_env__$private$data_cache$keys(), 2)
   bar <- allomdb$get_data('allometries')
   expect_s3_class(bar, 'tbl_df')
   expect_identical(
@@ -139,9 +139,9 @@ test_that("cache works", {
     dplyr::tbl(allomdb$.__enclos_env__$private$pool_conn, 'allometries') |>
       dplyr::collect()
   )
-  expect_length(allomdb$.__enclos_env__$private$data_cache, 2)
+  expect_length(allomdb$.__enclos_env__$private$data_cache$keys(), 2)
   baz <- allomdb$get_data('thesaurus_variables')
-  expect_length(allomdb$.__enclos_env__$private$data_cache, 3)
+  expect_length(allomdb$.__enclos_env__$private$data_cache$keys(), 3)
 })
 
 test_that("external get data wrapper works", {
@@ -156,7 +156,7 @@ test_that("external get data wrapper works", {
     "class lfcAllometries"
   )
   xyz <- allometries_get_data(allomdb, 'thesaurus_sources')
-  expect_length(allomdb$.__enclos_env__$private$data_cache, 4)
+  expect_length(allomdb$.__enclos_env__$private$data_cache$keys(), 4)
   expect_identical(
     allomdb$get_data('thesaurus_sources'),
     allometries_get_data(allomdb, 'thesaurus_sources')

@@ -68,7 +68,7 @@ test_that("describe_var method works", {
 test_that("cache works", {
   skip_on_cran()
   skip_on_travis()
-  expect_length(nfidb$.__enclos_env__$private$data_cache, 4)
+  expect_length(nfidb$.__enclos_env__$private$data_cache$keys(), 4)
   bar <- nfidb$get_data('plots', FALSE)
   expect_s3_class(bar, 'tbl_df')
   expect_identical(
@@ -76,9 +76,9 @@ test_that("cache works", {
     dplyr::tbl(nfidb$.__enclos_env__$private$pool_conn, 'plots') |>
       dplyr::collect()
   )
-  expect_length(nfidb$.__enclos_env__$private$data_cache, 4)
+  expect_length(nfidb$.__enclos_env__$private$data_cache$keys(), 4)
   baz <- nfidb$get_data('plot_nfi_4_results', FALSE)
-  expect_length(nfidb$.__enclos_env__$private$data_cache, 5)
+  expect_length(nfidb$.__enclos_env__$private$data_cache$keys(), 5)
 })
 
 test_that("external get data wrapper works", {
@@ -93,7 +93,7 @@ test_that("external get data wrapper works", {
     "class lfcNFI"
   )
   xyz <- nfi_get_data(nfidb, 'plot_nfi_3_results', FALSE)
-  expect_length(nfidb$.__enclos_env__$private$data_cache, 6)
+  expect_length(nfidb$.__enclos_env__$private$data_cache$keys(), 6)
   expect_identical(
     nfidb$get_data('plot_nfi_3_results', FALSE),
     nfi_get_data(nfidb, 'plot_nfi_3_results', FALSE)

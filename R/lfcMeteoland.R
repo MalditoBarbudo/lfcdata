@@ -319,8 +319,8 @@ lfcMeteoland <- R6::R6Class(
       }
 
       cache_name <- glue::glue("{raster_table_name}_{rlang::hash(bands)}{rlang::hash(clip)}")
-      res <- private$data_cache[[cache_name]] %||% {
-
+      res <- private$data_cache$get(cache_name)
+      if (cachem::is.key_missing(res)) {
         message(
           'Querying low res (1000x1000 meters) raster from LFC database',
           ', this can take a while...'
@@ -342,10 +342,38 @@ lfcMeteoland <- R6::R6Class(
         message('Done')
 
         # update cache
-        private$data_cache[[cache_name]] <- meteoland_raster
+        private$data_cache$set(cache_name, meteoland_raster)
         # return raster
-        meteoland_raster
+        res <- meteoland_raster
       }
+
+      # res <- private$data_cache[[cache_name]] %||% {
+
+      #   message(
+      #     'Querying low res (1000x1000 meters) raster from LFC database',
+      #     ', this can take a while...'
+      #   )
+
+      #   # get raster
+      #   meteoland_raster <- try(
+      #     get_raster_from_db(
+      #       private$pool_conn, raster_table_name,
+      #       rast_column, bands, clip
+      #     )
+      #   )
+
+      #   # check if raster inherits from try-error to stop
+      #   if (inherits(meteoland_raster, "try-error")) {
+      #     stop("Can not connect to the database:\n", meteoland_raster[1])
+      #   }
+
+      #   message('Done')
+
+      #   # update cache
+      #   private$data_cache[[cache_name]] <- meteoland_raster
+      #   # return raster
+      #   meteoland_raster
+      # }
 
       # now we can return a SpatRaster (just as is) or a stars object
       if (spatial == 'stars') {
@@ -462,7 +490,7 @@ lfcMeteoland <- R6::R6Class(
         warning(glue::glue(
           "Some points are not in Catalonia ",
           "and they they will be removed from interpolation ",
-          "(indexes of offending points: {stringr::str_flatten(as.character(offending_coords_index), collapse = ', ')})",
+          "(indexes of offending points: {stringr::str_flatten(as.character(offending_coords_index), collapse = ', ')})"
         ))
       }
 

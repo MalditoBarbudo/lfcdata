@@ -28,7 +28,8 @@ Imports:
     dbplyr,
     tictoc,
     withr,
-    terra
+    terra,
+    cachem
 RoxygenNote: 7.2.3
 Suggests: 
     testthat (>= 2.1.0),

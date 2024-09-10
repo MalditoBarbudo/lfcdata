@@ -51,46 +51,85 @@ lfcNFI <- R6::R6Class(
         logical = list(spatial = spatial),
         na = list(spatial = spatial)
       )
+      check_length_for(table_name, 1)
 
-      res <- private$data_cache[[
-        glue::glue("{table_name}_{as.character(spatial)}")
-      ]] %||%
-        {
-          # is the query spatial?
-          if (!spatial) {
-            # if not, return the data as is
-            super$get_data(table_name)
+      res <- private$data_cache$get(tolower(glue::glue("{table_name}_{as.character(spatial)}")))
+      if (cachem::is.key_missing(res)) {
+        if (!spatial) {
+          # if not, return the data as is
+          res <- super$get_data(table_name)
+        } else {
+          # if it is, then convert based on the lat and long vars
+          if (all(
+            c('coords_longitude', 'coords_latitude') %in%
+            names(super$get_data(table_name))
+          )) {
+            query_data_spatial <- super$get_data(table_name) |>
+              sf::st_as_sf(
+                coords = c('coords_longitude', 'coords_latitude'),
+                remove = FALSE, crs = 4326
+              )
           } else {
-            # if it is, then convert based on the lat and long vars
-            if (all(
-              c('coords_longitude', 'coords_latitude') %in%
-              names(super$get_data(table_name))
-            )) {
-              query_data_spatial <- super$get_data(table_name) |>
-                sf::st_as_sf(
-                  coords = c('coords_longitude', 'coords_latitude'),
-                  remove = FALSE, crs = 4326
-                )
-            } else {
-              # if there is no lat long vars, then get them from plots
-              query_data_spatial <- super$get_data(table_name) |>
-                dplyr::left_join(
-                  super$get_data('plots') |>
-                    dplyr::select(plot_id, coords_longitude, coords_latitude) |>
-                    dplyr::collect(),
-                  by = 'plot_id'
-                ) |>
-                sf::st_as_sf(
-                  coords = c('coords_longitude', 'coords_latitude'),
-                  remove = FALSE, crs = 4326
-                )
-            }
-            private$data_cache[[
-              glue::glue("{table_name}_{as.character(spatial)}")
-            ]] <- query_data_spatial
-            query_data_spatial
+            # if there is no lat long vars, then get them from plots
+            query_data_spatial <- super$get_data(table_name) |>
+              dplyr::left_join(
+                super$get_data('plots') |>
+                  dplyr::select(plot_id, coords_longitude, coords_latitude) |>
+                  dplyr::collect(),
+                by = 'plot_id'
+              ) |>
+              sf::st_as_sf(
+                coords = c('coords_longitude', 'coords_latitude'),
+                remove = FALSE, crs = 4326
+              )
           }
+          private$data_cache$set(
+            tolower(glue::glue("{table_name}_{as.character(spatial)}")),
+            query_data_spatial
+          )
+          res <- query_data_spatial
         }
+      }
+      
+      # res <- private$data_cache[[
+      #   glue::glue("{table_name}_{as.character(spatial)}")
+      # ]] %||%
+      #   {
+      #     # is the query spatial?
+      #     if (!spatial) {
+      #       # if not, return the data as is
+      #       super$get_data(table_name)
+      #     } else {
+      #       # if it is, then convert based on the lat and long vars
+      #       if (all(
+      #         c('coords_longitude', 'coords_latitude') %in%
+      #         names(super$get_data(table_name))
+      #       )) {
+      #         query_data_spatial <- super$get_data(table_name) |>
+      #           sf::st_as_sf(
+      #             coords = c('coords_longitude', 'coords_latitude'),
+      #             remove = FALSE, crs = 4326
+      #           )
+      #       } else {
+      #         # if there is no lat long vars, then get them from plots
+      #         query_data_spatial <- super$get_data(table_name) |>
+      #           dplyr::left_join(
+      #             super$get_data('plots') |>
+      #               dplyr::select(plot_id, coords_longitude, coords_latitude) |>
+      #               dplyr::collect(),
+      #             by = 'plot_id'
+      #           ) |>
+      #           sf::st_as_sf(
+      #             coords = c('coords_longitude', 'coords_latitude'),
+      #             remove = FALSE, crs = 4326
+      #           )
+      #       }
+      #       private$data_cache[[
+      #         glue::glue("{table_name}_{as.character(spatial)}")
+      #       ]] <- query_data_spatial
+      #       query_data_spatial
+      #     }
+      #   }
 
       return(res)
     },

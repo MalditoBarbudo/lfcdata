@@ -84,7 +84,7 @@ test_that("describe_var method works", {
 test_that("cache works", {
   skip_on_cran()
   skip_on_travis()
-  expect_length(fesdb$.__enclos_env__$private$data_cache, 3)
+  expect_length(fesdb$.__enclos_env__$private$data_cache$keys(), 3)
   bar <- fesdb$get_data('static', FALSE)
   expect_s3_class(bar, 'tbl_df')
   expect_identical(
@@ -92,9 +92,9 @@ test_that("cache works", {
     dplyr::tbl(fesdb$.__enclos_env__$private$pool_conn, 'static') |>
       dplyr::collect()
   )
-  expect_length(fesdb$.__enclos_env__$private$data_cache, 3)
+  expect_length(fesdb$.__enclos_env__$private$data_cache$keys(), 3)
   baz <- fesdb$get_data('plot_nfi_4_results', FALSE)
-  expect_length(fesdb$.__enclos_env__$private$data_cache, 4)
+  expect_length(fesdb$.__enclos_env__$private$data_cache$keys(), 4)
 })
 
 test_that("external get data wrapper works", {
@@ -109,7 +109,7 @@ test_that("external get data wrapper works", {
     "class lfcFES"
   )
   xyz <- fes_get_data(fesdb, 'plot_nfi_3_results', FALSE)
-  expect_length(fesdb$.__enclos_env__$private$data_cache, 5)
+  expect_length(fesdb$.__enclos_env__$private$data_cache$keys(), 5)
   expect_identical(
     fesdb$get_data('plot_nfi_3_results', FALSE),
     fes_get_data(fesdb, 'plot_nfi_3_results', FALSE)

@@ -53,33 +53,60 @@ lfcFES <- R6::R6Class(
         na = list(spatial = spatial)
       )
 
-      res <- private$data_cache[[
-        glue::glue("{table_name}_{as.character(spatial)}")
-      ]] %||%
-        {
-          # is the query spatial?
-          if (!spatial) {
-            # if not, return the data as is
-            # here we dont update cache, because is done in the super method
-            super$get_data(table_name)
-          } else {
-            message('Querying table from LFC database, this can take a while...')
-            # if it is, use the sf read to get the spatial one
-            query_data_spatial <- try(
-              sf::st_read(private$pool_conn, table_name)
-            )
-            message('Done')
-            # check if any error
-            if (inherits(query_data_spatial, "try-error")) {
-              stop("Can not connect to the database:\n", query_data_spatial[1])
-            }
-            # update cache
-            private$data_cache[[
-              glue::glue("{table_name}_{as.character(spatial)}")
-            ]] <- query_data_spatial
-            query_data_spatial
+      res <- private$data_cache$get(tolower(glue::glue("{table_name}_{as.character(spatial)}")))
+      if (cachem::is.key_missing(res)) {
+        # is the query spatial?
+        if (!spatial) {
+          # if not, return the data as is
+          # here we dont update cache, because is done in the super method
+          res <- super$get_data(table_name)
+        } else {
+          message('Querying table from LFC database, this can take a while...')
+          # if it is, use the sf read to get the spatial one
+          query_data_spatial <- try(
+            sf::st_read(private$pool_conn, table_name)
+          )
+          message('Done')
+          # check if any error
+          if (inherits(query_data_spatial, "try-error")) {
+            stop("Can not connect to the database:\n", query_data_spatial[1])
           }
+          # update cache
+          private$data_cache$set(
+            tolower(glue::glue("{table_name}_{as.character(spatial)}")),
+            query_data_spatial
+          )
+          res <- query_data_spatial
         }
+      }
+
+      # res <- private$data_cache[[
+      #   glue::glue("{table_name}_{as.character(spatial)}")
+      # ]] %||%
+      #   {
+      #     # is the query spatial?
+      #     if (!spatial) {
+      #       # if not, return the data as is
+      #       # here we dont update cache, because is done in the super method
+      #       super$get_data(table_name)
+      #     } else {
+      #       message('Querying table from LFC database, this can take a while...')
+      #       # if it is, use the sf read to get the spatial one
+      #       query_data_spatial <- try(
+      #         sf::st_read(private$pool_conn, table_name)
+      #       )
+      #       message('Done')
+      #       # check if any error
+      #       if (inherits(query_data_spatial, "try-error")) {
+      #         stop("Can not connect to the database:\n", query_data_spatial[1])
+      #       }
+      #       # update cache
+      #       private$data_cache[[
+      #         glue::glue("{table_name}_{as.character(spatial)}")
+      #       ]] <- query_data_spatial
+      #       query_data_spatial
+      #     }
+      #   }
 
       return(res)
     },

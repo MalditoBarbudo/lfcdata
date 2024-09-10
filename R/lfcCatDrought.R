@@ -99,10 +99,8 @@ lfcCatDrought <- R6::R6Class(
 
       cache_name <- glue::glue("{raster_table_name}_{rlang::hash(bands)}{rlang::hash(clip)}")
 
-      res <- private$data_cache[[cache_name]] %||% {
-        # pool checkout
-        # pool_checkout <- pool::poolCheckout(private$pool_conn)
-
+      res <- private$data_cache$get(cache_name)
+      if (cachem::is.key_missing(res)) {
         message(
           "Querying raster from LFC database, ",
           "this can take a while..."
@@ -121,12 +119,6 @@ lfcCatDrought <- R6::R6Class(
             rast_column, bands, clip
           )
         })
-        # catdrought_raster <- try({
-        #   rpostgis::pgGetRast(
-        #     pool_checkout, name = c('daily', raster_table_name), bands = TRUE
-        #   )
-        # })
-        # pool::poolReturn(pool_checkout)
 
         # if there is an error, stop
         if (
@@ -149,10 +141,65 @@ lfcCatDrought <- R6::R6Class(
         message("Done")
 
         # update cache
-        private$data_cache[[cache_name]] <- catdrought_raster
+        private$data_cache$set(cache_name, catdrought_raster)
         # return the raster
-        catdrought_raster
+        res <- catdrought_raster
       }
+      
+      # res <- private$data_cache[[cache_name]] %||% {
+      #   # pool checkout
+      #   # pool_checkout <- pool::poolCheckout(private$pool_conn)
+
+      #   message(
+      #     "Querying raster from LFC database, ",
+      #     "this can take a while..."
+      #   )
+
+      #   # get the fixed table name (as catdrought uses the daily schema)
+      #   schema <- "daily"
+      #   raster_table_name <- glue::glue_sql("{`schema`}.{`raster_table_name`}", .con = private$pool_conn)
+
+      #   # try to get the raster
+      #   catdrought_raster <- try({
+      #     get_raster_from_db(
+      #       private$pool_conn,
+      #       # c
+      #       raster_table_name,
+      #       rast_column, bands, clip
+      #     )
+      #   })
+      #   # catdrought_raster <- try({
+      #   #   rpostgis::pgGetRast(
+      #   #     pool_checkout, name = c('daily', raster_table_name), bands = TRUE
+      #   #   )
+      #   # })
+      #   # pool::poolReturn(pool_checkout)
+
+      #   # if there is an error, stop
+      #   if (
+      #     inherits(catdrought_raster, "try-error") && stringr::str_detect(
+      #       catdrought_raster, "table missing"
+      #     )
+      #   ) {
+      #     stop(glue::glue("Selected date {date} is not available in the database"))
+      #   }
+
+      #   ## Set the correct names on the layers. I don't know why but when
+      #   ## building the database, when the temp table is copied to the
+      #   ## partitioned table, layer names are lost
+      #   names(catdrought_raster) <- c(
+      #     'DDS', 'DeepDrainage', 'Eplant', 'Esoil', 'Infiltration',
+      #     'Interception', 'LAI', 'LMFC', 'PET', 'Precipitation', 'Psi', 'REW',
+      #     'Runoff', 'Theta'
+      #   )[bands]
+
+      #   message("Done")
+
+      #   # update cache
+      #   private$data_cache[[cache_name]] <- catdrought_raster
+      #   # return the raster
+      #   catdrought_raster
+      # }
 
       if (spatial == 'stars') {
         res <- res |>

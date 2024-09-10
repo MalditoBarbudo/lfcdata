@@ -19,8 +19,8 @@ lfcObject <- R6::R6Class(
       # and update the cache
       # NOTE: %||% is in utils.R, simplifies the syntax and the readibility of the
       # expression.
-      private$data_cache[[glue::glue("{table_name}_FALSE")]] %||% {
-        # try to catch a db connection error
+      res <- private$data_cache$get(tolower(glue::glue("{table_name}_FALSE")))
+      if (cachem::is.key_missing(res)) {
         message('Querying table from LFC database, this can take a while...')
         query_data <- try(
           dplyr::tbl(private$pool_conn, table_name) |> dplyr::collect(),
@@ -31,10 +31,28 @@ lfcObject <- R6::R6Class(
         if (inherits(query_data, "try-error")) {
           stop("Can not connect to the database:\n", query_data[1])
         } else {
-          private$data_cache[[glue::glue("{table_name}_FALSE")]] <- query_data
-          return(query_data)
+          private$data_cache$set(tolower(glue::glue("{table_name}_FALSE")), query_data)
+          res <- query_data
         }
       }
+
+      # private$data_cache[[glue::glue("{table_name}_FALSE")]] %||% {
+      #   # try to catch a db connection error
+      #   message('Querying table from LFC database, this can take a while...')
+      #   query_data <- try(
+      #     dplyr::tbl(private$pool_conn, table_name) |> dplyr::collect(),
+      #     silent = TRUE
+      #   )
+      #   message('Done')
+      #   # check if any error
+      #   if (inherits(query_data, "try-error")) {
+      #     stop("Can not connect to the database:\n", query_data[1])
+      #   } else {
+      #     private$data_cache[[glue::glue("{table_name}_FALSE")]] <- query_data
+      #     return(query_data)
+      #   }
+      # }
+      return(res)
     }
   ),
 
@@ -82,7 +100,8 @@ lfcObject <- R6::R6Class(
     },
 
     # cache object
-    data_cache = list(),
+    data_cache = cachem::cache_mem(evict = "fifo"),
+    # data_cache = list(),
 
     # finalize method
     finalize = function() {

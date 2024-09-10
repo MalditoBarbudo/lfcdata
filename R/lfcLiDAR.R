@@ -90,12 +90,19 @@ lfcLiDAR <- R6::R6Class(
       regex_detection <- glue::glue("^", glue::glue_collapse(variables, sep = '|^'), "|^poly_km2$")
 
       # get the data, select the variables. Check first if cache exists
-      cached_data <-
-        private$data_cache[[table_name]] %||% {
-          lidar_agg_data <- sf::st_read(private$pool_conn, table_name, as_tibble = TRUE)
-          private$data_cache[[table_name]] <- lidar_agg_data
-          lidar_agg_data
-        }
+      cached_data <- private$data_cache$get(tolower(table_name))
+      if (cachem::is.key_missing(cached_data)) {
+        lidar_agg_data <- sf::st_read(private$pool_conn, table_name, as_tibble = TRUE)
+        private$data_cache$set(tolower(table_name), lidar_agg_data)
+        cached_data <- lidar_agg_data
+      }
+
+      # cached_data <-
+      #   private$data_cache[[table_name]] %||% {
+      #     lidar_agg_data <- sf::st_read(private$pool_conn, table_name, as_tibble = TRUE)
+      #     private$data_cache[[table_name]] <- lidar_agg_data
+      #     lidar_agg_data
+      #   }
 
       res <-
         cached_data |>
@@ -128,7 +135,8 @@ lfcLiDAR <- R6::R6Class(
       )
 
       # check cache, retrieve it or make the query
-      res <- private$data_cache[[cache_name]] %||% {
+      res <- private$data_cache$get(cache_name)
+      if (cachem::is.key_missing(res)) {
         variables_as_numbers <-
           variables |>
           sort() |>
@@ -161,10 +169,48 @@ lfcLiDAR <- R6::R6Class(
         message('Done')
 
         # update cache
-        private$data_cache[[cache_name]] <- lidar_raster
+        private$data_cache$set(cache_name, lidar_raster)
         # return raster
-        lidar_raster
+        res <- lidar_raster
       }
+
+      # res <- private$data_cache[[cache_name]] %||% {
+      #   variables_as_numbers <-
+      #     variables |>
+      #     sort() |>
+      #     purrr::map_int(
+      #       ~ switch(
+      #         .x,
+      #         'AB' = 1L, 'BAT' = 8L, 'BF' = 6L, 'CAT' = 9L,
+      #         'DBH' = 2L, 'HM' = 4L, 'REC' = 7L, 'VAE' = 10L,
+      #         'DEN' = 3L, 'LAI' = 5L
+      #       )
+      #     )
+
+      #   message(
+      #     'Querying low res (400x400m) raster from LFC database',
+      #     ', this can take a while...'
+      #   )
+      #   # let's try to get the raster. With any error, the pool checkout is
+      #   # not returned resulting in dangling db connections, so we use `try``
+      #   lidar_raster <- try(
+      #     get_raster_from_db(
+      #       private$pool_conn, table_name = "lidar_stack_utm",
+      #       rast_column = rast_column, bands = variables_as_numbers, clip = clip
+      #     )
+      #   )
+      #   # check if lidar_raster inherits from try-error to stop
+      #   if (inherits(lidar_raster, "try-error")) {
+      #     stop("Can not connect to the database:\n", lidar_raster[1])
+      #   }
+
+      #   message('Done')
+
+      #   # update cache
+      #   private$data_cache[[cache_name]] <- lidar_raster
+      #   # return raster
+      #   lidar_raster
+      # }
 
       # now we can return a raster (just as is) or a stars object
       if (spatial == 'stars') {
@@ -421,12 +467,12 @@ lfcLiDAR <- R6::R6Class(
       point_query <- glue::glue_sql(
         "SELECT {point_id} As point_id, ST_Value(
            rast,
-           ST_Transform(ST_GeomFromEWKT({wkt_point}),25831)
+           ST_Transform(ST_GeomFromEWKT({wkt_point}),3043)
          ) As point_val
          FROM {`var_name`}
          WHERE ST_Intersects(
            rast,
-           ST_Transform(ST_GeomFromEWKT({wkt_point}),25831)
+           ST_Transform(ST_GeomFromEWKT({wkt_point}),3043)
          );",
         .con = private$pool_conn
       )
