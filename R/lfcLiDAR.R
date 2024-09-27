@@ -227,6 +227,11 @@ lfcLiDAR <- R6::R6Class(
       return(res)
     },
 
+    # get highres png base64 string to include as bitmap in some scenarios
+    get_lowres_png = function() {
+      super$get_data("pngs")
+    },
+
     # available tables method
     avail_tables = function() {
       c(
@@ -241,7 +246,10 @@ lfcLiDAR <- R6::R6Class(
 
       # argument checks
       check_args_for(character = list(variables = variables))
-      check_if_in_for(variables, c('AB', 'BAT', 'BF', 'CAT', 'DBH', 'DEN', 'HM', 'LAI', 'REC', 'VAE'))
+      check_if_in_for(
+        variables,
+        c('AB', 'BAT', 'BF', 'CAT', 'DBH', 'DEN', 'HM', 'LAI', 'REC', 'VAE')
+      )
 
       # cats
       lidar_describe_var_cat(
