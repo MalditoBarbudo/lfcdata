@@ -347,34 +347,6 @@ lfcMeteoland <- R6::R6Class(
         res <- meteoland_raster
       }
 
-      # res <- private$data_cache[[cache_name]] %||% {
-
-      #   message(
-      #     'Querying low res (1000x1000 meters) raster from LFC database',
-      #     ', this can take a while...'
-      #   )
-
-      #   # get raster
-      #   meteoland_raster <- try(
-      #     get_raster_from_db(
-      #       private$pool_conn, raster_table_name,
-      #       rast_column, bands, clip
-      #     )
-      #   )
-
-      #   # check if raster inherits from try-error to stop
-      #   if (inherits(meteoland_raster, "try-error")) {
-      #     stop("Can not connect to the database:\n", meteoland_raster[1])
-      #   }
-
-      #   message('Done')
-
-      #   # update cache
-      #   private$data_cache[[cache_name]] <- meteoland_raster
-      #   # return raster
-      #   meteoland_raster
-      # }
-
       # now we can return a SpatRaster (just as is) or a stars object
       if (spatial == 'stars') {
         res <- res |>
@@ -390,7 +362,181 @@ lfcMeteoland <- R6::R6Class(
       # return the raster
       return(res)
 
-    }
+    },
+    # get_time_series method.
+    # Taking advantage of the partitioned table, we don't need to download the
+    # rasters, extract the values overlaping sf and return the res in the app,
+    # we can do it in the DB and retrieve directly the results
+    get_current_time_series = function(sf, variable) {
+
+      # arguments check
+      check_args_for(
+        sf = list(sf = sf),
+        character = list(variable = variable)
+      )
+      check_length_for(variable, 1)
+      check_if_in_for(
+        variable, c(
+          "MeanTemperature", "MinTemperature", "MaxTemperature",
+          "MeanRelativeHumidity", "MinRelativeHumidity", "MaxRelativeHumidity",
+          "Precipitation", "Radiation", "WindSpeed", "PET", "ThermalAmplitude"
+        )
+      )
+
+      # cache
+      cache_name <- glue::glue("{rlang::hash(sf)}_{rlang::hash(variable)}")
+      res <- private$data_cache$get(cache_name)
+
+      if (cachem::is.key_missing(res)) {
+        # switches
+        band <- switch(
+          variable,
+          "MeanTemperature" = 1L,
+          "MinTemperature" = 2L,
+          "MaxTemperature" = 3L,
+          "MeanRelativeHumidity" = 4L,
+          "MinRelativeHumidity" = 5L,
+          "MaxRelativeHumidity" = 6L,
+          "Precipitation" = 7L,
+          "Radiation" = 8L,
+          "WindSpeed" = 9L,
+          "PET" = 10L,
+          "ThermalAmplitude" = 11L
+        )
+  
+        # now the table name
+        table_name <- "meteoland_low"
+  
+        # transform the sf to the coord system in the db
+        sf_transf <- sf |>
+          # first thing here is to transform to the correct coordinates system
+          sf::st_transform(crs = 3043)
+  
+        # we need also the identifiers of the polygons
+        sf_id <- sf_transf |>
+          dplyr::pull(1)
+        
+        # get the correct geometry column
+        sf_column <- attr(sf_transf, 'sf_column')
+  
+        # we need the sf as text to create the SQL query
+        sf_text <- sf_transf |>
+          # convert to text
+          dplyr::pull({{sf_column}}) |>
+          sf::st_as_text()
+        
+        # look which kind of sf is, points or polygons
+        # POLYGONS
+        if (all(sf::st_is(sf, type = c('POLYGON', 'MULTIPOLYGON')))) {
+  
+          # Now we build the query and get the polygon/s values
+          # data query to get the dump of the data
+          # pool_checkout <- pool::poolCheckout(private$pool_conn)
+          data_queries <- glue::glue_sql(
+            "SELECT
+             day,
+             (ST_SummaryStatsAgg(ST_Clip(rast,geom, -9999, true),{band},true)).*
+           FROM
+             daily.{`table_name`},
+             (select st_geomfromtext({sf_text}, 3043) as geom) AS feat
+           WHERE
+             ST_Intersects(rast, geom)
+           GROUP BY day;", .con = private$pool_conn
+          ) |>
+            purrr::set_names(sf_id)
+  
+          # pool::poolReturn(pool_checkout)
+  
+          dates_available <- seq(
+            lubridate::ymd(Sys.Date() - 366), lubridate::ymd(Sys.Date() - 1),
+            # lubridate::ymd(Sys.Date() - 366), lubridate::ymd('2020-12-12'),
+            by = 'days'
+          )
+  
+          res <-
+            data_queries |>
+            purrr::imap_dfr(
+              ~ pool::dbGetQuery(private$pool_conn, .x) |>
+                dplyr::mutate(polygon_id = .y)
+            ) |>
+            dplyr::arrange(day, polygon_id) |>
+            dplyr::select(day, polygon_id, dplyr::everything()) |>
+            dplyr::mutate(
+              stderror = stddev/sqrt(count)
+            ) |>
+            dplyr::as_tibble() |>
+            dplyr::filter(day %in% dates_available)
+  
+          # res checks for warnings or errors
+          if (nrow(res) < 1) {
+            stop("All polygons are out of bounds of the raster")
+          }
+  
+          if (length(sf_id) > length(unique(res[['polygon_id']]))) {
+            warning("One or more polygons are out of bounds of the raster and were removed")
+          }
+
+          # update cache
+          private$data_cache$set(cache_name, res)
+          return(res)
+        }
+        # POINTS
+        if (all(sf::st_is(sf, type = c('POINT', 'MULTIPOINT')))) {
+          # Now we build the query and get the polygon/s values
+          # data query to get the dump of the data
+          # pool_checkout <- pool::poolCheckout(private$pool_conn)
+          data_queries <- glue::glue_sql(
+            "
+            SELECT day, ST_Value(
+              rast,
+              {band},
+              st_geomfromtext({sf_text}, 3043)
+            ) As pixel_value
+            FROM daily.{`table_name`}
+            WHERE ST_Intersects(
+              rast,
+              st_geomfromtext({sf_text}, 3043)
+            )
+          ", .con = private$pool_conn
+          ) |>
+            purrr::set_names(sf_id)
+          # pool::poolReturn(pool_checkout)
+  
+          dates_available <- seq(
+            lubridate::ymd(Sys.Date() - 366), lubridate::ymd(Sys.Date() - 1),
+            # lubridate::ymd(Sys.Date() - 366), lubridate::ymd('2020-12-12'),
+            by = 'days'
+          )
+  
+          res <-
+            data_queries |>
+            purrr::imap_dfr(
+              ~ pool::dbGetQuery(private$pool_conn, .x) |>
+                dplyr::mutate(point_id = .y)
+            ) |>
+            dplyr::arrange(day, point_id) |>
+            dplyr::select(day, point_id, "{variable}" := pixel_value) |>
+            dplyr::filter(day %in% dates_available)
+  
+          # res checks for warnings or errors
+          if (nrow(res) < 1) {
+            stop("All points are out of bounds of the raster")
+          }
+  
+          if (length(sf_id) > length(unique(res[['point_id']]))) {
+            warning("One or more points are out of bounds of the raster and were removed")
+          }
+  
+          # update cache
+          private$data_cache$set(cache_name, res)
+          return(res)
+        }
+  
+        stop("No points or polygons detected in sf")
+      } # end of no cached value
+
+      return(res)
+    } # end of time series method
 
   ), # end of public methods
   # private methods
