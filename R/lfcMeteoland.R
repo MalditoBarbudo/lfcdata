@@ -286,6 +286,33 @@ lfcMeteoland <- R6::R6Class(
       return(res_list)
     },
 
+    # get pngs method
+    get_pngs = function(date) {
+      date <- stringr::str_remove_all(date, "-")
+      cache_name <- glue::glue("pngs_{date}")
+      res <- private$data_cache$get(cache_name)
+      if (cachem::is.key_missing(res)) {
+        schema <- "daily"
+        table_name <- "pngs"
+        pngs_table_name <- glue::glue_sql("{`schema`}.{`table_name`}", .con = private$pool_conn)
+        # res <- super$get_data(pngs_table_name)
+        # res <- pool::dbReadTable(private$pool_conn, pngs_table_name) |>
+        #   dplyr::as_tibble()
+        get_query <- glue::glue_sql(
+          "SELECT * FROM {`pngs_table_name`}
+          WHERE date = {date};",
+          .con = private$pool_conn
+        )
+
+        res <- pool::dbGetQuery(private$pool_conn, get_query)
+
+        # update cache
+        private$data_cache$set(cache_name, res)
+      }
+      # return res
+      return(res)
+    },
+
     # get_lowres_raster method.
     # Meteoland db is a postgis db so we need to
     # retrieve the 1000x1000 raster table for the specified date.
